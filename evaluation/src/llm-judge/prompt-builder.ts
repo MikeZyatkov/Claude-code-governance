@@ -1,0 +1,112 @@
+/**
+ * Prompt builder for LLM-as-judge evaluation
+ */
+
+import { Pattern, Tactic } from '../types'
+
+export class PromptBuilder {
+  buildEvaluationPrompt(code: string, pattern: Pattern): string {
+    return `# Code Evaluation Task
+
+You are an expert code reviewer evaluating code against established architecture patterns.
+
+## Pattern to Evaluate Against
+
+**Pattern Name**: ${pattern.pattern_name} (${pattern.version})
+**Domain**: ${pattern.domain}
+
+### Goal
+${pattern.goal}
+
+### Guiding Policy
+${pattern.guiding_policy}
+
+## Code to Evaluate
+
+\`\`\`typescript
+${code}
+\`\`\`
+
+## Evaluation Instructions
+
+### Part 1: Evaluate Tactics
+
+Score each tactic on a scale of 0-5 using the provided rubric:
+
+${this.formatTactics(pattern.tactics)}
+
+For each tactic, provide:
+1. Score (0-5)
+2. Brief reasoning (2-3 sentences)
+
+### Part 2: Evaluate Constraints
+
+Check each constraint and determine: PASS, FAIL, or EXCEPTION_ALLOWED
+
+${this.formatConstraints(pattern.constraints)}
+
+For each constraint, provide:
+1. Status (PASS/FAIL/EXCEPTION_ALLOWED)
+2. Brief reasoning
+3. If EXCEPTION_ALLOWED, specify which exception applies
+
+## Output Format
+
+Provide your evaluation as a JSON object with this structure:
+
+\`\`\`json
+{
+  "tactic_scores": [
+    {
+      "tactic_name": "...",
+      "score": 4,
+      "reasoning": "..."
+    }
+  ],
+  "constraint_checks": [
+    {
+      "constraint_rule": "...",
+      "status": "PASS",
+      "reasoning": "...",
+      "exception_used": "..." // only if EXCEPTION_ALLOWED
+    }
+  ],
+  "overall_reasoning": "Summary of the evaluation (2-3 sentences)"
+}
+\`\`\`
+
+Be objective and precise. Focus on observable patterns in the code, not potential improvements.
+`
+  }
+
+  private formatTactics(tactics: Tactic[]): string {
+    return tactics.map((tactic, index) => `
+#### Tactic ${index + 1}: ${tactic.name}
+**Priority**: ${tactic.priority}
+**Description**: ${tactic.description}
+
+**Scoring Rubric**:
+- **5**: ${tactic.scoring_rubric[5]}
+- **4**: ${tactic.scoring_rubric[4]}
+- **3**: ${tactic.scoring_rubric[3]}
+- **2**: ${tactic.scoring_rubric[2]}
+- **1**: ${tactic.scoring_rubric[1]}
+- **0**: ${tactic.scoring_rubric[0]}
+`).join('\n')
+  }
+
+  private formatConstraints(constraints: any[]): string {
+    return constraints.map((constraint, index) => `
+#### Constraint ${index + 1}: ${constraint.rule}
+**Description**: ${constraint.description}
+**Evaluation Type**: ${constraint.evaluation}
+${constraint.exceptions.length > 0 ? `**Allowed Exceptions**:
+${constraint.exceptions.map((e: string) => `  - ${e}`).join('\n')}` : ''}
+`).join('\n')
+  }
+
+  buildCalibrationPrompt(code: string, pattern: Pattern, calibrationExamples: any[]): string {
+    // TODO: Build prompt with calibration examples for consistency
+    return this.buildEvaluationPrompt(code, pattern)
+  }
+}

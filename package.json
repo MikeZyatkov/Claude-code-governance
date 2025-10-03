@@ -1,0 +1,50 @@
+{
+  "name": "@essensys/claude-patterns",
+  "version": "1.0.0",
+  "description": "Strategy-driven architecture patterns and evaluation framework for AI-assisted development",
+  "main": "evaluation/dist/index.js",
+  "types": "evaluation/dist/index.d.ts",
+  "scripts": {
+    "build": "cd evaluation && tsc",
+    "test": "cd evaluation && jest",
+    "lint": "eslint . --ext .ts",
+    "type-check": "cd evaluation && tsc --noEmit",
+    "evaluate": "node evaluation/dist/cli.js",
+    "validate-patterns": "node scripts/validate-patterns.js"
+  },
+  "keywords": [
+    "architecture",
+    "patterns",
+    "ddd",
+    "cqrs",
+    "evaluation",
+    "llm",
+    "ai-assisted-development",
+    "code-quality"
+  ],
+  "author": "essensys",
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/jest": "^29.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "yaml": "^2.3.4",
+    "glob": "^10.3.10",
+    "commander": "^11.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/essensys/claude-code-governance.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
