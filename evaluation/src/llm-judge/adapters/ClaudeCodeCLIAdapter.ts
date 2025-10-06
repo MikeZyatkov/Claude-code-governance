@@ -9,15 +9,15 @@ import { ILLMAdapter, LLMRequest, LLMResponse } from '../ILLMAdapter'
 export class ClaudeCodeCLIAdapter implements ILLMAdapter {
   private cliCommand: string
 
-  constructor(cliCommand: string = 'claude-code') {
+  constructor(cliCommand: string = '/Users/mikhail/.claude/local/claude') {
     this.cliCommand = cliCommand
   }
 
   async complete(request: LLMRequest): Promise<LLMResponse> {
     return new Promise((resolve, reject) => {
-      const args = ['--non-interactive']
+      const args = ['--print']
 
-      // Add model if specified (Claude Code CLI supports --model flag)
+      // Add model if specified
       if (request.model) {
         args.push('--model', request.model)
       }
