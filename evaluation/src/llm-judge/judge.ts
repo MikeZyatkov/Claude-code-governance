@@ -1,22 +1,27 @@
 /**
  * LLM-as-judge evaluator
- * Uses Claude API to evaluate code against patterns
+ * Uses pluggable LLM adapter to evaluate code against patterns
  */
 
 import { Pattern, LLMJudgeResult, TacticScore, ConstraintCheck } from '../types'
 import { PromptBuilder } from './prompt-builder'
+import { ILLMAdapter } from './ILLMAdapter'
+import { ClaudeCodeCLIAdapter } from './adapters/ClaudeCodeCLIAdapter'
 
 interface JudgeOptions {
   model?: string
   apiKey?: string
   multiPassCount?: number
+  adapter?: ILLMAdapter
 }
 
 export class LLMJudge {
   private promptBuilder: PromptBuilder
+  private defaultAdapter: ILLMAdapter
 
-  constructor() {
+  constructor(defaultAdapter?: ILLMAdapter) {
     this.promptBuilder = new PromptBuilder()
+    this.defaultAdapter = defaultAdapter || new ClaudeCodeCLIAdapter()
   }
 
   async evaluatePattern(
@@ -25,13 +30,16 @@ export class LLMJudge {
     options: JudgeOptions = {}
   ): Promise<LLMJudgeResult> {
     const multiPassCount = options.multiPassCount || 3
+    const adapter = options.adapter || this.defaultAdapter
+
+    console.log(`    Using LLM adapter: ${adapter.getName()}`)
 
     // Run multiple passes for consistency
     const passes: LLMJudgeResult[] = []
 
     for (let i = 0; i < multiPassCount; i++) {
       console.log(`    Pass ${i + 1}/${multiPassCount}...`)
-      const result = await this.singleEvaluation(code, pattern, options)
+      const result = await this.singleEvaluation(code, pattern, adapter, options)
       passes.push(result)
     }
 
@@ -42,15 +50,79 @@ export class LLMJudge {
   private async singleEvaluation(
     code: string,
     pattern: Pattern,
+    adapter: ILLMAdapter,
     options: JudgeOptions
   ): Promise<LLMJudgeResult> {
     const prompt = this.promptBuilder.buildEvaluationPrompt(code, pattern)
 
-    // TODO: Implement actual Claude API call
-    // For now, return mock results
-    console.log(`    [Mock] Evaluating with prompt length: ${prompt.length} chars`)
+    try {
+      // Use adapter to complete the prompt
+      const response = await adapter.complete({
+        prompt,
+        model: options.model,
+        temperature: 0, // Deterministic for evaluation
+        maxTokens: 4096
+      })
 
-    return this.createMockResult(pattern)
+      // Parse JSON response
+      const evaluation = this.parseEvaluationResponse(response.content)
+      return this.mapToLLMJudgeResult(evaluation, pattern)
+
+    } catch (error) {
+      console.error(`    Error during evaluation: ${error}`)
+      throw error
+    }
+  }
+
+  private parseEvaluationResponse(content: string): any {
+    // Try to extract JSON from markdown code block
+    const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/)
+    const jsonText = jsonMatch ? jsonMatch[1] : content
+
+    try {
+      return JSON.parse(jsonText)
+    } catch (error) {
+      // If parsing fails, try to find JSON object in the text
+      const objectMatch = content.match(/\{[\s\S]*\}/)
+      if (objectMatch) {
+        return JSON.parse(objectMatch[0])
+      }
+      throw new Error(`Failed to parse evaluation response: ${error}`)
+    }
+  }
+
+  private mapToLLMJudgeResult(evaluation: any, pattern: Pattern): LLMJudgeResult {
+    // Map the evaluation response to our result type
+    const tacticScores: TacticScore[] = evaluation.tactic_scores.map((ts: any) => ({
+      tactic_name: ts.tactic_name,
+      priority: pattern.tactics.find(t => t.name === ts.tactic_name)?.priority || 'optional',
+      score: ts.score,
+      reasoning: ts.reasoning
+    }))
+
+    const constraintChecks: ConstraintCheck[] = evaluation.constraint_checks.map((cc: any) => ({
+      constraint_rule: cc.constraint_rule,
+      status: cc.status,
+      reasoning: cc.reasoning,
+      exception_used: cc.exception_used
+    }))
+
+    const tacticsScore = this.calculateTacticsScore(tacticScores)
+    const constraintsPassed = constraintChecks.every(
+      c => c.status === 'PASS' || c.status === 'EXCEPTION_ALLOWED'
+    )
+    const overallScore = (tacticsScore * 0.7) + (constraintsPassed ? 5 : 0) * 0.3
+
+    return {
+      pattern_name: pattern.pattern_name,
+      pattern_version: pattern.version,
+      tactic_scores: tacticScores,
+      constraint_checks: constraintChecks,
+      tactics_score: Math.round(tacticsScore * 10) / 10,
+      constraints_passed: constraintsPassed,
+      overall_pattern_score: Math.round(overallScore * 10) / 10,
+      reasoning: evaluation.overall_reasoning || 'No reasoning provided'
+    }
   }
 
   private aggregateResults(
