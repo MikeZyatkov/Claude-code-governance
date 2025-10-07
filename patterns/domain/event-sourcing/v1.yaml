@@ -1,0 +1,130 @@
+pattern_name: "Event Sourcing"
+version: "v1"
+domain: "Architecture"
+
+goal: |
+  Store aggregate state as a sequence of domain events rather than current
+  state snapshots. Enable complete audit trails, temporal queries, and event
+  replay. Ensure every state change is captured as an immutable fact that can
+  be replayed to reconstruct aggregate state.
+
+guiding_policy: |
+  Aggregates produce domain events for every state change. These events are
+  persisted in an event store (DynamoDB) and replayed to reconstitute aggregate
+  state. Use the es-aggregates library which provides AggregateRoot base class,
+  Repository, and event sourcing infrastructure. State is rebuilt by replaying
+  all events in sequence.
+
+tactics:
+  - id: "aggregate-extends-root"
+    name: "Aggregates extend AggregateRoot"
+    priority: critical
+    description: "All event-sourced aggregates extend AggregateRoot from es-aggregates"
+
+  - id: "register-event-handlers"
+    name: "Register event handlers in constructor"
+    priority: critical
+    description: "Constructor calls register() for each event type to map events to state mutation methods"
+
+  - id: "apply-via-applyChange"
+    name: "Apply events using applyChange() method"
+    priority: critical
+    description: "All state changes go through applyChange(event), never mutate state directly"
+
+  - id: "events-drive-state"
+    name: "Events are the source of truth for state"
+    priority: critical
+    description: "Aggregate state is derived from event stream, not stored directly"
+
+  - id: "static-factory-method"
+    name: "Provide static factory() for reconstitution"
+    priority: critical
+    description: "Static factory() method returns new instance for event replay"
+
+  - id: "dynamo-event-store"
+    name: "Use DynamoDB for event storage"
+    priority: important
+    description: "Events stored in DynamoDB table, one table per aggregate type"
+
+  - id: "no-direct-mutation"
+    name: "No direct state mutation in business methods"
+    priority: important
+    description: "Business methods create and apply events, never assign to fields directly"
+
+  - id: "event-handlers-mutate"
+    name: "Only event handlers mutate state"
+    priority: important
+    description: "Registered event handler functions directly assign to private fields"
+
+  - id: "validate-before-events"
+    name: "Validate before creating events"
+    priority: important
+    description: "Business methods validate invariants, then create events. Invalid operations throw before event creation"
+
+  - id: "idempotent-handlers"
+    name: "Event handlers should be idempotent"
+    priority: optional
+    description: "Applying the same event multiple times produces same result (for event replay)"
+
+constraints:
+  - rule: "Aggregates MUST extend AggregateRoot"
+    description: "Event-sourced aggregates extend AggregateRoot from es-aggregates"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "All state changes MUST produce events"
+    description: "Every mutation creates and applies an event via applyChange()"
+    exceptions:
+      - "Event handlers registered in constructor mutate directly"
+      - "Static factory() for reconstitution"
+    evaluation: "llm_judge"
+
+  - rule: "Event handlers MUST be registered in constructor"
+    description: "All event types mapped to handlers via register() in constructor"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Business methods MUST NOT mutate state directly"
+    description: "No direct field assignment in create(), update() methods, only via events"
+    exceptions:
+      - "Event handler functions can assign directly"
+    evaluation: "llm_judge"
+
+  - rule: "Aggregates MUST provide static factory() method"
+    description: "Factory method for creating empty instance for event replay"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Events MUST be stored in DynamoDB"
+    description: "Event store backed by DynamoDB, configured via Repository"
+    exceptions:
+      - "Test environments may use in-memory store"
+    evaluation: "llm_judge"
+
+related_patterns:
+  - "Domain Events"
+  - "DDD Aggregates"
+  - "Repository Pattern"
+  - "CQRS"
+
+anti_patterns:
+  - name: "Direct State Mutation"
+    description: "Business methods assigning to fields instead of creating events"
+  - name: "Missing Event Handlers"
+    description: "Events created but no registered handler to apply them"
+  - name: "State-Based Persistence"
+    description: "Saving aggregate state directly instead of events"
+  - name: "Missing Factory Method"
+    description: "No static factory() for event replay, breaking reconstitution"
+
+examples_from_codebase:
+  good:
+    - "contexts/tenant-management/domain/model/Occupier.aggregate.ts"
+    - "contexts/tenant-management/domain/model/OperatorUser.aggregate.ts"
+  needs_improvement: []
+
+references:
+  - "Fowler, Martin. Event Sourcing (martinfowler.com)"
+  - "Vernon, Vaughn. Implementing Domain-Driven Design"
+  - "Young, Greg. Event Sourcing"
+  - "es-aggregates library documentation"

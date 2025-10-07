@@ -53,9 +53,9 @@ tactics:
     description: "Basic input validation in handler (non-null, format), business validation in domain"
 
   - id: "use-mapper-for-conversion"
-    name: "Use mapper to convert API layer to domain parameters"
+    name: "Use mapper for API-to-domain conversion when reused"
     priority: important
-    description: "Command handlers use mappers to convert API request types (snake_case) to domain params (camelCase)"
+    description: "Use mapper classes when same API→domain conversion is reused across multiple handlers. Single-use conversions can be inline in Lambda handler"
 
   - id: "queries-read-without-modifications"
     name: "Query handlers read directly from repository without modifications"

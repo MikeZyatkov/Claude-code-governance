@@ -72,10 +72,10 @@ tactic_scoring:
 
   - tactic_id: "use-mapper-for-conversion"
     scoring_rubric:
-      5: "All command handlers use dedicated mapper for API→domain conversion"
-      4: "Mostly uses mappers, 1-2 inline conversions"
-      3: "Mix of mappers and inline conversion logic"
-      2: "Primarily inline conversion, no dedicated mappers"
+      5: "Mappers used for reused conversions, inline for single-use (follows Infrastructure pattern)"
+      4: "Mostly follows pattern, one unnecessary mapper or missing reuse"
+      3: "Inconsistent mapper usage"
+      2: "Too many single-use mappers or missing needed mappers"
       1: "No conversion, API types passed directly to domain"
       0: "Not applicable"
 

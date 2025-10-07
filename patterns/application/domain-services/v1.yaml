@@ -1,0 +1,124 @@
+pattern_name: "Domain Services"
+version: "v1"
+domain: "Domain-Driven Design"
+
+goal: |
+  Encapsulate domain logic that doesn't naturally belong to a single aggregate
+  or value object. Handle operations that span multiple aggregates, coordinate
+  complex validations, or integrate with external systems for domain operations.
+
+guiding_policy: |
+  Domain services are stateless objects in the application layer that perform
+  domain logic not belonging to aggregates. They coordinate cross-aggregate
+  operations, validate against external systems, or perform complex calculations.
+  Services use dependency injection, depend on ports for external integrations,
+  and are named with "Service" suffix.
+
+tactics:
+  - id: "stateless-services"
+    name: "Services must be stateless"
+    priority: critical
+    description: "Domain services have no instance state, all data passed as parameters"
+
+  - id: "service-suffix"
+    name: "Name services with 'Service' suffix"
+    priority: critical
+    description: "Services named descriptively with Service suffix: SpaceValidatorService, TimeZoneConversionService"
+
+  - id: "services-in-application"
+    name: "Services in application/services/ directory"
+    priority: critical
+    description: "Domain services live in application layer, not domain or infrastructure"
+
+  - id: "use-for-cross-aggregate"
+    name: "Use services for cross-aggregate operations"
+    priority: important
+    description: "Operations spanning multiple aggregates belong in services, not in one aggregate"
+
+  - id: "use-for-external-validation"
+    name: "Use services for external validations"
+    priority: important
+    description: "Validations requiring external systems (DB lookups, API calls) go in services"
+
+  - id: "injectable-services"
+    name: "Mark services with @injectable decorator"
+    priority: important
+    description: "Services use @injectable() for DI container registration"
+
+  - id: "inject-dependencies"
+    name: "Inject ports and dependencies via constructor"
+    priority: important
+    description: "Constructor uses @inject for port interfaces and other dependencies"
+
+  - id: "pure-functions-preferred"
+    name: "Prefer pure functions for calculations"
+    priority: important
+    description: "Calculation services should be pure functions (deterministic, no side effects)"
+
+  - id: "return-domain-types"
+    name: "Return domain types or validation results"
+    priority: optional
+    description: "Services return domain objects, value objects, or validation results, not infrastructure types"
+
+  - id: "comprehensive-tests"
+    name: "Unit test services with fakes"
+    priority: optional
+    description: "Services unit tested using fake implementations of ports"
+
+constraints:
+  - rule: "Services MUST be stateless"
+    description: "No instance fields except injected dependencies"
+    exceptions:
+      - "Injected dependencies as readonly fields"
+    evaluation: "deterministic"
+
+  - rule: "Services MUST NOT contain state specific to requests"
+    description: "No request-scoped state, services are singletons"
+    exceptions: []
+    evaluation: "llm_judge"
+
+  - rule: "Services MUST be in application/services/"
+    description: "Domain services located in application layer"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Services MUST use port interfaces for external dependencies"
+    description: "Services depend on ports, not concrete infrastructure implementations"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Business logic spanning aggregates MUST be in services"
+    description: "Don't force cross-aggregate logic into one aggregate, use service"
+    exceptions: []
+    evaluation: "llm_judge"
+
+  - rule: "Services MUST NOT access database directly"
+    description: "Services use ports/repositories, never direct DB access"
+    exceptions: []
+    evaluation: "llm_judge"
+
+related_patterns:
+  - "DDD Aggregates"
+  - "Ports and Adapters"
+  - "Application Architecture"
+
+anti_patterns:
+  - name: "Stateful Service"
+    description: "Service with instance state that carries over between calls"
+  - name: "Service in Wrong Layer"
+    description: "Service in domain or infrastructure instead of application"
+  - name: "Anemic Aggregates with Fat Services"
+    description: "Business logic that belongs in aggregates moved to services"
+  - name: "Service Accessing Database Directly"
+    description: "Service bypassing ports and repositories to access DB"
+
+examples_from_codebase:
+  good:
+    - "contexts/tenant-management/application/services/SpaceValidatorService.ts"
+    - "contexts/tenant-management/application/services/TimeZoneConversionService.ts"
+  needs_improvement: []
+
+references:
+  - "Evans, Eric. Domain-Driven Design (Domain Services)"
+  - "Vernon, Vaughn. Implementing Domain-Driven Design"
+  - "Fowler, Martin. Service Layer"
