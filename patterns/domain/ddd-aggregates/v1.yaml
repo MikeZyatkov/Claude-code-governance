@@ -16,137 +16,65 @@ guiding_policy: |
   ensuring auditability and enabling event-driven architectures.
 
 tactics:
-  - name: "Extend AggregateRoot from es-aggregates for root entities"
+  - id: "extend-aggregate-root"
+    name: "Extend AggregateRoot from es-aggregates for root entities"
     priority: critical
     description: "Aggregate roots must extend AggregateRoot base class to inherit event sourcing capabilities"
-    scoring_rubric:
-      5: "Aggregate extends AggregateRoot, uses it correctly with event registration and application"
-      4: "Extends AggregateRoot but minor issues in event handling patterns"
-      3: "Extends AggregateRoot but doesn't fully leverage event sourcing capabilities"
-      2: "Uses aggregate-like structure but doesn't extend proper base class"
-      1: "No aggregate root pattern, direct state manipulation"
-      0: "Not applicable or completely absent"
 
-  - name: "Define entities within aggregate using Entity base class"
+  - id: "define-entities-with-base-class"
+    name: "Define entities within aggregate using Entity base class"
     priority: critical
     description: "Child entities (e.g., Contract, Occupancy) must extend Entity and receive applier function"
-    scoring_rubric:
-      5: "All entities extend Entity base class, properly receive and use applier function"
-      4: "Entities extend Entity but minor issues with applier usage"
-      3: "Some entities follow pattern, others don't"
-      2: "Entity-like structure but doesn't use proper base class"
-      1: "Entities are just data structures with no behavior"
-      0: "Not applicable"
 
-  - name: "Encapsulate state with private fields and public getters"
+  - id: "encapsulate-state"
+    name: "Encapsulate state with private fields and public getters"
     priority: critical
     description: "All internal state as private fields (prefix with _), expose via public getters only"
-    scoring_rubric:
-      5: "All fields private with underscore prefix, all have public getters, no public setters"
-      4: "Mostly encapsulated, 1-2 fields missing getters or incorrectly public"
-      3: "Some encapsulation but multiple fields directly public or missing getters"
-      2: "Mix of public/private with no clear pattern"
-      1: "All fields public, no encapsulation"
-      0: "Not applicable"
 
-  - name: "Implement static factory method for aggregate creation"
+  - id: "static-factory-creation"
+    name: "Implement static factory method for aggregate creation"
     priority: critical
     description: "Provide static create() method that validates and emits creation event"
-    scoring_rubric:
-      5: "Static create() validates all invariants, creates appropriate event, applies via applyChange()"
-      4: "Has create() method with minor validation gaps"
-      3: "Has create() but weak validation or improper event handling"
-      2: "Creation logic exists but not as static factory"
-      1: "Direct constructor usage with no validation"
-      0: "Not applicable"
 
-  - name: "Register event handlers in constructor"
+  - id: "register-event-handlers"
+    name: "Register event handlers in constructor"
     priority: critical
     description: "Use register() in constructor to map event types to state mutation handlers"
-    scoring_rubric:
-      5: "All domain events registered in constructor with proper handlers that mutate state"
-      4: "Most events registered, minor gaps in coverage"
-      3: "Some events registered but inconsistent pattern"
-      2: "Event registration present but handlers don't properly update state"
-      1: "No event registration, direct state mutation"
-      0: "Not applicable"
 
-  - name: "Apply state changes via events using applyChange()"
+  - id: "apply-via-events"
+    name: "Apply state changes via events using applyChange()"
     priority: critical
     description: "All state mutations must create domain event and call applyChange(), never mutate state directly"
-    scoring_rubric:
-      5: "100% of state changes via events through applyChange(), no direct mutations"
-      4: "Most changes via events, 1-2 minor direct mutations for non-critical state"
-      3: "Mix of event-based and direct mutations (~50/50)"
-      2: "Primarily direct mutations with some event usage"
-      1: "No event sourcing, all direct mutations"
-      0: "Not applicable"
 
-  - name: "Validate business invariants before emitting events"
+  - id: "validate-before-events"
+    name: "Validate business invariants before emitting events"
     priority: important
     description: "Check all business rules and throw DomainError before creating events"
-    scoring_rubric:
-      5: "Comprehensive validation before all events, meaningful DomainError messages"
-      4: "Good validation coverage with minor gaps"
-      3: "Some validation but inconsistent or incomplete"
-      2: "Minimal validation, mostly trusts inputs"
-      1: "No validation, invalid states possible"
-      0: "Not applicable"
 
-  - name: "Delegate entity creation to entity static factories"
+  - id: "delegate-entity-creation"
+    name: "Delegate entity creation to entity static factories"
     priority: important
     description: "When creating child entities, use Entity.create() which returns events"
-    scoring_rubric:
-      5: "All entity creation delegated to entity static factories that return events"
-      4: "Most entities created via factories, 1 minor deviation"
-      3: "Mix of factory and direct instantiation"
-      2: "Primarily direct instantiation of entities"
-      1: "No factory pattern for entities"
-      0: "Not applicable"
 
-  - name: "Keep entity collections private with public getters returning readonly/copies"
+  - id: "private-entity-collections"
+    name: "Keep entity collections private with public getters returning readonly/copies"
     priority: important
     description: "Entity collections (Maps, Arrays) private, expose via getters returning Array.from() or readonly"
-    scoring_rubric:
-      5: "All collections private, getters return Array.from() or readonly types"
-      4: "Collections private but 1 getter returns mutable reference"
-      3: "Some collections exposed directly or mutable"
-      2: "Most collections publicly mutable"
-      1: "All collections directly accessible and mutable"
-      0: "Not applicable"
 
-  - name: "Provide aggregate-level methods for all entity modifications"
+  - id: "aggregate-level-modifications"
+    name: "Provide aggregate-level methods for all entity modifications"
     priority: important
     description: "Don't expose entities for external modification, provide aggregate methods instead"
-    scoring_rubric:
-      5: "All entity modifications via aggregate methods (e.g., createContract(), not getContract().modify())"
-      4: "Mostly aggregate-level methods, 1 minor leak"
-      3: "Mix of aggregate methods and direct entity manipulation"
-      2: "Primarily direct entity access for modifications"
-      1: "Entities fully exposed for external modification"
-      0: "Not applicable"
 
-  - name: "Route child entity events through entity.route() method"
+  - id: "route-child-entity-events"
+    name: "Route child entity events through entity.route() method"
     priority: optional
     description: "When entity events occur, call entity.route(event) to apply within entity boundary"
-    scoring_rubric:
-      5: "All child entity events properly routed via entity.route()"
-      4: "Most entity events routed correctly"
-      3: "Inconsistent routing pattern"
-      2: "Rarely uses route(), mostly direct handling"
-      1: "No routing pattern used"
-      0: "Not applicable (no child entities)"
 
-  - name: "Use Map for entity collections when lookup by ID is needed"
+  - id: "use-map-for-collections"
+    name: "Use Map for entity collections when lookup by ID is needed"
     priority: optional
     description: "Store entities in Map<string, Entity> for efficient ID-based retrieval"
-    scoring_rubric:
-      5: "Entity collections use Map with ID keys, efficient lookups"
-      4: "Uses Map but occasionally uses array searches"
-      3: "Mix of Map and Array usage"
-      2: "Primarily arrays with inefficient lookups"
-      1: "No consideration for lookup efficiency"
-      0: "Not applicable (no entity collections)"
 
 constraints:
   - rule: "Aggregate root MUST be the only entry point for modifications"

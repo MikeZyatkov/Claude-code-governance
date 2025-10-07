@@ -1,5 +1,11 @@
 /**
  * Core types for the evaluation framework
+ *
+ * Architecture Note:
+ * - Patterns define WHAT to do (tactics, constraints) - used for both generation and evaluation
+ * - Calibrations define HOW to score it (scoring rubrics) - used only for evaluation
+ * - This separation allows patterns to be clean implementation guides while keeping
+ *   scoring criteria separate and independently evolvable
  */
 
 export type Priority = 'critical' | 'important' | 'optional'
@@ -15,10 +21,10 @@ export interface ScoringRubric {
 }
 
 export interface Tactic {
+  id: string
   name: string
   priority: Priority
   description: string
-  scoring_rubric: ScoringRubric
 }
 
 export interface Constraint {
@@ -46,6 +52,23 @@ export interface Pattern {
     needs_improvement?: string[]
   }
   references?: string[]
+}
+
+export interface TacticScoring {
+  tactic_id: string
+  scoring_rubric: ScoringRubric
+}
+
+export interface Calibration {
+  pattern_ref: {
+    name: string
+    version: string
+  }
+  tactic_scoring: TacticScoring[]
+  examples?: {
+    excellent?: string
+    acceptable?: string
+  }
 }
 
 export interface TacticScore {
@@ -99,6 +122,7 @@ export interface EvaluationConfig {
   code: string
   codePath?: string
   patterns: Pattern[]
+  calibrations: Calibration[] // Scoring rubrics for each pattern
   checkDeterministic: boolean
   checkLLMJudge: boolean
   llmModel?: string

@@ -28,8 +28,48 @@ Constraints (Boundaries)
 This creates a hierarchy that both humans and LLMs can understand:
 - **Goal**: Why does this pattern exist? What problem does it solve?
 - **Guiding Policy**: What's the conceptual approach?
-- **Tactics**: What specific actions should be taken? (with priorities and scoring rubrics)
+- **Tactics**: What specific actions should be taken? (with priorities and IDs)
 - **Constraints**: What are the hard rules? (with allowed exceptions)
+
+### Pattern and Calibration Separation
+
+**Design Decision**: Scoring rubrics are separated from pattern definitions.
+
+**Patterns** (`patterns/**/*.yaml`):
+- Define WHAT to do (tactics with IDs, constraints)
+- Used for both code generation AND evaluation
+- Focus on implementation guidance
+- Clean, readable specifications
+
+**Calibrations** (`calibration/**/*-scoring.yaml`):
+- Define HOW to score (rubrics per tactic ID)
+- Used only during evaluation
+- Can evolve independently from patterns
+- Allow multiple scoring strategies per pattern
+
+**Example**:
+```yaml
+# Pattern: tactics have stable IDs
+tactics:
+  - id: "encapsulate-state"
+    name: "Encapsulate state with private fields"
+    priority: critical
+    description: "All internal state as private fields..."
+
+# Calibration: references tactic by ID
+tactic_scoring:
+  - tactic_id: "encapsulate-state"
+    scoring_rubric:
+      5: "All fields private with underscore prefix..."
+      3: "Some encapsulation but gaps..."
+      1: "All fields public..."
+```
+
+**Benefits**:
+- Patterns stay focused on "what" not "how to judge"
+- Scoring can be refined without pattern changes
+- Multiple teams can use different scoring strictness
+- Tactic IDs ensure calibration stays linked to pattern
 
 ### Bidirectional Usage
 
@@ -43,10 +83,18 @@ This ensures structural alignment - what we tell Claude to do is exactly what we
 ### Evaluation Pipeline
 
 ```
-Code → Deterministic Checks → LLM-as-Judge → Aggregated Score → Recommendations
-         (tests, linting,        (tactics,       (weighted        (actionable
-          type check)             constraints)     combination)     feedback)
+Code + Pattern + Calibration
+  ↓
+Deterministic Checks (tests, linting, type check)
+  ↓
+LLM-as-Judge (evaluates tactics using scoring rubrics, checks constraints)
+  ↓
+Aggregated Score (weighted combination based on tactic priorities)
+  ↓
+Recommendations (actionable feedback on low-scoring tactics)
 ```
+
+The evaluator loads both the pattern (for tactic/constraint definitions) and calibration (for scoring rubrics), ensuring each tactic is scored using its corresponding rubric by tactic ID.
 
 ## Pattern Priorities
 

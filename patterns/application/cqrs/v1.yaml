@@ -17,148 +17,70 @@ guiding_policy: |
   queries bypass aggregates and read directly from persistence.
 
 tactics:
-  - name: "Separate command and query handlers into different directories"
+  - id: "separate-command-query-directories"
+    name: "Separate command and query handlers into different directories"
     priority: critical
     description: "Place command handlers in application/commands/, query handlers in application/queries/"
-    scoring_rubric:
-      5: "Clear directory separation, all handlers in correct location"
-      4: "Mostly separated, 1-2 handlers in wrong location"
-      3: "Partial separation, inconsistent structure"
-      2: "Handlers mixed together in single directory"
-      1: "No separation, all in generic 'handlers' folder"
-      0: "Not applicable"
 
-  - name: "Commands MUST return only identifiers or acknowledgment"
+  - id: "commands-return-id-only"
+    name: "Commands MUST return only identifiers or acknowledgment"
     priority: critical
     description: "Command handlers return string (ID), void, or acknowledgment token, never full data"
-    scoring_rubric:
-      5: "All command handlers return string (ID), void, or simple acknowledgment only"
-      4: "One command returns slightly more than ID but still minimal"
-      3: "Some commands return full objects or complex data"
-      2: "Most commands return full data"
-      1: "All commands return full objects, indistinguishable from queries"
-      0: "Not applicable"
 
-  - name: "Queries MUST NOT modify state"
+  - id: "queries-no-state-modification"
+    name: "Queries MUST NOT modify state"
     priority: critical
     description: "Query handlers only read and return data, no aggregate modifications, no events emitted"
-    scoring_rubric:
-      5: "All query handlers purely read, zero state modifications"
-      4: "Queries read-only except for negligible logging/metrics updates"
-      3: "One query modifies non-critical state (e.g., last_accessed timestamp)"
-      2: "Multiple queries modify state"
-      1: "Queries frequently modify state, no separation from commands"
-      0: "Not applicable"
 
-  - name: "Command handlers orchestrate domain aggregate methods"
+  - id: "commands-orchestrate-domain"
+    name: "Command handlers orchestrate domain aggregate methods"
     priority: critical
     description: "Commands load aggregate from repository, call domain methods, save aggregate back"
-    scoring_rubric:
-      5: "Commands: load aggregate → call domain method → save via repository, no business logic in handler"
-      4: "Commands follow pattern with minor business logic leakage"
-      3: "Commands have significant business logic instead of delegating to domain"
-      2: "Commands manipulate aggregates directly without using domain methods"
-      1: "Commands bypass aggregates entirely, direct DB manipulation"
-      0: "Not applicable"
 
-  - name: "Query handlers return application-layer DTOs, not domain aggregates"
+  - id: "queries-return-dtos"
+    name: "Query handlers return application-layer DTOs, not domain aggregates"
     priority: critical
     description: "Queries return simple DTOs/response objects, never expose full aggregate instances"
-    scoring_rubric:
-      5: "All queries return flat DTOs/response types, never domain aggregates"
-      4: "Mostly DTOs, one query returns aggregate but it's read-only"
-      3: "Mix of DTOs and aggregate returns"
-      2: "Primarily returns aggregates"
-      1: "Only returns domain aggregates, no DTO layer"
-      0: "Not applicable"
 
-  - name: "Use dependency injection for repository access"
+  - id: "use-dependency-injection"
+    name: "Use dependency injection for repository access"
     priority: important
     description: "Inject repositories via constructor using @inject decorator from tsyringe"
-    scoring_rubric:
-      5: "All handlers use @injectable with @inject for repositories, proper DI container registration"
-      4: "Most handlers use DI correctly, 1 minor deviation"
-      3: "Inconsistent DI usage, mix of injection and direct instantiation"
-      2: "Primarily direct instantiation, minimal DI"
-      1: "No DI, direct instantiation or singletons"
-      0: "Not applicable"
 
-  - name: "Command handlers validate inputs then delegate to domain"
+  - id: "validate-inputs-in-handler"
+    name: "Command handlers validate inputs then delegate to domain"
     priority: important
     description: "Basic input validation in handler (non-null, format), business validation in domain"
-    scoring_rubric:
-      5: "Clear separation: handler validates inputs, domain validates business rules"
-      4: "Good separation with minor overlap"
-      3: "Some business validation in handler that should be in domain"
-      2: "Most validation in handler, domain is anemic"
-      1: "All validation in handler or no validation"
-      0: "Not applicable"
 
-  - name: "Use mapper to convert API layer to domain parameters"
+  - id: "use-mapper-for-conversion"
+    name: "Use mapper to convert API layer to domain parameters"
     priority: important
     description: "Command handlers use mappers to convert API request types (snake_case) to domain params (camelCase)"
-    scoring_rubric:
-      5: "All command handlers use dedicated mapper for API→domain conversion"
-      4: "Mostly uses mappers, 1-2 inline conversions"
-      3: "Mix of mappers and inline conversion logic"
-      2: "Primarily inline conversion, no dedicated mappers"
-      1: "No conversion, API types passed directly to domain"
-      0: "Not applicable"
 
-  - name: "Query handlers read directly from repository without modifications"
+  - id: "queries-read-without-modifications"
+    name: "Query handlers read directly from repository without modifications"
     priority: important
     description: "Queries call repository.read() and map to response, no aggregate method calls"
-    scoring_rubric:
-      5: "All query handlers: read from repo → map to DTO → return, no aggregate methods called"
-      4: "Mostly follows pattern, minor aggregate method calls for computed values"
-      3: "Queries sometimes call aggregate business methods"
-      2: "Queries frequently invoke aggregate business logic"
-      1: "No distinction, queries and commands both invoke business methods"
-      0: "Not applicable"
 
-  - name: "Name command handlers with CommandHandler suffix"
+  - id: "name-command-handlers"
+    name: "Name command handlers with CommandHandler suffix"
     priority: important
     description: "Follow naming: CreateOccupierCommandHandler, DeleteOperatorUserCommandHandler"
-    scoring_rubric:
-      5: "All command handlers follow *CommandHandler naming pattern"
-      4: "Mostly follows pattern, 1 naming deviation"
-      3: "Inconsistent naming across handlers"
-      2: "Few handlers follow pattern"
-      1: "No naming convention"
-      0: "Not applicable"
 
-  - name: "Name query handlers with QueryHandler suffix"
+  - id: "name-query-handlers"
+    name: "Name query handlers with QueryHandler suffix"
     priority: important
     description: "Follow naming: GetOccupierByIdQueryHandler, ListOperatorUsersQueryHandler"
-    scoring_rubric:
-      5: "All query handlers follow *QueryHandler naming pattern"
-      4: "Mostly follows pattern, 1 naming deviation"
-      3: "Inconsistent naming across handlers"
-      2: "Few handlers follow pattern"
-      1: "No naming convention"
-      0: "Not applicable"
 
-  - name: "Add structured logging at handler entry and exit points"
+  - id: "structured-logging"
+    name: "Add structured logging at handler entry and exit points"
     priority: optional
     description: "Log command/query at start, log result/error at end with correlation info"
-    scoring_rubric:
-      5: "Comprehensive logging at entry/exit, includes correlation IDs and key data"
-      4: "Good logging coverage with minor gaps"
-      3: "Some logging but inconsistent"
-      2: "Minimal logging, mostly debugging statements"
-      1: "No logging or console.log only"
-      0: "Not applicable"
 
-  - name: "Handle errors at handler boundary with try-catch"
+  - id: "error-handling-boundary"
+    name: "Handle errors at handler boundary with try-catch"
     priority: optional
     description: "Wrap handler logic in try-catch, log errors, re-throw or transform to application errors"
-    scoring_rubric:
-      5: "All handlers have error boundaries, proper error logging and transformation"
-      4: "Most handlers have error handling, minor gaps"
-      3: "Inconsistent error handling across handlers"
-      2: "Minimal error handling, most errors unhandled"
-      1: "No error handling, errors propagate raw"
-      0: "Not applicable"
 
 constraints:
   - rule: "Command handlers MUST NOT return full domain objects"

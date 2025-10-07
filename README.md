@@ -21,12 +21,15 @@ claude-code-governance/
 │   ├── application/      # Application layer (CQRS, event sourcing)
 │   └── infrastructure/   # Infrastructure patterns (repositories, adapters)
 │
+├── calibration/          # Scoring rubrics for evaluation (separate from patterns)
+│   ├── ddd-aggregates/   # v1-scoring.yaml with tactic scoring rubrics
+│   └── cqrs/             # v1-scoring.yaml with tactic scoring rubrics
+│
 ├── evaluation/           # Code evaluation framework
 │   └── src/
 │       ├── deterministic/ # AST analysis, linting checks
 │       └── llm-judge/     # LLM-based pattern evaluation
 │
-├── calibration/          # Pre-scored code examples for judge calibration
 ├── benchmarks/           # Standard tasks for testing pattern effectiveness
 ├── agents/               # Custom Claude Code agents
 ├── commands/             # Custom slash commands
@@ -91,8 +94,9 @@ console.log(`Constraints Passed: ${result.llm_judge.constraints_passed}`)
 
 ## 📚 Pattern Framework
 
-Each pattern follows this structure:
+Patterns and scoring are separated for clarity:
 
+### Pattern Structure
 ```yaml
 pattern_name: "Pattern Name"
 version: "v1"
@@ -104,18 +108,33 @@ guiding_policy: |
   Overall approach to achieving the goal
 
 tactics:
-  - name: "Specific implementation action"
+  - id: "stable-tactic-identifier"  # Stable ID for linking to scoring
+    name: "Specific implementation action"
     priority: critical|important|optional
-    scoring_rubric:
-      5: "Excellent implementation"
-      3: "Acceptable implementation"
-      1: "Poor implementation"
+    description: "What to do"
 
 constraints:
   - rule: "MUST/MUST NOT statement"
     exceptions: ["Valid exception cases"]
     evaluation: "deterministic|llm_judge"
 ```
+
+### Calibration Structure
+```yaml
+# calibration/{pattern-name}/v1-scoring.yaml
+pattern_ref:
+  name: "Pattern Name"
+  version: "v1"
+
+tactic_scoring:
+  - tactic_id: "stable-tactic-identifier"  # Links to tactic by ID
+    scoring_rubric:
+      5: "Excellent implementation"
+      3: "Acceptable implementation"
+      1: "Poor implementation"
+```
+
+**Why separate?** Patterns focus on "what to do" for both generation and evaluation, while calibrations define "how to score" only for evaluation. This keeps patterns clean and allows scoring to evolve independently.
 
 ## 📊 Available Patterns
 
@@ -137,10 +156,10 @@ constraints:
 - ✅ Security scans
 
 ### LLM-as-Judge Scoring
-- **Tactics**: 0-5 score per tactic (weighted by priority)
+- **Tactics**: 0-5 score per tactic using calibration rubrics (weighted by priority)
 - **Constraints**: PASS/FAIL/EXCEPTION_ALLOWED
 - **Consistency**: Multiple passes with median aggregation
-- **Calibration**: Pre-scored examples for anchor points
+- **Linkage**: Tactic IDs ensure scoring rubrics match pattern tactics
 
 ### Score Aggregation
 
@@ -155,12 +174,13 @@ overall_score = (deterministic × 0.3) + (Σ(pattern_scores) × 0.7)
 
 ## 🔄 Pattern Evolution
 
-Patterns are versioned for evolutionary tracking:
+Patterns and calibrations are versioned for evolutionary tracking:
 
 ```bash
 # Update pattern
 cp patterns/domain/ddd-aggregates/v1.yaml patterns/domain/ddd-aggregates/v2.yaml
-# Edit v2.yaml with improvements
+cp calibration/ddd-aggregates/v1-scoring.yaml calibration/ddd-aggregates/v2-scoring.yaml
+# Edit v2.yaml and v2-scoring.yaml with improvements
 
 # Test impact
 npm run evaluate -- --pattern=ddd-aggregates-v1 --benchmark=all
@@ -170,7 +190,7 @@ npm run evaluate -- --pattern=ddd-aggregates-v2 --benchmark=all
 npm run pattern-diff v1 v2
 ```
 
-**Best Practice**: Change one pattern at a time to measure impact clearly.
+**Best Practice**: Change one pattern at a time to measure impact clearly. You can also refine just the scoring rubrics in calibration files without changing the pattern itself.
 
 ## 🤖 Custom Agents
 
@@ -205,17 +225,19 @@ Refactors code to match specified pattern.
 ### Adding New Patterns
 
 1. Create pattern file: `patterns/{category}/{pattern-name}/v1.yaml`
-2. Define all fields: goal, guiding_policy, tactics, constraints
-3. Add scoring rubrics (0-5 scale with explicit criteria)
-4. Specify constraint evaluation method
-5. Test on existing codebase examples
-6. Submit PR with pattern + test results
+2. Define all fields: goal, guiding_policy, tactics (with stable IDs), constraints
+3. Create calibration file: `calibration/{pattern-name}/v1-scoring.yaml`
+4. Add scoring rubrics (0-5 scale with explicit criteria) linked to tactic IDs
+5. Specify constraint evaluation method
+6. Test on existing codebase examples
+7. Submit PR with pattern + calibration + test results
 
 ### Pattern Review Checklist
 
 - [ ] Goal clearly states strategic challenge
 - [ ] Guiding policy provides conceptual framework
-- [ ] All tactics have priorities and scoring rubrics
+- [ ] All tactics have stable IDs, priorities, and clear descriptions
+- [ ] Calibration file exists with scoring rubrics for all tactic IDs
 - [ ] Constraints have exceptions listed
 - [ ] Evaluation method specified (deterministic vs LLM)
 - [ ] Tested on ≥3 real codebase examples

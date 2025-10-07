@@ -1,0 +1,116 @@
+# Scoring calibration for DDD Aggregates and Entities pattern v1
+# This file contains the scoring rubrics used during code evaluation
+# Pattern definition: patterns/domain/ddd-aggregates/v1.yaml
+
+pattern_ref:
+  name: "DDD Aggregates and Entities"
+  version: "v1"
+
+tactic_scoring:
+  - tactic_id: "extend-aggregate-root"
+    scoring_rubric:
+      5: "Aggregate extends AggregateRoot, uses it correctly with event registration and application"
+      4: "Extends AggregateRoot but minor issues in event handling patterns"
+      3: "Extends AggregateRoot but doesn't fully leverage event sourcing capabilities"
+      2: "Uses aggregate-like structure but doesn't extend proper base class"
+      1: "No aggregate root pattern, direct state manipulation"
+      0: "Not applicable or completely absent"
+
+  - tactic_id: "define-entities-with-base-class"
+    scoring_rubric:
+      5: "All entities extend Entity base class, properly receive and use applier function"
+      4: "Entities extend Entity but minor issues with applier usage"
+      3: "Some entities follow pattern, others don't"
+      2: "Entity-like structure but doesn't use proper base class"
+      1: "Entities are just data structures with no behavior"
+      0: "Not applicable"
+
+  - tactic_id: "encapsulate-state"
+    scoring_rubric:
+      5: "All fields private with underscore prefix, all have public getters, no public setters"
+      4: "Mostly encapsulated, 1-2 fields missing getters or incorrectly public"
+      3: "Some encapsulation but multiple fields directly public or missing getters"
+      2: "Mix of public/private with no clear pattern"
+      1: "All fields public, no encapsulation"
+      0: "Not applicable"
+
+  - tactic_id: "static-factory-creation"
+    scoring_rubric:
+      5: "Static create() validates all invariants, creates appropriate event, applies via applyChange()"
+      4: "Has create() method with minor validation gaps"
+      3: "Has create() but weak validation or improper event handling"
+      2: "Creation logic exists but not as static factory"
+      1: "Direct constructor usage with no validation"
+      0: "Not applicable"
+
+  - tactic_id: "register-event-handlers"
+    scoring_rubric:
+      5: "All domain events registered in constructor with proper handlers that mutate state"
+      4: "Most events registered, minor gaps in coverage"
+      3: "Some events registered but inconsistent pattern"
+      2: "Event registration present but handlers don't properly update state"
+      1: "No event registration, direct state mutation"
+      0: "Not applicable"
+
+  - tactic_id: "apply-via-events"
+    scoring_rubric:
+      5: "100% of state changes via events through applyChange(), no direct mutations"
+      4: "Most changes via events, 1-2 minor direct mutations for non-critical state"
+      3: "Mix of event-based and direct mutations (~50/50)"
+      2: "Primarily direct mutations with some event usage"
+      1: "No event sourcing, all direct mutations"
+      0: "Not applicable"
+
+  - tactic_id: "validate-before-events"
+    scoring_rubric:
+      5: "Comprehensive validation before all events, meaningful DomainError messages"
+      4: "Good validation coverage with minor gaps"
+      3: "Some validation but inconsistent or incomplete"
+      2: "Minimal validation, mostly trusts inputs"
+      1: "No validation, invalid states possible"
+      0: "Not applicable"
+
+  - tactic_id: "delegate-entity-creation"
+    scoring_rubric:
+      5: "All entity creation delegated to entity static factories that return events"
+      4: "Most entities created via factories, 1 minor deviation"
+      3: "Mix of factory and direct instantiation"
+      2: "Primarily direct instantiation of entities"
+      1: "No factory pattern for entities"
+      0: "Not applicable"
+
+  - tactic_id: "private-entity-collections"
+    scoring_rubric:
+      5: "All collections private, getters return Array.from() or readonly types"
+      4: "Collections private but 1 getter returns mutable reference"
+      3: "Some collections exposed directly or mutable"
+      2: "Most collections publicly mutable"
+      1: "All collections directly accessible and mutable"
+      0: "Not applicable"
+
+  - tactic_id: "aggregate-level-modifications"
+    scoring_rubric:
+      5: "All entity modifications via aggregate methods (e.g., createContract(), not getContract().modify())"
+      4: "Mostly aggregate-level methods, 1 minor leak"
+      3: "Mix of aggregate methods and direct entity manipulation"
+      2: "Primarily direct entity access for modifications"
+      1: "Entities fully exposed for external modification"
+      0: "Not applicable"
+
+  - tactic_id: "route-child-entity-events"
+    scoring_rubric:
+      5: "All child entity events properly routed via entity.route()"
+      4: "Most entity events routed correctly"
+      3: "Inconsistent routing pattern"
+      2: "Rarely uses route(), mostly direct handling"
+      1: "No routing pattern used"
+      0: "Not applicable (no child entities)"
+
+  - tactic_id: "use-map-for-collections"
+    scoring_rubric:
+      5: "Entity collections use Map with ID keys, efficient lookups"
+      4: "Uses Map but occasionally uses array searches"
+      3: "Mix of Map and Array usage"
+      2: "Primarily arrays with inefficient lookups"
+      1: "No consideration for lookup efficiency"
+      0: "Not applicable (no entity collections)"
