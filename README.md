@@ -217,8 +217,7 @@ Refactors code to match specified pattern.
 - [Framework Overview](docs/framework-overview.md)
 - [Pattern Authoring Guide](docs/pattern-authoring.md)
 - [Evaluation Guide](docs/evaluation-guide.md)
-- [Integration Instructions](docs/integration.md)
-- [Custom Agents Guide](docs/agents.md)
+- [Benchmarking Guide](docs/benchmarking.md)
 
 ## 🧑‍💻 Contributing
 
