@@ -142,6 +142,9 @@ tactic_scoring:
 |---------|---------|--------|--------|
 | DDD Aggregates | v1 | Domain | ✅ Production |
 | CQRS | v1 | Application | ✅ Production |
+| Application Architecture | v1 | Application | ✅ Production |
+| Infrastructure & API | v1 | Infrastructure | ✅ Production |
+| Testing | v1 | Testing | ✅ Production |
 | Error Handling | v1 | Core | 🚧 Coming Soon |
 | Security | v1 | Core | 🚧 Coming Soon |
 | Logging | v1 | Core | 🚧 Coming Soon |

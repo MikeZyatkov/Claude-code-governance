@@ -1,0 +1,80 @@
+# Scoring calibration for Infrastructure & API pattern v1
+# This file contains the scoring rubrics used during code evaluation
+# Pattern definition: patterns/infrastructure/infrastructure-api/v1.yaml
+
+pattern_ref:
+  name: "Infrastructure & API"
+  version: "v1"
+
+tactic_scoring:
+  - tactic_id: "inline-mapping"
+    scoring_rubric:
+      5: "All single-use mappings inline in handlers. Mapper classes only exist for reuse"
+      4: "One minor single-use mapper class but generally follows pattern"
+      3: "Multiple single-use mappers created unnecessarily"
+      2: "Most mappings extracted to classes even for single use"
+      1: "Mapper classes everywhere regardless of reuse"
+      0: "Not applicable"
+
+  - tactic_id: "api-snake-case"
+    scoring_rubric:
+      5: "100% of API types use snake_case"
+      4: "One field uses incorrect case"
+      3: "Multiple fields use incorrect case"
+      2: "Mix of snake_case and camelCase in API layer"
+      1: "API layer uses camelCase"
+      0: "Not applicable"
+
+  - tactic_id: "domain-camelcase"
+    scoring_rubric:
+      5: "100% of domain types use camelCase"
+      4: "One field uses incorrect case"
+      3: "Multiple fields use incorrect case"
+      2: "Mix of camelCase and snake_case in domain"
+      1: "Domain layer uses snake_case"
+      0: "Not applicable"
+
+  - tactic_id: "feature-specific-naming"
+    scoring_rubric:
+      5: "All infrastructure resources have feature-specific names"
+      4: "One resource has generic name"
+      3: "Multiple resources have generic names"
+      2: "Most resources use generic names"
+      1: "All resources use generic names (TABLE_NAME, QUEUE_URL, etc.)"
+      0: "Not applicable"
+
+  - tactic_id: "mapper-reuse-only"
+    scoring_rubric:
+      5: "All mapper classes used in 2+ places. No single-use mappers"
+      4: "One single-use mapper class"
+      3: "Multiple single-use mapper classes"
+      2: "Most mappers are single-use"
+      1: "All mappings in mapper classes regardless of reuse"
+      0: "Not applicable (no mappers)"
+
+  - tactic_id: "environment-variable-conventions"
+    scoring_rubric:
+      5: "All env vars clearly indicate their resource (OCCUPIER_USERS_TABLE, INVITATION_QUEUE_URL)"
+      4: "One env var slightly ambiguous"
+      3: "Multiple env vars ambiguous or generic"
+      2: "Most env vars generic (TABLE, QUEUE, etc.)"
+      1: "All env vars generic"
+      0: "Not applicable"
+
+  - tactic_id: "adapter-interface-first"
+    scoring_rubric:
+      5: "All adapters have port interface defined in application layer"
+      4: "One adapter missing port interface"
+      3: "Multiple adapters without port interfaces"
+      2: "Most adapters implemented without ports"
+      1: "No port interfaces, all concrete implementations"
+      0: "Not applicable (no adapters)"
+
+  - tactic_id: "fake-for-all-adapters"
+    scoring_rubric:
+      5: "All adapter interfaces have fake implementations in infrastructure/fakes/"
+      4: "One adapter missing fake"
+      3: "Multiple adapters missing fakes"
+      2: "Most adapters without fakes"
+      1: "No fake implementations"
+      0: "Not applicable (no adapters)"

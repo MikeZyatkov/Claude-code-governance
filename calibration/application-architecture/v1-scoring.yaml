@@ -1,0 +1,80 @@
+# Scoring calibration for Application Architecture pattern v1
+# This file contains the scoring rubrics used during code evaluation
+# Pattern definition: patterns/application/application-architecture/v1.yaml
+
+pattern_ref:
+  name: "Application Architecture"
+  version: "v1"
+
+tactic_scoring:
+  - tactic_id: "avoid-wrapper-objects"
+    scoring_rubric:
+      5: "All return types are direct (arrays, primitives, domain objects). No unnecessary wrappers"
+      4: "One minor wrapper used where it could be avoided but doesn't significantly complicate usage"
+      3: "Multiple wrappers used where direct returns would work, but pattern is somewhat consistent"
+      2: "Excessive wrapping, many return types wrapped unnecessarily"
+      1: "Everything wrapped in objects regardless of need"
+      0: "Not applicable"
+
+  - tactic_id: "bulk-operations"
+    scoring_rubric:
+      5: "All multi-item processing uses bulk operations (1 query per validation type)"
+      4: "Mostly bulk operations, one minor case uses individual queries"
+      3: "Mix of bulk and individual queries with no clear pattern"
+      2: "Primarily individual queries, minimal bulk optimization"
+      1: "No bulk operations, N items = N queries throughout"
+      0: "Not applicable (single-item operations only)"
+
+  - tactic_id: "bulk-port-interfaces"
+    scoring_rubric:
+      5: "All ports supporting bulk operations have explicit batch methods (validateMany, createMany)"
+      4: "Most ports have batch methods, one minor port could benefit from batching"
+      3: "Some ports batched, others use individual item methods"
+      2: "Primarily single-item port methods even when bulk needed"
+      1: "No batch methods in port interfaces"
+      0: "Not applicable (no bulk operations needed)"
+
+  - tactic_id: "structured-partial-success"
+    scoring_rubric:
+      5: "Bulk operations return structured { successes: [], failures: [] } with clear error details"
+      4: "Structured results with minor gaps in error detail"
+      3: "Partial success handling exists but inconsistent structure"
+      2: "Throws on first error instead of collecting all failures"
+      1: "No partial success handling"
+      0: "Not applicable (single-item only)"
+
+  - tactic_id: "command-return-conventions"
+    scoring_rubric:
+      5: "All commands return ID/void. No commands return full objects. Queries return appropriate types"
+      4: "One command returns slightly more than ID but still minimal"
+      3: "Some commands return full objects"
+      2: "Most commands return full objects"
+      1: "No distinction between command and query return types"
+      0: "Not applicable"
+
+  - tactic_id: "thin-application-layer"
+    scoring_rubric:
+      5: "All handlers orchestrate only: load aggregate, call domain method, save. Zero business logic in handlers"
+      4: "Handlers mostly orchestrate, minor business logic leak (trivial check)"
+      3: "Handlers contain significant business logic that should be in domain"
+      2: "Most business logic in handlers, domain is anemic"
+      1: "All business logic in application layer"
+      0: "Not applicable"
+
+  - tactic_id: "validation-separation"
+    scoring_rubric:
+      5: "Clear separation: handlers validate inputs (required, format), domain validates business rules"
+      4: "Good separation with minor overlap"
+      3: "Some business validation in handlers that should be in domain"
+      2: "Most validation in handlers"
+      1: "No separation, all validation in one layer"
+      0: "Not applicable"
+
+  - tactic_id: "efficient-validation"
+    scoring_rubric:
+      5: "All external validations batched efficiently"
+      4: "Mostly batched, one minor individual call"
+      3: "Mix of batched and individual validation calls"
+      2: "Primarily individual validation calls"
+      1: "No batching of validations"
+      0: "Not applicable (no external validations)"

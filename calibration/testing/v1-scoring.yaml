@@ -1,0 +1,98 @@
+# Scoring calibration for Testing pattern v1
+# This file contains the scoring rubrics used during code evaluation
+# Pattern definition: patterns/testing/testing/v1.yaml
+
+pattern_ref:
+  name: "Testing"
+  version: "v1"
+
+tactic_scoring:
+  - tactic_id: "colocated-tests"
+    scoring_rubric:
+      5: "All test files colocated with implementation in same directory"
+      4: "One test file in wrong location"
+      3: "Multiple test files not colocated"
+      2: "Most tests in separate test directory"
+      1: "No colocation, all tests centralized"
+      0: "Not applicable"
+
+  - tactic_id: "unit-tests-domain"
+    scoring_rubric:
+      5: "All aggregates, entities, value objects have comprehensive unit tests"
+      4: "One minor domain class missing tests"
+      3: "Multiple domain classes without tests"
+      2: "Most domain classes lack tests"
+      1: "No unit tests for domain layer"
+      0: "Not applicable (no domain classes)"
+
+  - tactic_id: "unit-tests-application"
+    scoring_rubric:
+      5: "All command and query handlers have unit tests using fakes"
+      4: "One handler missing tests"
+      3: "Multiple handlers without tests"
+      2: "Most handlers lack tests"
+      1: "No unit tests for application handlers"
+      0: "Not applicable (no handlers)"
+
+  - tactic_id: "component-tests-projectors"
+    scoring_rubric:
+      5: "All projectors have component tests with DbTestHelper"
+      4: "One projector missing component test"
+      3: "Multiple projectors without component tests"
+      2: "Most projectors lack component tests"
+      1: "No component tests for projectors"
+      0: "Not applicable (no projectors)"
+
+  - tactic_id: "fake-implementations"
+    scoring_rubric:
+      5: "All ports have fake implementations in infrastructure/fakes/"
+      4: "One port missing fake"
+      3: "Multiple ports without fakes"
+      2: "Most ports lack fakes"
+      1: "No fake implementations"
+      0: "Not applicable (no ports)"
+
+  - tactic_id: "specific-test-scenarios"
+    scoring_rubric:
+      5: "All test descriptions are specific scenarios (Given-When-Then or clear conditions)"
+      4: "Most tests specific, 1-2 generic descriptions"
+      3: "Mix of specific and generic test descriptions"
+      2: "Most tests have generic descriptions"
+      1: "All tests use generic descriptions ('it works', 'handles X')"
+      0: "Not applicable"
+
+  - tactic_id: "error-scenarios"
+    scoring_rubric:
+      5: "Comprehensive error and edge case coverage alongside happy paths"
+      4: "Good error coverage with minor gaps"
+      3: "Some error tests but many scenarios missing"
+      2: "Minimal error testing"
+      1: "Only happy path tests"
+      0: "Not applicable"
+
+  - tactic_id: "authorization-tests"
+    scoring_rubric:
+      5: "All authorization rules tested where applicable"
+      4: "One authorization scenario missing"
+      3: "Multiple authorization scenarios not tested"
+      2: "Minimal authorization testing"
+      1: "No authorization tests"
+      0: "Not applicable (no authorization rules)"
+
+  - tactic_id: "test-file-suffix"
+    scoring_rubric:
+      5: "All test files use .test.ts suffix"
+      4: "One file uses .spec.ts"
+      3: "Multiple files use wrong suffix"
+      2: "Mix of .test.ts and .spec.ts"
+      1: "No consistent suffix"
+      0: "Not applicable"
+
+  - tactic_id: "reset-fakes"
+    scoring_rubric:
+      5: "All fakes reset state in beforeEach for test isolation"
+      4: "One fake doesn't reset state"
+      3: "Multiple fakes share state across tests"
+      2: "Most fakes don't reset state"
+      1: "No state reset, tests interdependent"
+      0: "Not applicable (no fakes with state)"

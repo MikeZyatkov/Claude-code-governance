@@ -1,0 +1,95 @@
+pattern_name: "Infrastructure & API"
+version: "v1"
+domain: "Infrastructure Layer"
+
+goal: |
+  Maintain clean boundaries between API layer and domain while minimizing
+  boilerplate. Establish clear naming conventions for infrastructure resources.
+  Keep mapping logic simple and colocated unless there's a clear reason for
+  abstraction.
+
+guiding_policy: |
+  API and domain speak different languages - API uses platform conventions
+  (snake_case), domain uses language conventions (camelCase). Convert at the
+  boundary but keep conversion simple unless complexity justifies extraction.
+  Name infrastructure resources descriptively to avoid collisions and confusion.
+
+tactics:
+  - id: "inline-mapping"
+    name: "Use inline mapping in Lambda handlers"
+    priority: critical
+    description: "Map API request to domain parameters inline in handler unless a mapper already exists and is being reused across multiple handlers"
+
+  - id: "api-snake-case"
+    name: "API layer uses snake_case"
+    priority: critical
+    description: "All API request/response types use snake_case for field names, following REST API conventions"
+
+  - id: "domain-camelcase"
+    name: "Domain layer uses camelCase"
+    priority: critical
+    description: "All domain types, parameters, and internal code use camelCase following TypeScript conventions"
+
+  - id: "feature-specific-naming"
+    name: "Use feature-specific infrastructure names"
+    priority: important
+    description: "Tables, queues, environment variables use feature-specific names (OCCUPIER_USERS_TABLE) not generic (TABLE_NAME)"
+
+  - id: "mapper-reuse-only"
+    name: "Create mapper classes only for reuse"
+    priority: important
+    description: "Mapper classes exist only when same mapping is used in multiple places. Single-use mappings stay inline"
+
+  - id: "environment-variable-conventions"
+    name: "Use descriptive environment variable names"
+    priority: important
+    description: "Environment variables clearly indicate what they point to (OCCUPIER_EVENT_BUS_NAME not EVENT_BUS)"
+
+  - id: "adapter-interface-first"
+    name: "Define adapter interfaces (ports) before implementation"
+    priority: important
+    description: "Create port interface in application layer, then implement adapter in infrastructure layer"
+
+  - id: "fake-for-all-adapters"
+    name: "Provide fake implementations for all adapters"
+    priority: optional
+    description: "Every adapter interface has a fake implementation in infrastructure/fakes/ for testing"
+
+constraints:
+  - rule: "API types MUST use snake_case"
+    description: "All API request and response types use snake_case field names"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Domain types MUST use camelCase"
+    description: "All domain types and internal code use camelCase"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Mapper classes MUST NOT be created for single-use mappings"
+    description: "Inline mapping in Lambda handler unless mapper is reused"
+    exceptions:
+      - "Mapper exists and is already being reused elsewhere"
+    evaluation: "llm_judge"
+
+  - rule: "Environment variables MUST use feature-specific names"
+    description: "Env vars must clearly indicate what resource they reference"
+    exceptions: []
+    evaluation: "llm_judge"
+
+related_patterns:
+  - "Hexagonal Architecture"
+  - "Ports and Adapters"
+  - "Application Architecture"
+
+anti_patterns:
+  - name: "Generic Environment Variable Names"
+    description: "Using TABLE_NAME, QUEUE_URL instead of OCCUPIER_USERS_TABLE, INVITATION_QUEUE_URL"
+  - name: "Premature Mapper Extraction"
+    description: "Creating mapper class for single-use conversion that could be inline"
+  - name: "Inconsistent Case Conventions"
+    description: "Mixing snake_case and camelCase within same layer"
+
+references:
+  - "REST API Naming Conventions"
+  - "TypeScript Style Guide"
