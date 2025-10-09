@@ -1,11 +1,11 @@
 /**
- * Pattern loader - loads patterns from YAML files
+ * Pattern loader - loads patterns and calibrations from YAML files
  */
 
 import * as fs from 'fs'
 import * as path from 'path'
 import * as yaml from 'yaml'
-import { Pattern } from './types'
+import { Pattern, Calibration } from './types'
 
 export class PatternLoader {
   private patternsDir: string
@@ -129,6 +129,29 @@ export class PatternLoader {
     return patternList
   }
 
+  /**
+   * Load calibration file for a pattern
+   */
+  loadCalibration(patternName: string, version: string = 'v1'): Calibration {
+    const calibrationPath = path.join(
+      this.patternsDir,
+      '../calibration',
+      patternName,
+      `${version}-scoring.yaml`
+    )
+
+    if (!fs.existsSync(calibrationPath)) {
+      throw new Error(`Calibration not found: ${calibrationPath}`)
+    }
+
+    const content = fs.readFileSync(calibrationPath, 'utf8')
+    const calibration = yaml.parse(content) as Calibration
+
+    this.validateCalibration(calibration)
+
+    return calibration
+  }
+
   private validatePattern(pattern: Pattern): void {
     const required = ['pattern_name', 'version', 'goal', 'guiding_policy', 'tactics', 'constraints']
 
@@ -140,21 +163,13 @@ export class PatternLoader {
 
     // Validate tactics
     for (const tactic of pattern.tactics) {
-      if (!tactic.name || !tactic.priority || !tactic.scoring_rubric) {
+      if (!tactic.id || !tactic.name || !tactic.priority) {
         throw new Error(`Invalid tactic in pattern ${pattern.pattern_name}: ${JSON.stringify(tactic)}`)
       }
 
       const validPriorities = ['critical', 'important', 'optional']
       if (!validPriorities.includes(tactic.priority)) {
         throw new Error(`Invalid priority "${tactic.priority}" in tactic ${tactic.name}`)
-      }
-
-      // Validate scoring rubric has all scores
-      const requiredScores = ['0', '1', '2', '3', '4', '5']
-      for (const score of requiredScores) {
-        if (!(score in tactic.scoring_rubric)) {
-          throw new Error(`Tactic ${tactic.name} missing score ${score} in rubric`)
-        }
       }
     }
 
@@ -170,6 +185,26 @@ export class PatternLoader {
       }
     }
   }
+
+  private validateCalibration(calibration: Calibration): void {
+    if (!calibration.pattern_ref || !calibration.tactic_scoring) {
+      throw new Error('Calibration missing required fields')
+    }
+
+    // Validate each tactic scoring has all scores
+    for (const tacticScore of calibration.tactic_scoring) {
+      if (!tacticScore.tactic_id || !tacticScore.scoring_rubric) {
+        throw new Error(`Invalid tactic scoring: ${JSON.stringify(tacticScore)}`)
+      }
+
+      const requiredScores = ['0', '1', '2', '3', '4', '5']
+      for (const score of requiredScores) {
+        if (!(score in tacticScore.scoring_rubric)) {
+          throw new Error(`Tactic ${tacticScore.tactic_id} missing score ${score} in rubric`)
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -178,6 +213,11 @@ export class PatternLoader {
 export function loadPattern(category: string, name: string, version?: string): Pattern {
   const loader = new PatternLoader()
   return loader.loadPattern(category, name, version)
+}
+
+export function loadCalibration(patternName: string, version?: string): Calibration {
+  const loader = new PatternLoader()
+  return loader.loadCalibration(patternName, version)
 }
 
 export function loadAllPatterns(): Pattern[] {

@@ -3,7 +3,7 @@
  * Uses pluggable LLM adapter to evaluate code against patterns
  */
 
-import { Pattern, LLMJudgeResult, TacticScore, ConstraintCheck } from '../types'
+import { Pattern, LLMJudgeResult, TacticScore, ConstraintCheck, Calibration } from '../types'
 import { PromptBuilder } from './prompt-builder'
 import { ILLMAdapter } from './ILLMAdapter'
 import { ClaudeCodeCLIAdapter } from './adapters/ClaudeCodeCLIAdapter'
@@ -27,6 +27,7 @@ export class LLMJudge {
   async evaluatePattern(
     code: string,
     pattern: Pattern,
+    calibration: Calibration,
     options: JudgeOptions = {}
   ): Promise<LLMJudgeResult> {
     const multiPassCount = options.multiPassCount || 3
@@ -39,7 +40,7 @@ export class LLMJudge {
 
     for (let i = 0; i < multiPassCount; i++) {
       console.log(`    Pass ${i + 1}/${multiPassCount}...`)
-      const result = await this.singleEvaluation(code, pattern, adapter, options)
+      const result = await this.singleEvaluation(code, pattern, calibration, adapter, options)
       passes.push(result)
     }
 
@@ -50,10 +51,11 @@ export class LLMJudge {
   private async singleEvaluation(
     code: string,
     pattern: Pattern,
+    calibration: Calibration,
     adapter: ILLMAdapter,
     options: JudgeOptions
   ): Promise<LLMJudgeResult> {
-    const prompt = this.promptBuilder.buildEvaluationPrompt(code, pattern)
+    const prompt = this.promptBuilder.buildEvaluationPrompt(code, pattern, calibration)
 
     try {
       // Use adapter to complete the prompt
@@ -211,12 +213,12 @@ export class LLMJudge {
     let maxCount = 0
     let modeValue = items[0]
 
-    for (const [value, count] of counts) {
+    counts.forEach((count, value) => {
       if (count > maxCount) {
         maxCount = count
         modeValue = value
       }
-    }
+    })
 
     return modeValue
   }

@@ -10,7 +10,13 @@
     "lint": "eslint . --ext .ts",
     "type-check": "cd evaluation && tsc --noEmit",
     "evaluate": "node evaluation/dist/cli.js",
-    "validate-patterns": "node scripts/validate-patterns.js"
+    "validate-patterns": "node scripts/validate-patterns.js",
+    "validate:commands": "ts-node scripts/validate-command-handlers.ts",
+    "validate:queries": "ts-node scripts/validate-query-handlers.ts",
+    "validate:aggregates": "ts-node scripts/validate-aggregates.ts",
+    "validate:value-objects": "ts-node scripts/validate-value-objects.ts",
+    "validate:projectors": "ts-node scripts/validate-projectors.ts",
+    "validate:all": "ts-node scripts/validate-all.ts"
   },
   "keywords": [
     "architecture",
@@ -33,6 +39,7 @@
     "eslint": "^8.0.0",
     "jest": "^29.0.0",
     "ts-jest": "^29.0.0",
+    "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
   },
   "dependencies": {

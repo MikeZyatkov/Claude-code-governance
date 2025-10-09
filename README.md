@@ -16,25 +16,51 @@ This repository provides:
 ```
 claude-code-governance/
 ├── patterns/              # Architecture patterns (YAML definitions)
-│   ├── core/             # Always-applied (error handling, security, logging)
-│   ├── domain/           # DDD patterns (aggregates, entities, value objects)
-│   ├── application/      # Application layer (CQRS, event sourcing)
-│   └── infrastructure/   # Infrastructure patterns (repositories, adapters)
+│   ├── core/             # Error handling
+│   ├── domain/           # DDD (aggregates, entities, value objects, events, event sourcing)
+│   ├── application/      # CQRS, projectors, domain services, app architecture
+│   └── infrastructure/   # Infrastructure & API patterns
 │
-├── calibration/          # Scoring rubrics for evaluation (separate from patterns)
-│   ├── ddd-aggregates/   # v1-scoring.yaml with tactic scoring rubrics
-│   └── cqrs/             # v1-scoring.yaml with tactic scoring rubrics
+├── calibration/          # Scoring rubrics for evaluation (12 patterns)
+│   ├── ddd-aggregates/   # v1-scoring.yaml
+│   ├── cqrs/             # v1-scoring.yaml
+│   ├── value-objects/    # v1-scoring.yaml
+│   └── ...               # 9 more patterns
 │
 ├── evaluation/           # Code evaluation framework
 │   └── src/
 │       ├── deterministic/ # AST analysis, linting checks
 │       └── llm-judge/     # LLM-based pattern evaluation
 │
+├── scripts/              # Pattern validation commands (NEW!)
+│   ├── validate-command-handlers.ts
+│   ├── validate-aggregates.ts
+│   └── validate-all.ts
+│
 ├── benchmarks/           # Standard tasks for testing pattern effectiveness
 ├── agents/               # Custom Claude Code agents
 ├── commands/             # Custom slash commands
 └── docs/                 # Framework documentation
 ```
+
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Validate all patterns in your codebase
+npm run validate:all
+
+# Or validate specific patterns
+npm run validate:commands      # CQRS Command Handlers
+npm run validate:queries       # CQRS Query Handlers
+npm run validate:aggregates    # DDD Aggregates + Event Sourcing
+npm run validate:value-objects # Value Objects
+npm run validate:projectors    # Read Model Projectors
+```
+
+See [scripts/README.md](scripts/README.md) for detailed usage.
 
 ## 📦 Installation
 
@@ -50,7 +76,7 @@ npm install @essensys/claude-patterns --save-dev
 git submodule add https://github.com/essensys/claude-code-governance.git .claude-patterns
 ```
 
-## 🚀 Quick Start
+## 💡 Usage
 
 ### 1. Using Patterns for Code Generation
 
@@ -136,18 +162,27 @@ tactic_scoring:
 
 **Why separate?** Patterns focus on "what to do" for both generation and evaluation, while calibrations define "how to score" only for evaluation. This keeps patterns clean and allows scoring to evolve independently.
 
-## 📊 Available Patterns
+## 📊 Available Patterns (12 Total)
 
-| Pattern | Version | Domain | Status |
-|---------|---------|--------|--------|
-| DDD Aggregates | v1 | Domain | ✅ Production |
-| CQRS | v1 | Application | ✅ Production |
-| Application Architecture | v1 | Application | ✅ Production |
-| Infrastructure & API | v1 | Infrastructure | ✅ Production |
-| Testing | v1 | Testing | ✅ Production |
-| Error Handling | v1 | Core | 🚧 Coming Soon |
-| Security | v1 | Core | 🚧 Coming Soon |
-| Logging | v1 | Core | 🚧 Coming Soon |
+| Pattern | Version | Category | Status |
+|---------|---------|----------|--------|
+| **DDD Aggregates** | v1 | Domain | ✅ Ready |
+| **Value Objects** | v1 | Domain | ✅ Ready |
+| **Domain Events** | v1 | Domain | ✅ Ready |
+| **Event Sourcing** | v1 | Domain | ✅ Ready |
+| **Repository Pattern** | v1 | Domain | ✅ Ready |
+| **CQRS** | v1 | Application | ✅ Ready |
+| **Application Architecture** | v1 | Application | ✅ Ready |
+| **Projectors/Read Models** | v1 | Application | ✅ Ready |
+| **Domain Services** | v1 | Application | ✅ Ready |
+| **Infrastructure & API** | v1 | Infrastructure | ✅ Ready |
+| **Error Handling** | v1 | Core | ✅ Ready |
+| **Testing** | v1 | Testing | ✅ Ready |
+
+Each pattern includes:
+- Pattern definition YAML in `patterns/`
+- Scoring calibration YAML in `calibration/`
+- Examples from real codebase
 
 ## 🧪 Evaluation Methodology
 

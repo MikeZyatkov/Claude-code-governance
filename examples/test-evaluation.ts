@@ -2,7 +2,7 @@
  * Test evaluation with real code using Claude Code CLI
  */
 
-import { evaluateCode, loadPattern } from '../evaluation/src/index'
+import { evaluateCode, loadPattern, loadCalibration } from '../evaluation/src/index'
 import { ClaudeCodeCLIAdapter } from '../evaluation/src/llm-judge/adapters/ClaudeCodeCLIAdapter'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -10,8 +10,9 @@ import * as path from 'path'
 async function testEvaluation() {
   console.log('=== Testing Evaluation Framework ===\n')
 
-  // Load pattern
+  // Load pattern and calibration
   const dddPattern = loadPattern('domain', 'ddd-aggregates', 'v1')
+  const dddCalibration = loadCalibration('ddd-aggregates', 'v1')
   console.log(`Loaded pattern: ${dddPattern.pattern_name} (${dddPattern.version})`)
 
   // Sample code to evaluate (from workspace project)
@@ -39,6 +40,7 @@ async function testEvaluation() {
     code,
     codePath: workspacePath,
     patterns: [dddPattern],
+    calibrations: [dddCalibration],
     checkDeterministic: false, // Skip for now (not implemented)
     checkLLMJudge: true,
     multiPassCount: 1 // Use 1 pass for faster testing, increase to 3-5 for production

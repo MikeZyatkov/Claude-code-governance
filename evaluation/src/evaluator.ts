@@ -39,9 +39,21 @@ export class CodeEvaluator {
       for (const pattern of config.patterns) {
         console.log(`  Evaluating against pattern: ${pattern.pattern_name} ${pattern.version}`)
 
+        // Find matching calibration for this pattern
+        const calibration = config.calibrations.find(
+          c => c.pattern_ref.name === pattern.pattern_name && c.pattern_ref.version === pattern.version
+        )
+
+        if (!calibration) {
+          throw new Error(
+            `No calibration found for pattern ${pattern.pattern_name} ${pattern.version}`
+          )
+        }
+
         const result = await this.llmJudge.evaluatePattern(
           config.code,
           pattern,
+          calibration,
           {
             model: config.llmModel,
             apiKey: config.llmApiKey,

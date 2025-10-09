@@ -2,10 +2,10 @@
  * Prompt builder for LLM-as-judge evaluation
  */
 
-import { Pattern, Tactic } from '../types'
+import { Pattern, Tactic, Calibration, ScoringRubric } from '../types'
 
 export class PromptBuilder {
-  buildEvaluationPrompt(code: string, pattern: Pattern): string {
+  buildEvaluationPrompt(code: string, pattern: Pattern, calibration: Calibration): string {
     return `# Code Evaluation Task
 
 You are an expert code reviewer evaluating code against established architecture patterns.
@@ -33,7 +33,7 @@ ${code}
 
 Score each tactic on a scale of 0-5 using the provided rubric:
 
-${this.formatTactics(pattern.tactics)}
+${this.formatTactics(pattern.tactics, calibration)}
 
 For each tactic, provide:
 1. Score (0-5)
@@ -79,20 +79,31 @@ Be objective and precise. Focus on observable patterns in the code, not potentia
 `
   }
 
-  private formatTactics(tactics: Tactic[]): string {
-    return tactics.map((tactic, index) => `
+  private formatTactics(tactics: Tactic[], calibration: Calibration): string {
+    return tactics.map((tactic, index) => {
+      // Find scoring rubric for this tactic in calibration
+      const tacticScoring = calibration.tactic_scoring.find(ts => ts.tactic_id === tactic.id)
+
+      if (!tacticScoring) {
+        throw new Error(`No scoring rubric found for tactic: ${tactic.id}`)
+      }
+
+      const rubric = tacticScoring.scoring_rubric
+
+      return `
 #### Tactic ${index + 1}: ${tactic.name}
 **Priority**: ${tactic.priority}
 **Description**: ${tactic.description}
 
 **Scoring Rubric**:
-- **5**: ${tactic.scoring_rubric[5]}
-- **4**: ${tactic.scoring_rubric[4]}
-- **3**: ${tactic.scoring_rubric[3]}
-- **2**: ${tactic.scoring_rubric[2]}
-- **1**: ${tactic.scoring_rubric[1]}
-- **0**: ${tactic.scoring_rubric[0]}
-`).join('\n')
+- **5**: ${rubric[5]}
+- **4**: ${rubric[4]}
+- **3**: ${rubric[3]}
+- **2**: ${rubric[2]}
+- **1**: ${rubric[1]}
+- **0**: ${rubric[0]}
+`
+    }).join('\n')
   }
 
   private formatConstraints(constraints: any[]): string {
@@ -105,8 +116,8 @@ ${constraint.exceptions.map((e: string) => `  - ${e}`).join('\n')}` : ''}
 `).join('\n')
   }
 
-  buildCalibrationPrompt(code: string, pattern: Pattern, calibrationExamples: any[]): string {
+  buildCalibrationPrompt(code: string, pattern: Pattern, calibration: Calibration, calibrationExamples: any[]): string {
     // TODO: Build prompt with calibration examples for consistency
-    return this.buildEvaluationPrompt(code, pattern)
+    return this.buildEvaluationPrompt(code, pattern, calibration)
   }
 }
