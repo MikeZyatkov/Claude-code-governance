@@ -16,7 +16,8 @@ async function testEvaluation() {
   console.log(`Loaded pattern: ${dddPattern.pattern_name} (${dddPattern.version})`)
 
   // Sample code to evaluate (from workspace project)
-  const workspacePath = path.join(__dirname, '../../workspace/contexts/tenant-management/domain/model/OccupierUser.aggregate.ts')
+  // const workspacePath = path.join(__dirname, '../../workspace/contexts/tenant-management/domain/model/OccupierUser.aggregate.ts')
+  const workspacePath = path.join(__dirname, '../evaluation/src/__tests__/fixtures/OccupierUser.aggregate.ts')
 
   let code: string
   if (fs.existsSync(workspacePath)) {
@@ -75,10 +76,16 @@ async function testEvaluation() {
     // Show tactic scores
     console.log('\n  Tactic Scores:')
     judgeResult.tactic_scores.forEach(tactic => {
-      const emoji = tactic.score >= 4 ? '✅' : tactic.score >= 3 ? '⚠️' : '❌'
-      console.log(`    ${emoji} ${tactic.tactic_name} (${tactic.priority}): ${tactic.score}/5`)
-      if (tactic.score < 3) {
+      if (tactic.score === -1) {
+        // Non-applicable tactics
+        console.log(`    ⚪ ${tactic.tactic_name} (${tactic.priority}): N/A`)
         console.log(`       ${tactic.reasoning}`)
+      } else {
+        const emoji = tactic.score >= 4 ? '✅' : tactic.score >= 3 ? '⚠️' : '❌'
+        console.log(`    ${emoji} ${tactic.tactic_name} (${tactic.priority}): ${tactic.score}/5`)
+        if (tactic.score < 3) {
+          console.log(`       ${tactic.reasoning}`)
+        }
       }
     })
 

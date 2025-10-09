@@ -148,9 +148,9 @@ export class CodeEvaluator {
 
     // LLM judge recommendations
     llmJudgeResults.forEach(result => {
-      // Low-scoring critical tactics
+      // Low-scoring critical tactics (excluding non-applicable ones)
       result.tactic_scores
-        .filter(t => t.priority === 'critical' && t.score < 3)
+        .filter(t => t.priority === 'critical' && t.score >= 0 && t.score < 3)
         .forEach(t => {
           recommendations.push(
             `🔴 Critical tactic needs improvement (${result.pattern_name}): ${t.tactic_name} (score: ${t.score}/5)`

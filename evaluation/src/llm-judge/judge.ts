@@ -189,6 +189,11 @@ export class LLMJudge {
     let totalWeight = 0
 
     for (const tactic of tacticScores) {
+      // Skip non-applicable tactics (score -1)
+      if (tactic.score === -1) {
+        continue
+      }
+
       const weight = weights[tactic.priority]
       weightedSum += tactic.score * weight
       totalWeight += weight

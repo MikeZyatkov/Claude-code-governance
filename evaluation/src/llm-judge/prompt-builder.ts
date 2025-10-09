@@ -51,8 +51,15 @@ Score each tactic on a scale of 0-5 using the provided rubric:
 ${this.formatTactics(pattern.tactics, calibration)}
 
 For each tactic, provide:
-1. Score (0-5)
+1. Score (0-5, or -1 if not applicable)
 2. Brief reasoning (2-3 sentences)
+
+**IMPORTANT**: If a tactic is not applicable to the code being evaluated (e.g., entity-related tactics when there are no child entities), use a score of **-1** and explain why it's not applicable in the reasoning. Non-applicable tactics will be excluded from scoring calculations.
+
+Examples of non-applicable tactics:
+- "Define entities within aggregate using Entity base class" when the aggregate has no child entities
+- "Keep entity collections private" when there are no entity collections
+- "Route child entity events" when there are no child entities
 
 ### Part 2: Evaluate Constraints
 
