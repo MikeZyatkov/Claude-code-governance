@@ -16,7 +16,7 @@ async function testEvaluation() {
   console.log(`Loaded pattern: ${dddPattern.pattern_name} (${dddPattern.version})`)
 
   // Sample code to evaluate (from workspace project)
-  const workspacePath = path.join(__dirname, '../../workspace/contexts/tenant-management/domain/model/Occupier.aggregate.ts')
+  const workspacePath = path.join(__dirname, '../../workspace/contexts/tenant-management/domain/model/OccupierUser.aggregate.ts')
 
   let code: string
   if (fs.existsSync(workspacePath)) {
@@ -28,6 +28,17 @@ async function testEvaluation() {
   }
 
   console.log(`Code length: ${code.length} characters\n`)
+
+  // Load implementation plan if available
+  const implementationPlanPath = path.join(__dirname, '../../workspace/IMPLEMENTATION_PLAN.md')
+  let implementationPlan: string | undefined
+  if (fs.existsSync(implementationPlanPath)) {
+    console.log(`Loading implementation plan from: ${implementationPlanPath}`)
+    implementationPlan = fs.readFileSync(implementationPlanPath, 'utf8')
+    console.log(`Implementation plan length: ${implementationPlan.length} characters\n`)
+  } else {
+    console.log('No implementation plan found - evaluation will proceed without it\n')
+  }
 
   // Create CLI adapter
   const cliAdapter = new ClaudeCodeCLIAdapter()
@@ -43,7 +54,8 @@ async function testEvaluation() {
     calibrations: [dddCalibration],
     checkDeterministic: false, // Skip for now (not implemented)
     checkLLMJudge: true,
-    multiPassCount: 1 // Use 1 pass for faster testing, increase to 3-5 for production
+    multiPassCount: 1, // Use 1 pass for faster testing, increase to 3-5 for production
+    implementationPlan // Pass the implementation plan for context
   })
 
   // Display results

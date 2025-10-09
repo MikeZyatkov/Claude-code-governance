@@ -13,6 +13,7 @@ interface JudgeOptions {
   apiKey?: string
   multiPassCount?: number
   adapter?: ILLMAdapter
+  implementationPlan?: string
 }
 
 export class LLMJudge {
@@ -55,7 +56,7 @@ export class LLMJudge {
     adapter: ILLMAdapter,
     options: JudgeOptions
   ): Promise<LLMJudgeResult> {
-    const prompt = this.promptBuilder.buildEvaluationPrompt(code, pattern, calibration)
+    const prompt = this.promptBuilder.buildEvaluationPrompt(code, pattern, calibration, options.implementationPlan)
 
     try {
       // Use adapter to complete the prompt

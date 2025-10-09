@@ -57,7 +57,8 @@ export class CodeEvaluator {
           {
             model: config.llmModel,
             apiKey: config.llmApiKey,
-            multiPassCount: config.multiPassCount || 3
+            multiPassCount: config.multiPassCount || 3,
+            implementationPlan: config.implementationPlan
           }
         )
 

@@ -128,6 +128,7 @@ export interface EvaluationConfig {
   llmModel?: string
   llmApiKey?: string
   multiPassCount?: number // For consistency (default: 3)
+  implementationPlan?: string // Optional implementation plan for context
 }
 
 export interface CalibrationExample {

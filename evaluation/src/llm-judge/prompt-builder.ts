@@ -5,7 +5,22 @@
 import { Pattern, Tactic, Calibration, ScoringRubric } from '../types'
 
 export class PromptBuilder {
-  buildEvaluationPrompt(code: string, pattern: Pattern, calibration: Calibration): string {
+  buildEvaluationPrompt(code: string, pattern: Pattern, calibration: Calibration, implementationPlan?: string): string {
+    const implementationPlanSection = implementationPlan ? `
+## Implementation Plan (What Was Supposed to Be Implemented)
+
+${implementationPlan}
+
+**IMPORTANT**: Use this implementation plan to understand what was supposed to be implemented. When evaluating the code:
+- Check if all planned features are actually implemented
+- Verify that planned event registrations are present
+- Confirm that planned methods and fields exist
+- Look for any regressions or missing implementations
+
+If the implementation plan specifies certain events should be registered, methods should exist, or specific functionality should be present, and you don't see them in the code, this is a critical issue that should result in low scores for relevant tactics.
+
+` : ''
+
     return `# Code Evaluation Task
 
 You are an expert code reviewer evaluating code against established architecture patterns.
@@ -20,7 +35,7 @@ ${pattern.goal}
 
 ### Guiding Policy
 ${pattern.guiding_policy}
-
+${implementationPlanSection}
 ## Code to Evaluate
 
 \`\`\`typescript
@@ -116,8 +131,8 @@ ${constraint.exceptions.map((e: string) => `  - ${e}`).join('\n')}` : ''}
 `).join('\n')
   }
 
-  buildCalibrationPrompt(code: string, pattern: Pattern, calibration: Calibration, calibrationExamples: any[]): string {
+  buildCalibrationPrompt(code: string, pattern: Pattern, calibration: Calibration, calibrationExamples: any[], implementationPlan?: string): string {
     // TODO: Build prompt with calibration examples for consistency
-    return this.buildEvaluationPrompt(code, pattern, calibration)
+    return this.buildEvaluationPrompt(code, pattern, calibration, implementationPlan)
   }
 }
