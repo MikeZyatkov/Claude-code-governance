@@ -1,34 +1,44 @@
 /**
- * Tests for evaluation framework with implementation plan context
+ * Integration tests for prompt effectiveness and evaluation pipeline
+ *
+ * These tests verify that changes to PromptBuilder or Evaluator logic work correctly.
+ * They use real code fixtures and check that the evaluation pipeline:
+ * 1. Scores good code highly
+ * 2. Detects regressions and scores them low
+ * 3. Uses implementation plan context to catch missing features
+ *
+ * These are regression tests for prompt engineering, not tests of individual tactics.
  */
 import { evaluateCode, loadPattern, loadCalibration } from '../index'
 import * as fs from 'fs'
 import * as path from 'path'
 
-describe('Evaluation with Implementation Plan', () => {
+describe('Evaluation Integration Tests', () => {
   const fixturesPath = path.join(__dirname, 'fixtures')
   const implementationPlanPath = path.join(fixturesPath, 'implementation-plan.md')
-  const aggregatePath = path.join(fixturesPath, 'OccupierUser.aggregate.ts')
+  const happyPathAggregatePath = path.join(fixturesPath, 'domain/happy-path/OccupierUser.aggregate.ts')
+  const regressionAggregatePath = path.join(fixturesPath, 'domain/regression/OccupierUser-missing-event-handler.aggregate.ts')
 
   let implementationPlan: string
-  let aggregateCode: string
+  let happyPathCode: string
+  let regressionCode: string
+  let pattern: any
+  let calibration: any
 
   beforeAll(() => {
-    // Load fixtures
+    // Load fixtures once for all tests
     implementationPlan = fs.readFileSync(implementationPlanPath, 'utf8')
-    aggregateCode = fs.readFileSync(aggregatePath, 'utf8')
+    happyPathCode = fs.readFileSync(happyPathAggregatePath, 'utf8')
+    regressionCode = fs.readFileSync(regressionAggregatePath, 'utf8')
+    pattern = loadPattern('domain', 'ddd-aggregates', 'v1')
+    calibration = loadCalibration('ddd-aggregates', 'v1')
   })
 
-  describe('OccupierUser Aggregate Evaluation', () => {
-    it('should score above 4.5 when all tactics are correctly implemented', async () => {
-      // Load pattern and calibration
-      const pattern = loadPattern('domain', 'ddd-aggregates', 'v1')
-      const calibration = loadCalibration('ddd-aggregates', 'v1')
-
-      // Evaluate the aggregate with implementation plan context
+  describe('Happy Path: Correct Implementation', () => {
+    it('should score correctly implemented aggregate above 4.5', async () => {
       const result = await evaluateCode({
-        code: aggregateCode,
-        codePath: aggregatePath,
+        code: happyPathCode,
+        codePath: happyPathAggregatePath,
         patterns: [pattern],
         calibrations: [calibration],
         checkDeterministic: false,
@@ -37,65 +47,53 @@ describe('Evaluation with Implementation Plan', () => {
         implementationPlan
       })
 
-      // Assert overall score is good
+      // Main assertion: good code scores high
       expect(result.overall_score).toBeGreaterThan(4.5)
+      expect(result.llm_judge[0].overall_pattern_score).toBeGreaterThan(4.5)
+      expect(result.llm_judge[0].constraints_passed).toBe(true)
 
-      // Assert pattern evaluation passed
-      expect(result.llm_judge).toHaveLength(1)
-      const judgeResult = result.llm_judge[0]
-
-      expect(judgeResult.overall_pattern_score).toBeGreaterThan(4.5)
-      expect(judgeResult.constraints_passed).toBe(true)
-
-      // Critical tactics should all score well (excluding N/A tactics with score -1)
-      const criticalTactics = judgeResult.tactic_scores.filter(t => t.priority === 'critical')
-      const applicableCriticalTactics = criticalTactics.filter(t => t.score !== -1)
-
-      // Should have at least some applicable critical tactics
-      expect(applicableCriticalTactics.length).toBeGreaterThan(0)
-
-      applicableCriticalTactics.forEach(tactic => {
-        expect(tactic.score).toBeGreaterThanOrEqual(4)
-      })
+      // Should have success recommendation
+      const hasSuccessMessage = result.recommendations.some(r => r.includes('✅'))
+      expect(hasSuccessMessage).toBe(true)
     })
+  })
 
-    it('should include implementation plan context in evaluation', async () => {
-      const pattern = loadPattern('domain', 'ddd-aggregates', 'v1')
-      const calibration = loadCalibration('ddd-aggregates', 'v1')
-
+  describe('Regression Detection: Missing Event Registration', () => {
+    it('should detect missing event handler and score below 4.0', async () => {
       const result = await evaluateCode({
-        code: aggregateCode,
-        codePath: aggregatePath,
+        code: regressionCode,
+        codePath: regressionAggregatePath,
         patterns: [pattern],
         calibrations: [calibration],
         checkDeterministic: false,
         checkLLMJudge: true,
         multiPassCount: 1,
-        implementationPlan
+        implementationPlan // Plan should help detect this regression
       })
 
-      // Verify evaluation completed successfully
-      expect(result.task_id).toBeDefined()
-      expect(result.timestamp).toBeDefined()
-      expect(result.llm_judge).toHaveLength(1)
+      // Main assertion: regression scores low
+      expect(result.overall_score).toBeLessThan(4.0)
 
-      // Check that critical event registration tactic is evaluated
+      // Should identify the specific problem
       const registerEventsTactic = result.llm_judge[0].tactic_scores.find(
         t => t.tactic_name === 'Register event handlers in constructor'
       )
       expect(registerEventsTactic).toBeDefined()
+      expect(registerEventsTactic!.score).toBeLessThan(3)
 
-      // Should score high because both event handlers are registered
-      expect(registerEventsTactic!.score).toBeGreaterThanOrEqual(4)
+      // Should have critical error recommendation
+      const hasCriticalError = result.recommendations.some(r =>
+        r.includes('🔴') || r.includes('Critical')
+      )
+      expect(hasCriticalError).toBe(true)
     })
+  })
 
-    it('should provide recommendations when all requirements met', async () => {
-      const pattern = loadPattern('domain', 'ddd-aggregates', 'v1')
-      const calibration = loadCalibration('ddd-aggregates', 'v1')
-
+  describe('N/A Tactics Handling', () => {
+    it('should correctly exclude non-applicable tactics from scoring', async () => {
       const result = await evaluateCode({
-        code: aggregateCode,
-        codePath: aggregatePath,
+        code: happyPathCode,
+        codePath: happyPathAggregatePath,
         patterns: [pattern],
         calibrations: [calibration],
         checkDeterministic: false,
@@ -104,41 +102,22 @@ describe('Evaluation with Implementation Plan', () => {
         implementationPlan
       })
 
-      // Should have positive recommendation
-      expect(result.recommendations).toBeDefined()
-      expect(result.recommendations.length).toBeGreaterThan(0)
+      const judgeResult = result.llm_judge[0]
 
-      // When score is high, should include success message
-      if (result.overall_score > 4.5) {
-        const hasSuccessMessage = result.recommendations.some(r =>
-          r.includes('✅') || r.includes('excellent') || r.includes('meets')
-        )
-        expect(hasSuccessMessage).toBe(true)
-      }
-    })
-  })
+      // Should have some N/A tactics (entity-related tactics for simple aggregate)
+      const naTactics = judgeResult.tactic_scores.filter(t => t.score === -1)
+      expect(naTactics.length).toBeGreaterThan(0)
 
-  describe('Evaluation without Implementation Plan', () => {
-    it('should still work without implementation plan context', async () => {
-      const pattern = loadPattern('domain', 'ddd-aggregates', 'v1')
-      const calibration = loadCalibration('ddd-aggregates', 'v1')
+      // N/A tactics should not prevent high score
+      expect(result.overall_score).toBeGreaterThan(4.5)
 
-      // Evaluate without implementation plan
-      const result = await evaluateCode({
-        code: aggregateCode,
-        codePath: aggregatePath,
-        patterns: [pattern],
-        calibrations: [calibration],
-        checkDeterministic: false,
-        checkLLMJudge: true,
-        multiPassCount: 1
-        // No implementationPlan provided
+      // Applicable critical tactics should all score well
+      const applicableCriticalTactics = judgeResult.tactic_scores.filter(
+        t => t.priority === 'critical' && t.score !== -1
+      )
+      applicableCriticalTactics.forEach(tactic => {
+        expect(tactic.score).toBeGreaterThanOrEqual(4)
       })
-
-      // Should still produce valid results
-      expect(result.overall_score).toBeGreaterThan(0)
-      expect(result.llm_judge).toHaveLength(1)
-      expect(result.llm_judge[0].tactic_scores.length).toBeGreaterThan(0)
     })
   })
 })

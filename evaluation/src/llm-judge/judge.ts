@@ -114,7 +114,17 @@ export class LLMJudge {
     const constraintsPassed = constraintChecks.every(
       c => c.status === 'PASS' || c.status === 'EXCEPTION_ALLOWED'
     )
-    const overallScore = (tacticsScore * 0.7) + (constraintsPassed ? 5 : 0) * 0.3
+
+    // Apply critical tactic penalty: if any critical tactic scores < 3, cap the overall score
+    const failingCriticalTactics = tacticScores.filter(t => t.priority === 'critical' && t.score >= 0 && t.score < 3)
+    let overallScore = (tacticsScore * 0.7) + (constraintsPassed ? 5 : 0) * 0.3
+
+    if (failingCriticalTactics.length > 0) {
+      // Cap score based on lowest critical tactic: score can't exceed 3.0 + (lowest_critical_score * 0.5)
+      const lowestCriticalScore = Math.min(...failingCriticalTactics.map(t => t.score))
+      const scoreCap = 3.0 + (lowestCriticalScore * 0.5)
+      overallScore = Math.min(overallScore, scoreCap)
+    }
 
     return {
       pattern_name: pattern.pattern_name,
@@ -164,7 +174,17 @@ export class LLMJudge {
     // Calculate aggregate scores
     const tacticsScore = this.calculateTacticsScore(tacticScores)
     const constraintsPassed = constraintChecks.every(c => c.status === 'PASS' || c.status === 'EXCEPTION_ALLOWED')
-    const overallScore = (tacticsScore * 0.7) + (constraintsPassed ? 5 : 0) * 0.3
+
+    // Apply critical tactic penalty: if any critical tactic scores < 3, cap the overall score
+    const failingCriticalTactics = tacticScores.filter(t => t.priority === 'critical' && t.score >= 0 && t.score < 3)
+    let overallScore = (tacticsScore * 0.7) + (constraintsPassed ? 5 : 0) * 0.3
+
+    if (failingCriticalTactics.length > 0) {
+      // Cap score based on lowest critical tactic: score can't exceed 3.0 + (lowest_critical_score * 0.5)
+      const lowestCriticalScore = Math.min(...failingCriticalTactics.map(t => t.score))
+      const scoreCap = 3.0 + (lowestCriticalScore * 0.5)
+      overallScore = Math.min(overallScore, scoreCap)
+    }
 
     return {
       pattern_name: pattern.pattern_name,
