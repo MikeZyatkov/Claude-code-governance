@@ -7,6 +7,12 @@
   "scripts": {
     "build": "cd evaluation && tsc",
     "test": "cd evaluation && jest",
+    "test:watch": "cd evaluation && jest --watch",
+    "benchmark": "jest benchmarks/ --verbose",
+    "benchmark:ddd": "jest benchmarks/ddd-aggregates",
+    "benchmark:cqrs": "jest benchmarks/cqrs",
+    "benchmark:all": "jest benchmarks/",
+    "benchmark:compare": "jest benchmarks/ --testNamePattern='version comparison'",
     "lint": "eslint . --ext .ts",
     "type-check": "cd evaluation && tsc --noEmit",
     "evaluate": "node evaluation/dist/cli.js",
@@ -32,8 +38,8 @@
   "license": "UNLICENSED",
   "private": true,
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/node": "^20.0.0",
-    "@types/jest": "^29.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.0.0",
@@ -43,9 +49,9 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "yaml": "^2.3.4",
+    "commander": "^11.1.0",
     "glob": "^10.3.10",
-    "commander": "^11.1.0"
+    "yaml": "^2.3.4"
   },
   "repository": {
     "type": "git",

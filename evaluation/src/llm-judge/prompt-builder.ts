@@ -74,7 +74,9 @@ For each constraint, provide:
 
 ## Output Format
 
-Provide your evaluation as a JSON object with this structure:
+**CRITICAL**: You MUST respond with ONLY a JSON code block. Do not include explanatory text, summaries, or markdown formatting outside the JSON block.
+
+Your response should be exactly this format (nothing else):
 
 \`\`\`json
 {
@@ -96,6 +98,12 @@ Provide your evaluation as a JSON object with this structure:
   "overall_reasoning": "Summary of the evaluation (2-3 sentences)"
 }
 \`\`\`
+
+**IMPORTANT**:
+- Start your response with \`\`\`json
+- Include ALL tactics and constraints in the JSON
+- End with \`\`\`
+- Do NOT add any text before or after the JSON block
 
 Be objective and precise. Focus on observable patterns in the code, not potential improvements.
 `

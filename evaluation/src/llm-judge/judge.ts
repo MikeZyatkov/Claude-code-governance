@@ -78,20 +78,47 @@ export class LLMJudge {
   }
 
   private parseEvaluationResponse(content: string): any {
-    // Try to extract JSON from markdown code block
-    const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/)
-    const jsonText = jsonMatch ? jsonMatch[1] : content
+    // Try multiple patterns for JSON code blocks (handles various LLM response formats)
+    const patterns = [
+      /```json\s*\n([\s\S]*?)\n```/,      // Standard: ```json\n...\n```
+      /```json\s*([\s\S]*?)```/,           // No newlines: ```json...```
+      /```\s*\n([\s\S]*?)\n```/,           // Plain code block: ```\n...\n```
+      /```\s*([\s\S]*?)```/                // Plain no newlines: ```...```
+    ]
 
-    try {
-      return JSON.parse(jsonText)
-    } catch (error) {
-      // If parsing fails, try to find JSON object in the text
-      const objectMatch = content.match(/\{[\s\S]*\}/)
-      if (objectMatch) {
-        return JSON.parse(objectMatch[0])
+    for (const pattern of patterns) {
+      const match = content.match(pattern)
+      if (match) {
+        try {
+          return JSON.parse(match[1].trim())
+        } catch (error) {
+          // Try next pattern
+          continue
+        }
       }
-      throw new Error(`Failed to parse evaluation response: ${error}`)
     }
+
+    // Try parsing the whole content as JSON
+    try {
+      return JSON.parse(content.trim())
+    } catch (error) {
+      // Continue to last resort
+    }
+
+    // Last resort: extract JSON object from anywhere in the text
+    const objectMatch = content.match(/\{[\s\S]*\}/)
+    if (objectMatch) {
+      try {
+        return JSON.parse(objectMatch[0])
+      } catch (error) {
+        // Fall through to error
+      }
+    }
+
+    // Complete failure - show more context
+    throw new Error(
+      `Failed to parse evaluation response. Response starts with: "${content.substring(0, 300)}..."`
+    )
   }
 
   private mapToLLMJudgeResult(evaluation: any, pattern: Pattern): LLMJudgeResult {
