@@ -3,7 +3,7 @@
 **Enterprise governance framework for hexagonal architecture with DDD, CQRS, and Event Sourcing patterns**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/[your-username]/claude-code-governance)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/MikeZyatkov/claude-code-governance)
 
 ## 🎯 Overview
 
@@ -22,7 +22,7 @@ A comprehensive Claude Code plugin that provides:
 
 ```bash
 # Add the marketplace
-/plugin marketplace add https://github.com/[your-username]/claude-code-governance
+/plugin marketplace add https://github.com/MikeZyatkov/claude-code-governance
 
 # Install the plugin
 /plugin install claude-code-governance
@@ -31,7 +31,7 @@ A comprehensive Claude Code plugin that provides:
 #### Option 2: Direct Installation
 
 ```bash
-/plugin install https://github.com/[your-username]/claude-code-governance
+/plugin install https://github.com/MikeZyatkov/claude-code-governance
 ```
 
 ### First Feature Plan
@@ -396,8 +396,8 @@ Free to use, modify, and distribute. Attribution appreciated!
 
 ## 📬 Support
 
-- **Issues**: [GitHub Issues](https://github.com/[your-username]/claude-code-governance/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/[your-username]/claude-code-governance/discussions)
+- **Issues**: [GitHub Issues](https://github.com/MikeZyatkov/claude-code-governance/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/MikeZyatkov/claude-code-governance/discussions)
 - **Documentation**: See `docs/` directory
 
 ## 🗺️ Roadmap
@@ -423,7 +423,7 @@ Free to use, modify, and distribute. Attribution appreciated!
 
 **Maintained by**: Mikhail
 **Version**: 1.0.0
-**Repository**: https://github.com/[your-username]/claude-code-governance
-**Marketplace**: https://github.com/[your-username]/claude-code-governance
+**Repository**: https://github.com/MikeZyatkov/claude-code-governance
+**Marketplace**: https://github.com/MikeZyatkov/claude-code-governance
 
-**Get started**: `/plugin marketplace add https://github.com/[your-username]/claude-code-governance`
+**Get started**: `/plugin marketplace add https://github.com/MikeZyatkov/claude-code-governance`

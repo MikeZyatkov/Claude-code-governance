@@ -1,5 +1,5 @@
 {
-  "name": "Architecture Governance Patterns",
+  "name": "architecture-governance-patterns",
   "description": "Enterprise-grade governance framework for hexagonal architecture with DDD, CQRS, and Event Sourcing patterns",
   "owner": {
     "name": "Mikhail",
