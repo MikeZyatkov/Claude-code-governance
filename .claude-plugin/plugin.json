@@ -17,11 +17,5 @@
   ],
   "commands": [
     "./commands/plan-hex-arc.md"
-  ],
-  "files": [
-    "./patterns/**/*.yaml",
-    "./calibration/**/*.yaml",
-    "./evaluation/**/*",
-    "./docs/**/*.md"
   ]
 }
