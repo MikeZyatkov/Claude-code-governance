@@ -1,326 +1,429 @@
 # Claude Code Governance Framework
 
-**Strategy-driven architecture patterns and evaluation framework for AI-assisted development**
+**Enterprise governance framework for hexagonal architecture with DDD, CQRS, and Event Sourcing patterns**
 
-## 🎯 Purpose
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/[your-username]/claude-code-governance)
 
-This repository provides:
+## 🎯 Overview
 
-1. **Architecture Patterns** - Codified best practices using a strategy-driven framework (goal → guiding policy → tactics → constraints)
-2. **Evaluation Framework** - Assess AI-generated code quality using deterministic checks + LLM-as-judge
-3. **Custom Agents** - Specialized Claude Code agents for pattern advice, code review, and refactoring
-4. **Slash Commands** - Custom commands for pattern evaluation and analysis
+A comprehensive Claude Code plugin that provides:
+
+- **Pattern-Based Planning** - Generate implementation plans following proven architectural patterns
+- **Quality Governance** - Enforce DDD/CQRS/Event Sourcing standards across your team
+- **Strategy-Driven Framework** - Goal → Guiding Policy → Tactics → Constraints structure
+- **11+ Battle-Tested Patterns** - Domain, Application, Infrastructure, and Core patterns
+
+## 🚀 Quick Start
+
+### Installation
+
+#### Option 1: Via Marketplace (Recommended)
+
+```bash
+# Add the marketplace
+/plugin marketplace add https://github.com/[your-username]/claude-code-governance
+
+# Install the plugin
+/plugin install claude-code-governance
+```
+
+#### Option 2: Direct Installation
+
+```bash
+/plugin install https://github.com/[your-username]/claude-code-governance
+```
+
+### First Feature Plan
+
+```bash
+# 1. Create requirements
+mkdir -p docs/my-feature
+# Edit docs/my-feature/requirements.md with your feature description
+
+# 2. Generate implementation plan
+/plan:hex-arc my-feature
+
+# 3. Review generated plan
+# Open docs/my-feature/plan.md
+```
+
+## 📚 What You Get
+
+### Available Command
+
+#### `/plan:hex-arc <feature-name>`
+
+Creates comprehensive implementation plans for hexagonal architecture features.
+
+**What it generates:**
+- ✅ Pattern compliance strategy
+- ✅ Domain layer design (aggregates, events, value objects)
+- ✅ Application layer (commands, queries, handlers, ports)
+- ✅ Infrastructure layer (API, Lambda, adapters)
+- ✅ Data strategy (Event Store + Read Models)
+- ✅ Test strategy (Given-When-Then scenarios)
+- ✅ Risk analysis and architectural decisions
+
+### Included Patterns (11 Total)
+
+#### Domain Patterns
+- **DDD Aggregates and Entities** (v1) - Consistency boundaries and invariant enforcement
+- **Value Objects** (v1) - Immutable domain types
+- **Domain Events** (v1) - Business fact capture
+- **Event Sourcing** (v1) - Event-based state persistence
+- **Repository Pattern** (v1) - Aggregate persistence abstraction
+
+#### Application Patterns
+- **CQRS** (v1) - Command/Query separation
+- **Domain Services** (v1) - Cross-aggregate coordination
+- **Projectors and Read Models** (v1) - Read model maintenance
+- **Ports and Adapters** (v1) - Hexagonal architecture boundaries
+
+#### Infrastructure Patterns
+- **Infrastructure API** (v1) - REST API design with AWS Lambda
+
+#### Core Patterns
+- **Error Handling** (v1) - Typed errors across layers
+- **Testing** (v1) - Test strategy and best practices
+
+## 💡 How It Works
+
+### 1. Create Requirements
+
+```markdown
+# docs/tenant-onboarding/requirements.md
+
+## Feature Description
+Create a tenant registration system where companies can sign up.
+
+## User Stories
+- As a company, I want to register my organization
+- As an admin, I want to validate tenant data
+
+## Technical Requirements
+- Event sourcing for audit trail
+- CQRS with CreateTenant command and GetTenant query
+- Projector for read model in RDS
+- Integration with AWS SES for emails
+```
+
+### 2. Generate Plan
+
+```bash
+/plan:hex-arc tenant-onboarding
+```
+
+### 3. Review Generated Plan
+
+The command creates `docs/tenant-onboarding/plan.md` with:
+
+**Pattern Compliance:**
+```markdown
+### DDD Aggregates and Entities v1
+
+**Why This Pattern Matters**: Tenant is the core aggregate...
+
+**Key Tactics to Follow**:
+- extend-aggregate-root: Tenant extends AggregateRoot
+- encapsulate-state: All state private with public getters
+- static-factory-creation: Tenant.create() validates and emits event
+- apply-via-events: All mutations via applyChange()
+
+**Constraints to Respect**:
+- MUST: Aggregate root MUST be only entry point for modifications
+- MUST: All state changes MUST produce domain events
+
+**Potential Risks**:
+- Risk: Direct field assignment bypasses event sourcing
+  - Mitigation: Code review, all mutations call applyChange()
+```
+
+**Domain Layer Design:**
+```typescript
+// Domain Events (pseudo-code)
+TenantCreated:
+  - tenantId: string
+  - companyName: string
+  - adminEmail: string
+  - createdAt: DateTime
+
+// Aggregate Methods
+Tenant.create(name, email) → Tenant
+  // Validates, emits TenantCreated event
+
+Tenant.activate() → void
+  // Emits TenantActivated event
+
+Tenant.isActive → boolean
+```
+
+**Plus:** Application layer, Infrastructure layer, Data strategy, Test strategy, Risk analysis
+
+### 4. Implement Following the Plan
+
+Reference pattern files during development:
+
+```bash
+# Detailed guidance in YAML files
+patterns/domain/ddd-aggregates/v1.yaml
+patterns/application/cqrs/v1.yaml
+patterns/domain/event-sourcing/v1.yaml
+```
+
+Each pattern includes:
+- **Goal** - Strategic challenge it solves
+- **Guiding Policy** - Overall approach
+- **Tactics** - Specific actions (Critical → Important → Optional)
+- **Constraints** - MUST/MUST NOT rules
+- **Anti-patterns** - Common mistakes to avoid
 
 ## 🏗️ Repository Structure
 
 ```
 claude-code-governance/
-├── patterns/              # Architecture patterns (YAML definitions)
-│   ├── core/             # Error handling
-│   ├── domain/           # DDD (aggregates, entities, value objects, events, event sourcing)
-│   ├── application/      # CQRS, projectors, domain services, app architecture
-│   └── infrastructure/   # Infrastructure & API patterns
+├── .claude-plugin/
+│   ├── plugin.json              # Plugin manifest
+│   └── marketplace.json         # Marketplace configuration
 │
-├── calibration/          # Scoring rubrics for evaluation (12 patterns)
-│   ├── ddd-aggregates/   # v1-scoring.yaml
-│   ├── cqrs/             # v1-scoring.yaml
-│   ├── value-objects/    # v1-scoring.yaml
-│   └── ...               # 9 more patterns
+├── commands/
+│   └── plan-hex-arc.md          # Planning command
 │
-├── evaluation/           # Code evaluation framework
+├── patterns/                     # Pattern definitions (YAML)
+│   ├── domain/                  # DDD patterns
+│   ├── application/             # CQRS, Services, Projectors
+│   ├── infrastructure/          # API, Adapters
+│   └── core/                    # Error Handling, Testing
+│
+├── calibration/                 # Scoring rubrics for evaluation
+│   ├── ddd-aggregates/
+│   ├── cqrs/
+│   └── ...
+│
+├── evaluation/                  # Evaluation framework (TypeScript)
 │   └── src/
-│       ├── deterministic/ # AST analysis, linting checks
-│       └── llm-judge/     # LLM-based pattern evaluation
+│       ├── evaluator.ts
+│       └── types.ts
 │
-├── scripts/              # Pattern validation commands (NEW!)
-│   ├── validate-command-handlers.ts
-│   ├── validate-aggregates.ts
-│   └── validate-all.ts
-│
-├── benchmarks/           # Standard tasks for testing pattern effectiveness
-├── agents/               # Custom Claude Code agents
-├── commands/             # Custom slash commands
-└── docs/                 # Framework documentation
+└── docs/                        # Framework documentation
+    ├── framework-overview.md
+    ├── pattern-authoring.md
+    └── benchmarking.md
 ```
 
-## 🚀 Quick Start
+## 📖 Pattern Framework
 
-```bash
-# Install dependencies
-npm install
+Patterns follow a **strategy-driven structure**:
 
-# Validate all patterns in your codebase
-npm run validate:all
-
-# Or validate specific patterns
-npm run validate:commands      # CQRS Command Handlers
-npm run validate:queries       # CQRS Query Handlers
-npm run validate:aggregates    # DDD Aggregates + Event Sourcing
-npm run validate:value-objects # Value Objects
-npm run validate:projectors    # Read Model Projectors
-```
-
-See [scripts/README.md](scripts/README.md) for detailed usage.
-
-## 📦 Installation
-
-### As NPM Package (Recommended for multiple teams)
-
-```bash
-npm install @essensys/claude-patterns --save-dev
-```
-
-### As Git Submodule (For single project)
-
-```bash
-git submodule add https://github.com/essensys/claude-code-governance.git .claude-patterns
-```
-
-## 💡 Usage
-
-### 1. Using Patterns for Code Generation
-
-Add to your project's `CLAUDE.md`:
-
-```markdown
-## Architecture Patterns
-
-Follow patterns from @essensys/claude-patterns:
-- [DDD Aggregates v1](https://github.com/essensys/claude-code-governance/blob/main/patterns/domain/ddd-aggregates/v1.yaml)
-- [CQRS v1](https://github.com/essensys/claude-code-governance/blob/main/patterns/application/cqrs/v1.yaml)
-```
-
-Then prompt Claude Code:
-
-```
-Implement a new "UpdateOccupier" feature following:
-- DDD Aggregates (v1)
-- CQRS (v1)
-
-Requirements: ...
-```
-
-### 2. Evaluating Generated Code
-
-```typescript
-import { evaluateCode } from '@essensys/claude-patterns/evaluation'
-import { dddAggregatesV1, cqrsV1 } from '@essensys/claude-patterns/patterns'
-
-const result = await evaluateCode({
-  code: generatedCode,
-  patterns: [dddAggregatesV1, cqrsV1],
-  checkDeterministic: true,
-  checkLLMJudge: true
-})
-
-console.log(`Overall Score: ${result.overall_score}/5`)
-console.log(`Tactics Score: ${result.llm_judge.tactics_score}/5`)
-console.log(`Constraints Passed: ${result.llm_judge.constraints_passed}`)
-```
-
-## 📚 Pattern Framework
-
-Patterns and scoring are separated for clarity:
-
-### Pattern Structure
 ```yaml
 pattern_name: "Pattern Name"
 version: "v1"
+domain: "Layer/Concern"
 
 goal: |
-  Strategic challenge this pattern addresses
+  What strategic challenge this pattern solves
 
 guiding_policy: |
   Overall approach to achieving the goal
 
 tactics:
-  - id: "stable-tactic-identifier"  # Stable ID for linking to scoring
-    name: "Specific implementation action"
-    priority: critical|important|optional
+  - id: "stable-identifier"       # Stable ID for linking
+    name: "Actionable tactic name"
+    priority: critical | important | optional
     description: "What to do"
 
 constraints:
   - rule: "MUST/MUST NOT statement"
+    description: "Explanation"
     exceptions: ["Valid exception cases"]
-    evaluation: "deterministic|llm_judge"
+    evaluation: "deterministic | llm_judge"
+
+anti_patterns:
+  - name: "Anti-pattern name"
+    description: "What to avoid and why"
+
+related_patterns:
+  - "Related Pattern"
+
+references:
+  - "Book/Article reference"
 ```
 
-### Calibration Structure
+### Why This Structure?
+
+Based on **Richard Rumelt's Good Strategy/Bad Strategy**:
+
+1. **Goal** (Diagnosis) - What problem are we solving?
+2. **Guiding Policy** (Policy) - What's our approach?
+3. **Tactics** (Coherent Actions) - What specific actions?
+4. **Constraints** - What rules must we follow?
+
+This ensures:
+- ✅ Architectural consistency
+- ✅ Clear rationale for decisions
+- ✅ Measurable quality standards
+- ✅ Team scalability
+
+## 🎓 Example: DDD Aggregates Pattern
+
 ```yaml
-# calibration/{pattern-name}/v1-scoring.yaml
-pattern_ref:
-  name: "Pattern Name"
-  version: "v1"
+goal: |
+  Maintain consistency boundaries and enforce business invariants within
+  a cluster of related domain objects. Ensure state changes are atomic,
+  trackable, and valid according to business rules.
 
-tactic_scoring:
-  - tactic_id: "stable-tactic-identifier"  # Links to tactic by ID
-    scoring_rubric:
-      5: "Excellent implementation"
-      3: "Acceptable implementation"
-      1: "Poor implementation"
+guiding_policy: |
+  Define clear aggregate boundaries where one object (Aggregate Root)
+  acts as the consistency guardian. All modifications must go through
+  the root, which validates invariants before applying changes via events.
+
+tactics:
+  - id: "extend-aggregate-root"
+    priority: critical
+    description: "Aggregate roots extend AggregateRoot from es-aggregates"
+
+  - id: "encapsulate-state"
+    priority: critical
+    description: "All state private (prefix _), expose via getters only"
+
+  - id: "apply-via-events"
+    priority: critical
+    description: "All mutations via applyChange(), never direct assignment"
+
+constraints:
+  - rule: "Aggregate root MUST be only entry point for modifications"
+    exceptions: []
+    evaluation: "llm_judge"
+
+  - rule: "All state changes MUST produce domain events"
+    exceptions:
+      - "Event handlers can assign directly to private fields"
+    evaluation: "llm_judge"
 ```
 
-**Why separate?** Patterns focus on "what to do" for both generation and evaluation, while calibrations define "how to score" only for evaluation. This keeps patterns clean and allows scoring to evolve independently.
-
-## 📊 Available Patterns (12 Total)
-
-| Pattern | Version | Category | Status |
-|---------|---------|----------|--------|
-| **DDD Aggregates** | v1 | Domain | ✅ Ready |
-| **Value Objects** | v1 | Domain | ✅ Ready |
-| **Domain Events** | v1 | Domain | ✅ Ready |
-| **Event Sourcing** | v1 | Domain | ✅ Ready |
-| **Repository Pattern** | v1 | Domain | ✅ Ready |
-| **CQRS** | v1 | Application | ✅ Ready |
-| **Application Architecture** | v1 | Application | ✅ Ready |
-| **Projectors/Read Models** | v1 | Application | ✅ Ready |
-| **Domain Services** | v1 | Application | ✅ Ready |
-| **Infrastructure & API** | v1 | Infrastructure | ✅ Ready |
-| **Error Handling** | v1 | Core | ✅ Ready |
-| **Testing** | v1 | Testing | ✅ Ready |
-
-Each pattern includes:
-- Pattern definition YAML in `patterns/`
-- Scoring calibration YAML in `calibration/`
-- Examples from real codebase
-
-## 🧪 Evaluation Methodology
-
-### Deterministic Checks
-- ✅ Unit tests passing
-- ✅ Linting compliance
-- ✅ Type checking
-- ✅ AST-based constraint validation
-- ✅ Security scans
-
-### LLM-as-Judge Scoring
-- **Tactics**: 0-5 score per tactic using calibration rubrics (weighted by priority)
-- **Constraints**: PASS/FAIL/EXCEPTION_ALLOWED
-- **Consistency**: Multiple passes with median aggregation
-- **Linkage**: Tactic IDs ensure scoring rubrics match pattern tactics
-
-### Score Aggregation
-
-```
-tactics_score = Σ(tactic_score × weight) / Σ(weight)
-  where weight = {critical: 3.0, important: 2.0, optional: 1.0}
-
-pattern_score = (tactics_score × 0.7) + (constraints_passed × 0.3)
-
-overall_score = (deterministic × 0.3) + (Σ(pattern_scores) × 0.7)
-```
-
-## 🔄 Pattern Evolution
-
-Patterns and calibrations are versioned for evolutionary tracking:
+## 🔮 Future Commands (Roadmap)
 
 ```bash
-# Update pattern
-cp patterns/domain/ddd-aggregates/v1.yaml patterns/domain/ddd-aggregates/v2.yaml
-cp calibration/ddd-aggregates/v1-scoring.yaml calibration/ddd-aggregates/v2-scoring.yaml
-# Edit v2.yaml and v2-scoring.yaml with improvements
+# Evaluate code quality
+/evaluate:hex-arc path/to/Aggregate.ts --pattern=ddd-aggregates
 
-# Test impact
-npm run evaluate -- --pattern=ddd-aggregates-v1 --benchmark=all
-npm run evaluate -- --pattern=ddd-aggregates-v2 --benchmark=all
+# List available patterns
+/list:patterns [category]
 
-# Compare results
-npm run pattern-diff v1 v2
+# Run benchmarks
+/benchmark:patterns
 ```
 
-**Best Practice**: Change one pattern at a time to measure impact clearly. You can also refine just the scoring rubrics in calibration files without changing the pattern itself.
+## 📚 Documentation
 
-## 🤖 Custom Agents
+- **[QUICKSTART.md](./QUICKSTART.md)** - Get started in 5 minutes
+- **[MARKETPLACE.md](./MARKETPLACE.md)** - Marketplace details and all plugins
+- **[PLUGIN.md](./PLUGIN.md)** - Full plugin documentation
+- **[Framework Overview](./docs/framework-overview.md)** - Philosophy and architecture
+- **[Pattern Authoring](./docs/pattern-authoring.md)** - Create your own patterns
+- **[Benchmarking Guide](./docs/benchmarking.md)** - Measure pattern effectiveness
 
-### Pattern Advisor
-```bash
-claude-code /pattern-advisor "Implement user authentication with JWT"
-```
-Suggests applicable patterns based on task description.
+## 🤝 Contributing
 
-### Code Reviewer
-```bash
-claude-code /review-against-patterns --files=src/
-```
-Reviews code against active patterns, provides score and suggestions.
-
-### Refactoring Agent
-```bash
-claude-code /refactor-to-pattern --pattern=ddd-aggregates-v1 --file=User.ts
-```
-Refactors code to match specified pattern.
-
-## 📖 Documentation
-
-- [Framework Overview](docs/framework-overview.md)
-- [Pattern Authoring Guide](docs/pattern-authoring.md)
-- [Evaluation Guide](docs/evaluation-guide.md)
-- [Benchmarking Guide](docs/benchmarking.md)
-
-## 🧑‍💻 Contributing
+Contributions welcome! Here's how:
 
 ### Adding New Patterns
 
-1. Create pattern file: `patterns/{category}/{pattern-name}/v1.yaml`
-2. Define all fields: goal, guiding_policy, tactics (with stable IDs), constraints
-3. Create calibration file: `calibration/{pattern-name}/v1-scoring.yaml`
-4. Add scoring rubrics (0-5 scale with explicit criteria) linked to tactic IDs
-5. Specify constraint evaluation method
-6. Test on existing codebase examples
-7. Submit PR with pattern + calibration + test results
+1. Create pattern: `patterns/{category}/{name}/v1.yaml`
+2. Create calibration: `calibration/{name}/v1-scoring.yaml`
+3. Pattern automatically discovered by commands (dynamic discovery)
+4. Test on real code
+5. Submit PR
+
+### Improving Commands
+
+1. Fork the repository
+2. Create feature branch
+3. Update command in `commands/`
+4. Test locally with `/plugin install /path/to/fork`
+5. Submit PR
 
 ### Pattern Review Checklist
 
 - [ ] Goal clearly states strategic challenge
-- [ ] Guiding policy provides conceptual framework
-- [ ] All tactics have stable IDs, priorities, and clear descriptions
-- [ ] Calibration file exists with scoring rubrics for all tactic IDs
-- [ ] Constraints have exceptions listed
-- [ ] Evaluation method specified (deterministic vs LLM)
-- [ ] Tested on ≥3 real codebase examples
-- [ ] Related patterns and anti-patterns documented
+- [ ] Guiding policy provides coherent approach
+- [ ] All tactics have stable IDs and clear priorities
+- [ ] Calibration rubrics exist for all tactics
+- [ ] Constraints list exceptions explicitly
+- [ ] Tested on ≥3 real code examples
+
+## 🌟 Why Use This Framework?
+
+### For Teams
+- **Consistency** - Everyone follows same patterns
+- **Quality** - Patterns encode proven best practices
+- **Speed** - Generated plans reduce decision paralysis
+- **Onboarding** - New developers learn patterns faster
+- **Governance** - Enforce architecture standards
+
+### For Individuals
+- **Learning** - Understand DDD/CQRS/Event Sourcing deeply
+- **Planning** - Comprehensive plans before coding
+- **Reference** - Patterns as implementation guide
+- **Quality** - Self-evaluate code against standards
 
 ## 🔬 Theoretical Foundation
 
-This framework synthesizes:
+Synthesizes:
 
-1. **Richard Rumelt's Strategy Kernel** - Diagnosis → Guiding Policy → Coherent Actions
-2. **Systems Thinking** - Constraints, feedback loops, leverage points
-3. **Formal Methods** - Explicit constraints with exceptions, checkable invariants
-
-## 📈 Roadmap
-
-**Phase 1: Foundation** (Current)
-- [x] Framework design
-- [x] DDD Aggregates pattern
-- [x] CQRS pattern
-- [ ] Evaluation harness implementation
-- [ ] Deterministic checkers
-
-**Phase 2: Core Patterns**
-- [ ] Error handling pattern
-- [ ] Security pattern
-- [ ] Logging pattern
-- [ ] Repository pattern
-
-**Phase 3: Advanced Evaluation**
-- [ ] LLM-as-judge implementation
-- [ ] Calibration examples
-- [ ] Benchmark task suite
-- [ ] A/B testing framework
-
-**Phase 4: Tooling**
-- [ ] Custom Claude Code agents
-- [ ] Slash commands
-- [ ] CI/CD integration
-- [ ] Dashboard for tracking scores
+1. **Richard Rumelt** - *Good Strategy/Bad Strategy* (strategy kernel)
+2. **Eric Evans** - *Domain-Driven Design* (tactical patterns)
+3. **Vaughn Vernon** - *Implementing Domain-Driven Design* (practical DDD)
+4. **Martin Fowler** - *Patterns of Enterprise Application Architecture*
+5. **Greg Young** - *CQRS and Event Sourcing*
 
 ## 📄 License
 
-UNLICENSED - Internal use only at essensys
+MIT License - See [LICENSE](./LICENSE)
+
+Free to use, modify, and distribute. Attribution appreciated!
+
+## 🙏 Credits
+
+**Patterns based on:**
+- Eric Evans - Domain-Driven Design
+- Vaughn Vernon - Implementing Domain-Driven Design
+- Martin Fowler - Enterprise Architecture Patterns
+- Greg Young - CQRS and Event Sourcing
+
+**Framework inspired by:**
+- Richard Rumelt - Good Strategy/Bad Strategy
+
+## 📬 Support
+
+- **Issues**: [GitHub Issues](https://github.com/[your-username]/claude-code-governance/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/[your-username]/claude-code-governance/discussions)
+- **Documentation**: See `docs/` directory
+
+## 🗺️ Roadmap
+
+### v1.0.0 (Current)
+- [x] Pattern-based planning command
+- [x] 11 architectural patterns
+- [x] Dynamic pattern discovery
+- [x] Comprehensive documentation
+
+### v1.1.0 (Next)
+- [ ] `/evaluate:hex-arc` - Code quality evaluation
+- [ ] `/list:patterns` - Pattern discovery command
+- [ ] Skills for common scaffolding tasks
+
+### v2.0.0 (Future)
+- [ ] Multiple architecture variants (Clean, Onion)
+- [ ] Microservices patterns
+- [ ] Benchmark suite
+- [ ] CI/CD integration
 
 ---
 
-**Maintained by**: essensys AI Transformation Team
+**Maintained by**: Mikhail
 **Version**: 1.0.0
-**Last Updated**: 2025-10-03
+**Repository**: https://github.com/[your-username]/claude-code-governance
+**Marketplace**: https://github.com/[your-username]/claude-code-governance
+
+**Get started**: `/plugin marketplace add https://github.com/[your-username]/claude-code-governance`

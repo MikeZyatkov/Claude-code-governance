@@ -1,0 +1,26 @@
+{
+  "name": "Architecture Governance Patterns",
+  "description": "Enterprise-grade governance framework for hexagonal architecture with DDD, CQRS, and Event Sourcing patterns",
+  "owner": {
+    "name": "Mikhail",
+    "url": "https://github.com/MikeZyatkov"
+  },
+  "plugins": [
+    {
+      "name": "claude-code-governance",
+      "source": "./",
+      "description": "Hexagonal architecture governance framework with DDD/CQRS/Event Sourcing patterns. Provides pattern-based planning, evaluation, and quality benchmarking.",
+      "version": "1.0.0",
+      "keywords": [
+        "governance",
+        "hexagonal-architecture",
+        "ddd",
+        "cqrs",
+        "event-sourcing",
+        "patterns",
+        "architecture",
+        "quality"
+      ]
+    }
+  ]
+}
