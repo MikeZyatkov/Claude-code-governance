@@ -47,10 +47,6 @@ export interface Pattern {
     name: string
     description: string
   }>
-  examples_from_codebase?: {
-    good?: string[]
-    needs_improvement?: string[]
-  }
   references?: string[]
 }
 

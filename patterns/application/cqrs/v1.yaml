@@ -128,12 +128,6 @@ anti_patterns:
   - name: "Combined Handler"
     description: "Single handler doing both reads and writes, defeating CQRS purpose"
 
-examples_from_codebase:
-  good:
-    - "contexts/tenant-management/application/commands/CreateOccupierCommandHandler.ts"
-    - "contexts/tenant-management/application/queries/GetOccupierByIdQueryHandler.ts"
-  needs_improvement: []
-
 references:
   - "Fowler, Martin. CQRS (martinfowler.com/bliki/CQRS.html)"
   - "Young, Greg. CQRS Documents"

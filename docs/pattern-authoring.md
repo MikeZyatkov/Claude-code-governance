@@ -46,8 +46,6 @@ Patterns follow the strategy-driven framework: Goal → Guiding Policy → Tacti
 
 **anti_patterns**: Common mistakes to avoid
 
-**examples_from_codebase**: Reference implementations
-
 **references**: Books, articles, documentation
 
 ## Writing the Goal
@@ -575,7 +573,6 @@ Before publishing a pattern:
 - [ ] Related patterns identified
 - [ ] Anti-patterns documented
 - [ ] References provided
-- [ ] Examples from codebase listed
 
 ## Next Steps
 

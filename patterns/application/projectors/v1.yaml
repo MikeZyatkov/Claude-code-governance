@@ -116,13 +116,6 @@ anti_patterns:
   - name: "Projector in Wrong Layer"
     description: "Projector in domain or infrastructure instead of application"
 
-examples_from_codebase:
-  good:
-    - "contexts/tenant-management/application/projectors/OccupierProjector.ts"
-    - "contexts/tenant-management/application/projectors/SiteProjector.ts"
-    - "contexts/tenant-management/application/projectors/OperatorUserProjector.ts"
-  needs_improvement: []
-
 references:
   - "Young, Greg. CQRS Documents"
   - "Vernon, Vaughn. Implementing Domain-Driven Design"

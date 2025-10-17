@@ -124,12 +124,6 @@ anti_patterns:
   - name: "Aggregate Boundary Violation"
     description: "Directly manipulating child entities from outside the aggregate"
 
-examples_from_codebase:
-  good:
-    - "contexts/tenant-management/domain/model/Occupier.aggregate.ts"
-    - "contexts/tenant-management/domain/model/Contract.entity.ts"
-  needs_improvement: []
-
 references:
   - "Evans, Eric. Domain-Driven Design: Tackling Complexity in the Heart of Software"
   - "Vernon, Vaughn. Implementing Domain-Driven Design"

@@ -121,13 +121,6 @@ anti_patterns:
   - name: "Swallowed Errors"
     description: "Catching errors without logging or re-throwing"
 
-examples_from_codebase:
-  good:
-    - "contexts/tenant-management/domain/errors/DomainError.ts"
-    - "contexts/tenant-management/application/errors/OccupierNotFoundError.ts"
-    - "contexts/tenant-management/infrastructure/mappers/DomainErrorMapper.ts"
-  needs_improvement: []
-
 references:
   - "Error Handling in TypeScript"
   - "REST API Error Response Standards"

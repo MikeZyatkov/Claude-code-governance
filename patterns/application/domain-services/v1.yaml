@@ -112,12 +112,6 @@ anti_patterns:
   - name: "Service Accessing Database Directly"
     description: "Service bypassing ports and repositories to access DB"
 
-examples_from_codebase:
-  good:
-    - "contexts/tenant-management/application/services/SpaceValidatorService.ts"
-    - "contexts/tenant-management/application/services/TimeZoneConversionService.ts"
-  needs_improvement: []
-
 references:
   - "Evans, Eric. Domain-Driven Design (Domain Services)"
   - "Vernon, Vaughn. Implementing Domain-Driven Design"

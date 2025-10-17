@@ -103,12 +103,6 @@ anti_patterns:
   - name: "Query-Rich Repository"
     description: "Repository with many query methods instead of using dedicated query handlers"
 
-examples_from_codebase:
-  good:
-    - "contexts/tenant-management/domain/repositories/IOccupierRepository.ts"
-    - "contexts/tenant-management/infrastructure/persistence/OccupierRepository.ts"
-  needs_improvement: []
-
 references:
   - "Evans, Eric. Domain-Driven Design (Repository chapter)"
   - "Vernon, Vaughn. Implementing Domain-Driven Design"

@@ -102,12 +102,6 @@ anti_patterns:
   - name: "Identity-based Equality"
     description: "Using reference equality instead of structural equality"
 
-examples_from_codebase:
-  good:
-    - "contexts/tenant-management/domain/model/OpeningTimes.vo.ts"
-    - "contexts/tenant-management/domain/model/SiteAddress.vo.ts"
-  needs_improvement: []
-
 references:
   - "Evans, Eric. Domain-Driven Design (Value Objects chapter)"
   - "Vernon, Vaughn. Implementing Domain-Driven Design"

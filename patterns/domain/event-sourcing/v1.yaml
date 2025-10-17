@@ -117,12 +117,6 @@ anti_patterns:
   - name: "Missing Factory Method"
     description: "No static factory() for event replay, breaking reconstitution"
 
-examples_from_codebase:
-  good:
-    - "contexts/tenant-management/domain/model/Occupier.aggregate.ts"
-    - "contexts/tenant-management/domain/model/OperatorUser.aggregate.ts"
-  needs_improvement: []
-
 references:
   - "Fowler, Martin. Event Sourcing (martinfowler.com)"
   - "Vernon, Vaughn. Implementing Domain-Driven Design"

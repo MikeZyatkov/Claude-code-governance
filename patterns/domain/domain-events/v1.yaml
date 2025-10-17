@@ -113,13 +113,6 @@ anti_patterns:
   - name: "Technical Events"
     description: "Events for technical concerns rather than business facts"
 
-examples_from_codebase:
-  good:
-    - "contexts/tenant-management/domain/events/OccupierCreated.ts"
-    - "contexts/tenant-management/domain/events/OccupierContractCreated.ts"
-    - "contexts/tenant-management/domain/events/OccupancyCreated.ts"
-  needs_improvement: []
-
 references:
   - "Vernon, Vaughn. Domain-Driven Design Distilled (Domain Events)"
   - "Evans, Eric. Domain-Driven Design"
