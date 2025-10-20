@@ -17,6 +17,7 @@
   ],
   "commands": [
     "./commands/plan-hex-arc.md",
-    "./commands/implement-hex-arc.md"
+    "./commands/implement-hex-arc.md",
+    "./commands/review-hex-arc.md"
   ]
 }
