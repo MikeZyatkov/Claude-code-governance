@@ -16,6 +16,7 @@
     "quality"
   ],
   "commands": [
-    "./commands/plan-hex-arc.md"
+    "./commands/plan-hex-arc.md",
+    "./commands/implement-hex-arc.md"
   ]
 }
