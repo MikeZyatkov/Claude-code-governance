@@ -47,8 +47,8 @@ Please run /plan:hex-arc {feature_name} first to create the plan.
 
 ```bash
 # Try these in order:
-# 1. Uncommitted changes
-git diff
+# 1. All uncommitted changes (staged + unstaged)
+git diff HEAD
 
 # 2. If empty, try committed changes on current branch vs main
 git diff main...HEAD
@@ -89,19 +89,16 @@ If no changes detected in either git diff:
 ⚠️ No code changes found to review
 
 Checked:
-  • Uncommitted changes (git diff)
+  • Uncommitted changes (git diff HEAD)
   • Committed changes on branch (git diff main...HEAD)
 
 Both returned empty.
 
 Next steps:
   1. Make your code changes
-  2. Stage or commit them
-  3. Run /review:hex-arc {feature_name} again
+  2. Run /review:hex-arc {feature_name} again
 
-Or if you have changes in a different location, ensure they are:
-  • In the working directory (for uncommitted changes)
-  • Committed on your current branch (for committed changes vs main)
+Note: Changes must be in your working directory (staged or unstaged) or committed on your current branch.
 ```
 
 ### Step 3: Extract Code for Each Layer
