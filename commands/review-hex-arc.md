@@ -1,6 +1,6 @@
 ---
 name: review:hex-arc
-description: Review implemented code against governance patterns using LLM-as-judge evaluation
+description: "Review hexagonal architecture code: /review:hex-arc <feature-name>"
 ---
 
 # Hexagonal Architecture Code Review

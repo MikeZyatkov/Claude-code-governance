@@ -1,6 +1,6 @@
 ---
 name: implement:hex-arc
-description: Implement a specific layer (Domain/Application/Infrastructure) following the hexagonal architecture plan
+description: "Implement hexagonal architecture layer: /implement:hex-arc <feature-name> <layer>"
 ---
 
 # Hexagonal Architecture Layer Implementation

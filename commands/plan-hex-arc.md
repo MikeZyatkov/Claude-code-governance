@@ -1,6 +1,6 @@
 ---
 name: plan:hex-arc
-description: Create implementation plan for hexagonal architecture feature following DDD/CQRS/Event Sourcing patterns
+description: "Plan hexagonal architecture feature: /plan:hex-arc <feature-name>"
 ---
 
 # Hexagonal Architecture Feature Planning
