@@ -13,13 +13,13 @@ Reviews implemented code against governance patterns using calibrated scoring ru
 /review:hex-arc <feature-name>
 ```
 
-**Auto-detects** which layers have changes and reviews them.
+**Auto-detects** which layers have uncommitted changes and reviews them.
 
 **Example**: `/review:hex-arc tenant-onboarding`
 
 ## What It Does
 
-1. **Detects changes**: Analyzes git diff to identify which layers were modified
+1. **Detects changes**: Analyzes uncommitted changes (git diff HEAD) to identify which layers were modified
 2. **Loads patterns**: Reads applicable patterns from the implementation plan
 3. **Loads calibration**: Gets scoring rubrics for each pattern
 4. **Evaluates code**: Uses LLM-as-judge with calibrated rubrics (same as evaluation framework)
@@ -43,18 +43,14 @@ Please run /plan:hex-arc {feature_name} first to create the plan.
 
 ### Step 2: Detect Changed Layers
 
-**Get git diff to identify changes:**
+**Get git diff to identify uncommitted changes:**
 
 ```bash
-# Try these in order:
-# 1. All uncommitted changes (staged + unstaged)
+# All uncommitted changes (staged + unstaged)
 git diff HEAD
-
-# 2. If empty, try committed changes on current branch vs main
-git diff main...HEAD
 ```
 
-If both return empty, no changes to review.
+If empty, no changes to review.
 
 **Map changed files to layers:**
 
@@ -65,9 +61,9 @@ Analyze file paths to determine which layers were modified:
 - Files matching custom patterns → Check plan for layer organization
 
 **Identify layers to review:**
-- If changes found in 1 layer → Review that layer
-- If changes found in multiple layers → Review all changed layers
-- If no git changes found → Ask user which layer to review
+- If uncommitted changes found in 1 layer → Review that layer
+- If uncommitted changes found in multiple layers → Review all changed layers
+- If no uncommitted changes found → Show error message
 
 Example output:
 ```
@@ -84,21 +80,20 @@ Layers identified: Domain
 Proceeding to review Domain layer...
 ```
 
-If no changes detected in either git diff:
+If no uncommitted changes detected:
 ```
-⚠️ No code changes found to review
+⚠️ No uncommitted changes found to review
 
-Checked:
-  • Uncommitted changes (git diff HEAD)
-  • Committed changes on branch (git diff main...HEAD)
+Checked: git diff HEAD (staged + unstaged changes)
 
-Both returned empty.
+Result: No changes detected
 
 Next steps:
-  1. Make your code changes
+  1. Make your code changes (or stage/unstage existing changes)
   2. Run /review:hex-arc {feature_name} again
 
-Note: Changes must be in your working directory (staged or unstaged) or committed on your current branch.
+Note: This command only reviews uncommitted changes in your working directory.
+To review committed code on your branch, compare the git diff manually or use the evaluation framework.
 ```
 
 ### Step 3: Extract Code for Each Layer
@@ -456,11 +451,16 @@ Provide a comprehensive review report:
 ### Re-review:
 After making changes, run review again:
 ```bash
-git add .
 /review:hex-arc {feature_name}
 ```
 
-Target: Score ≥ 4.0 before proceeding to next layer.
+Once quality gate is met (score ≥ 4.0):
+```bash
+git add .
+git commit -m "Implement {layer} layer for {feature_name}"
+```
+
+Target: Score ≥ 4.0 before committing.
 
 ---
 
@@ -517,7 +517,7 @@ Report structure:
 - ✅ Improvements to the prompt benefit both workflows
 
 **Auto-Detection**:
-- ✅ Git diff is the source of truth for what changed
+- ✅ Only reviews uncommitted changes (git diff HEAD)
 - ✅ Map file paths to layers intelligently
 - ✅ If ambiguous, ask user for clarification
 
