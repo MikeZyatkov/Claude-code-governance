@@ -55,6 +55,11 @@ tactics:
     priority: optional
     description: "Every adapter interface has a fake implementation in infrastructure/fakes/ for testing"
 
+  - id: "api-doc-error-lists"
+    name: "Format API error descriptions as YAML lists"
+    priority: important
+    description: "In serverless.doc.yml, format error code descriptions as readable YAML lists (using '|' multiline blocks) instead of HTML-formatted strings with <br> tags"
+
 constraints:
   - rule: "API types MUST use snake_case"
     description: "All API request and response types use snake_case field names"
@@ -76,6 +81,11 @@ constraints:
     description: "Env vars must clearly indicate what resource they reference"
     exceptions: []
     evaluation: "llm_judge"
+
+  - rule: "API documentation MUST format error lists as YAML lists"
+    description: "Error descriptions in serverless.doc.yml must use multiline YAML lists, not HTML-formatted strings"
+    exceptions: []
+    evaluation: "deterministic"
 
 related_patterns:
   - "Hexagonal Architecture"

@@ -50,7 +50,7 @@ mkdir -p docs/my-feature
 
 ## 📚 What You Get
 
-### Available Command
+### Available Commands
 
 #### `/plan:hex-arc <feature-name>`
 
@@ -64,6 +64,56 @@ Creates comprehensive implementation plans for hexagonal architecture features.
 - ✅ Data strategy (Event Store + Read Models)
 - ✅ Test strategy (Given-When-Then scenarios)
 - ✅ Risk analysis and architectural decisions
+
+#### `/implement:hex-arc <feature-name> <layer>`
+
+Implements a specific layer based on the implementation plan.
+
+**What it does:**
+- 🔨 Implements components following the plan's design
+- 🧪 Writes tests for all components
+- ✅ Verifies against governance patterns
+- 📝 Updates plan with implementation notes
+
+#### `/review:hex-arc <feature-name>`
+
+Reviews implemented code against governance patterns with automated scoring.
+
+**What it does:**
+- 🔍 Detects uncommitted changes (git diff)
+- 📊 Evaluates code with LLM-as-judge scoring
+- ⚖️ Checks pattern compliance (tactics + constraints)
+- 📋 Generates detailed review report with improvement suggestions
+
+#### `/orchestrate:hex-arc <feature-name> [--layers <list>] [--threshold <score>]`
+
+**NEW!** Orchestrates the complete implementation lifecycle with automated quality gates.
+
+**What it does:**
+- 🤖 Manages implementation → review → fix cycles automatically
+- 🎯 Enforces quality gates (default threshold: 4.5/5.0)
+- 🔄 Runs up to 3 fix iterations per layer
+- 💾 Commits each layer after passing quality gate
+- 📝 Creates detailed audit trail with issue descriptions
+- 👤 Pauses for user intervention only when needed
+
+**Example usage:**
+```bash
+# Orchestrate all layers with default threshold (4.5)
+/orchestrate:hex-arc tenant-onboarding
+
+# Orchestrate specific layers
+/orchestrate:hex-arc tenant-onboarding --layers "domain;application"
+
+# Custom quality threshold
+/orchestrate:hex-arc tenant-onboarding --threshold 4.0
+```
+
+**Quality gate criteria:**
+- Overall score ≥ threshold (default: 4.5/5.0)
+- No critical tactics with score < 4
+- No important tactics with score < 4
+- No constraint violations
 
 ### Included Patterns (11 Total)
 
@@ -89,7 +139,9 @@ Creates comprehensive implementation plans for hexagonal architecture features.
 
 ## 💡 How It Works
 
-### 1. Create Requirements
+### Workflow Option 1: Manual Control (Step-by-Step)
+
+#### 1. Create Requirements
 
 ```markdown
 # docs/tenant-onboarding/requirements.md
@@ -108,13 +160,13 @@ Create a tenant registration system where companies can sign up.
 - Integration with AWS SES for emails
 ```
 
-### 2. Generate Plan
+#### 2. Generate Plan
 
 ```bash
 /plan:hex-arc tenant-onboarding
 ```
 
-### 3. Review Generated Plan
+#### 3. Review Generated Plan
 
 The command creates `docs/tenant-onboarding/plan.md` with:
 
@@ -160,9 +212,51 @@ Tenant.isActive → boolean
 
 **Plus:** Application layer, Infrastructure layer, Data strategy, Test strategy, Risk analysis
 
-### 4. Implement Following the Plan
+#### 4. Implement Layer-by-Layer
 
-Reference pattern files during development:
+```bash
+# Implement each layer
+/implement:hex-arc tenant-onboarding domain
+/implement:hex-arc tenant-onboarding application
+/implement:hex-arc tenant-onboarding infrastructure
+```
+
+#### 5. Review Each Layer
+
+```bash
+# Review code quality after implementation
+/review:hex-arc tenant-onboarding
+```
+
+Review provides detailed scoring and actionable feedback for improvements.
+
+### Workflow Option 2: Automated Orchestration (Recommended)
+
+**One command to rule them all:**
+
+```bash
+# After creating plan, orchestrate full implementation
+/orchestrate:hex-arc tenant-onboarding
+```
+
+**What happens automatically:**
+
+1. **Domain Layer:** Implement → Review → Fix issues → Commit (✅ Score: 4.6/5.0)
+2. **Application Layer:** Implement → Review → Fix issues → Commit (✅ Score: 4.7/5.0)
+3. **Infrastructure Layer:** Implement → Review → Fix issues → Commit (✅ Score: 4.5/5.0)
+
+**Audit trail created:** `docs/tenant-onboarding/implementation-audit.md`
+
+**Benefits:**
+- ⚡ Fully automated quality gates
+- 🔄 Automatic fix cycles (up to 3 per layer)
+- 📊 Detailed audit trail with issue descriptions
+- 💾 Clean git commits with quality metrics
+- 🎯 Consistent quality across all layers
+
+### Pattern Reference During Development
+
+Reference pattern files for detailed guidance:
 
 ```bash
 # Detailed guidance in YAML files
@@ -304,14 +398,14 @@ constraints:
 ## 🔮 Future Commands (Roadmap)
 
 ```bash
-# Evaluate code quality
-/evaluate:hex-arc path/to/Aggregate.ts --pattern=ddd-aggregates
-
 # List available patterns
 /list:patterns [category]
 
 # Run benchmarks
 /benchmark:patterns
+
+# Evaluate specific file against pattern
+/evaluate:hex-arc path/to/Aggregate.ts --pattern=ddd-aggregates
 ```
 
 ## 📚 Documentation
@@ -402,15 +496,22 @@ Free to use, modify, and distribute. Attribution appreciated!
 
 ## 🗺️ Roadmap
 
-### v1.0.0 (Current)
+### v1.0.0
 - [x] Pattern-based planning command
 - [x] 11 architectural patterns
 - [x] Dynamic pattern discovery
 - [x] Comprehensive documentation
 
-### v1.1.0 (Next)
-- [ ] `/evaluate:hex-arc` - Code quality evaluation
+### v1.1.0 (Current)
+- [x] `/implement:hex-arc` - Layer implementation command
+- [x] `/review:hex-arc` - Code review with LLM-as-judge
+- [x] `/orchestrate:hex-arc` - Automated implementation lifecycle
+- [x] Audit trail with detailed issue tracking
+- [x] Quality gates with fix cycles
+
+### v1.2.0 (Next)
 - [ ] `/list:patterns` - Pattern discovery command
+- [ ] Pattern search and filtering
 - [ ] Skills for common scaffolding tasks
 
 ### v2.0.0 (Future)
