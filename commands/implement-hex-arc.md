@@ -19,369 +19,157 @@ Implements a specific layer for a feature following the implementation plan crea
 
 ## Instructions for Claude
 
-You are implementing a **specific layer** for a feature based on its implementation plan.
+### Step 1: Parse and Validate Inputs
 
-### Step 1: Validate Inputs and Locate Layer
-
-**Check plan exists:**
-- Verify `docs/{feature_name}/plan.md` exists
-
-If plan doesn't exist:
+**Parse command arguments:**
 ```
-❌ Error: Implementation plan not found
-Expected: docs/{feature_name}/plan.md
-
-Please run /plan:hex-arc {feature_name} first to create the plan.
+feature_name = first argument
+layer = second argument
 ```
 
-**Validate layer exists in plan:**
-1. Read `docs/{feature_name}/plan.md`
-2. Search for a section titled `## {Layer} Layer` (case-insensitive match)
-   - E.g., `## Domain Layer`, `## Application Layer`, `## Infrastructure Layer`
-   - Or custom layers: `## Presentation Layer`, `## Integration Layer`, etc.
-3. Check if that section has content (tasks, components to implement)
-
-If layer section not found in plan:
+If missing:
 ```
-❌ Error: Layer "{layer}" not found in implementation plan
+❌ Error: Missing required arguments
 
-Available layers in docs/{feature_name}/plan.md:
-  • Domain Layer
-  • Application Layer
-  • Infrastructure Layer
-
-Please specify one of the layers above, or update the plan to include a "{layer} Layer" section.
+Usage: /implement:hex-arc <feature-name> <layer>
+Example: /implement:hex-arc tenant-onboarding domain
 ```
 
-### Step 2: Read the Implementation Plan
+### Step 2: Invoke Implementation Engine Skill
 
-Read `docs/{feature_name}/plan.md` thoroughly:
+**Call the `implementation-engine` skill:**
 
-1. **Understand the full feature context**:
-   - Overview section
-   - Pattern Compliance strategy
-   - All layer designs (to understand dependencies)
-
-2. **Focus on the target layer**:
-   - Read the `{layer} Layer` section in detail
-   - Study the pseudo-code interfaces (these are your contracts)
-   - Note which patterns apply to this layer
-
-3. **Review Test Strategy**:
-   - Identify test scenarios for this layer
-   - Understand Given-When-Then specifications
-
-### Step 3: Review Governance Patterns
-
-**Pattern Discovery:**
-1. List all YAML files in the plugin's `patterns/` directory
-2. Read patterns that are relevant to this layer (identified in plan's "Pattern Compliance" section)
-
-**Layer-Specific Patterns:**
-- **Domain layer**: DDD Aggregates, Value Objects, Domain Events, Event Sourcing, Repository (interfaces)
-- **Application layer**: CQRS, Domain Services, Projectors, Ports (interfaces)
-- **Infrastructure layer**: Infrastructure API, Repository (implementations), Adapters
-
-**Pattern Focus:**
-For each relevant pattern, pay special attention to:
-- **Critical tactics** (priority: critical) - MUST follow these
-- **Important tactics** (priority: important) - Should follow these
-- **Constraints** with MUST/MUST NOT rules
-- **Anti-patterns** to avoid
-
-### Step 4: Explore Existing Codebase
-
-Before implementing:
-
-1. **Find similar implementations** mentioned in the plan
-   - Search for reference implementations
-   - Understand coding style and conventions
-
-2. **Review ./CLAUDE.md** for workspace conventions
-   - Naming patterns
-   - Directory structure
-   - Testing approach
-
-3. **Identify reusable components**:
-   - Existing base classes
-   - Existing utilities
-   - Existing test helpers
-
-### Step 5: Implement the Layer
-
-**Implementation Guidelines:**
-
-**Use Plan as Specification:**
-- Pseudo-code interfaces in plan are your contracts
-- Implement exactly what's specified (types, methods, return values)
-- If you need to deviate, note it for Implementation Notes section
-
-**Follow Patterns Strictly:**
-- Apply critical tactics from patterns without exception
-- Apply important tactics unless there's a strong reason not to
-- Document any deviations from patterns
-
-**Layer-Specific Implementation:**
-
-**Domain Layer:**
-- Start with Value Objects (no dependencies)
-- Then Domain Events (simple DTOs)
-- Then Aggregates (use value objects and events)
-- Repository interfaces last (reference aggregates)
-- **No infrastructure dependencies**
-
-**Application Layer:**
-- Start with Commands and Queries (simple DTOs)
-- Then Port interfaces (define external dependencies)
-- Then Command Handlers (orchestrate domain)
-- Then Query Handlers (read from repositories)
-- Then Projectors (subscribe to events)
-- Domain Services if needed (cross-aggregate logic)
-- **Depend on domain, define ports for infrastructure**
-
-**Infrastructure Layer:**
-- API types (request/response DTOs)
-- Adapter implementations (implement ports from application)
-- Repository implementations (implement domain interfaces)
-- Lambda handlers (call application handlers)
-- **Implement ports, depend on application and domain**
-
-**Code Quality:**
-- Match coding style from reference implementations
-- Use TypeScript with strict types
-- Add JSDoc comments for public APIs
-- Follow naming conventions from plan
-
-**Work Incrementally:**
-- Implement one component at a time
-- Write tests for each component before moving to next
-- Run tests frequently
-- Fix any failures before proceeding
-
-### Step 6: Write Tests
-
-Implement tests based on plan's "Test Strategy" section:
-
-**Test Layer Mapping:**
-- **Domain layer**: Unit tests (aggregate logic, value object validation)
-- **Application layer**: Integration tests (handlers with test DB, projectors)
-- **Infrastructure layer**: Component tests (API → handlers, adapters)
-
-**Test Implementation:**
-1. Create test file for each implementation file
-2. Implement Given-When-Then scenarios from plan
-3. Implement edge case tests from plan
-4. Run tests: `npm test` (or appropriate command)
-5. Verify all tests pass
-
-**Test Quality:**
-- Use descriptive test names from plan
-- Follow Given-When-Then structure
-- Use fakes for external dependencies
-- Test both happy paths and error cases
-
-### Step 7: Verify Against Patterns
-
-Before considering complete, verify:
-
-**Pattern Adherence:**
-- [ ] All critical tactics followed
-- [ ] All important tactics followed (or deviation documented)
-- [ ] All constraints satisfied
-- [ ] No anti-patterns present
-
-**Plan Adherence:**
-- [ ] All pseudo-code interfaces implemented
-- [ ] All public methods match signatures in plan
-- [ ] Return types match plan specifications
-
-**Code Quality:**
-- [ ] All tests pass
-- [ ] No linting errors
-- [ ] TypeScript compiles without errors
-- [ ] Code matches workspace conventions
-
-### Step 8: Update Implementation Plan
-
-**Update Checklist:**
-
-If the plan has a checklist for this layer, update it:
-
-```markdown
-## Implementation Checklist
-
-### Domain Layer
-- [x] Value Objects
-  - [x] EmailAddress value object
-  - [x] CompanyName value object
-- [x] Domain Events
-  - [x] TenantCreated event
-  - [x] TenantActivated event
-- [x] Aggregates
-  - [x] Tenant aggregate with create() and activate()
-- [x] Repository Interfaces
-  - [x] ITenantRepository interface
+```json
+{
+  "feature": "{feature_name}",
+  "layer": "{layer}",
+  "plan_path": "docs/{feature_name}/plan.md"
+}
 ```
 
-**Add Implementation Notes (if needed):**
+The skill will:
+- Validate plan exists and layer is in plan
+- Load implementation plan details
+- Load governance patterns
+- Explore codebase for conventions
+- Implement components following patterns
+- Write tests
+- Verify pattern compliance
+- Return structured result
 
-If you deviated from the plan, add this section at the end of plan.md:
+### Step 3: Handle Result
 
-```markdown
----
+**If result.success = false:**
 
-## Implementation Notes - {Layer} Layer
+Display error to user:
+```
+❌ Implementation failed: {result.error}
 
-**Implemented by**: Claude Code
-**Date**: {current_date}
+{If result.message:}
+{result.message}
 
-### Deviations from Plan
-
-**Deviation 1**: [What changed from original plan]
-- **Why**: [Justification - technical constraint, better approach found, etc.]
-- **Impact**: [What this affects - other layers, patterns, tests]
-- **Pattern Compliance**: [Still compliant? Which tactic/constraint affected?]
-
-**Deviation 2**: [Another change if any]
-- **Why**: ...
-- **Impact**: ...
-
-### Design Decisions Made
-
-**Decision 1**: [A choice you made during implementation]
-- **Options Considered**: [What alternatives were evaluated]
-- **Rationale**: [Why this approach was chosen]
-- **Trade-offs**: [What was gained vs. what was lost]
-
-### Implementation Details
-
-**Key Implementation Notes**:
-- [Any important details about how things were implemented]
-- [Performance considerations]
-- [Assumptions made]
-
-### Test Results
-
-**Tests Implemented**: {number} test cases
-**Tests Passing**: {number} / {number}
-**Coverage**: [If known]
-
-**Test Scenarios Covered**:
-- [x] Scenario 1 from plan
-- [x] Scenario 2 from plan
-- [x] Edge case 1
-- [ ] Scenario 3 (deferred because...)
-
-### Next Steps
-
-**Ready for Next Layer**: [Yes/No]
-- If Yes: Which layer should be implemented next?
-- If No: What needs to be resolved first?
-
-**Dependencies for Next Layer**:
-- [What the next layer will need from this layer]
-- [Any interfaces or contracts established]
+{If result.available_layers:}
+Available layers: {result.available_layers}
 ```
 
-### Step 9: Report Completion
+Stop execution.
 
-Provide a summary to the user:
+**If result.success = true:**
+
+Continue to Step 4.
+
+### Step 4: Display Results to User
+
+**Format implementation summary:**
 
 ```
-✓ {Layer} Layer implementation completed for {feature_name}
+✅ {layer} Layer Implementation Complete
 
 📦 Components Implemented:
-  • [Component 1 name] - [brief description]
-  • [Component 2 name] - [brief description]
-  • [Component 3 name] - [brief description]
+{For each component in result.components:}
+  • {component}
 
 🧪 Tests:
-  • {number} test cases implemented
-  • {number}/{number} tests passing
-  • Test files: [list test file paths]
+  • {result.tests.total} test cases implemented
+  • {result.tests.passed}/{result.tests.total} tests passing
+{If result.tests.failed > 0:}
+  ⚠️ {result.tests.failed} tests failing
+  {List test failures from result.errors}
 
-📋 Pattern Compliance:
-  • DDD Aggregates v1: ✓ All critical tactics followed
-  • Event Sourcing v1: ✓ All constraints satisfied
-  • [Other patterns]: ✓/⚠️
+📁 Files:
+{If result.files.created:}
+  Created:
+  {For each file in result.files.created:}
+    • {file}
 
-📝 Plan Updates:
-  • Checklist updated: docs/{feature_name}/plan.md
-  • Implementation notes added: [Yes/No]
+{If result.files.modified:}
+  Modified:
+  {For each file in result.files.modified:}
+    • {file}
 
-⚠️ Deviations (if any):
-  • [Deviation 1 summary]
-  • [Deviation 2 summary]
+📋 Patterns Applied:
+{For each pattern in result.patterns_applied:}
+  • {pattern}
 
-🎯 Next Steps:
-  1. Review implementation and tests
-  2. Run full test suite to verify integration
-  3. Ready to implement {next_layer} layer with:
-     /implement:hex-arc {feature_name} {next_layer}
+{If result.warnings:}
+⚠️ Warnings:
+{For each warning in result.warnings:}
+  • {warning}
 
-💡 Implementation available at:
-  - {list file paths of implemented components}
+{If result.errors:}
+❌ Errors:
+{For each error in result.errors:}
+  • {error}
+
+💡 Next Steps:
+  • Review the implementation
+  • Run review: /review:hex-arc {feature_name}
+  • Or implement next layer: /implement:hex-arc {feature_name} <next-layer>
 ```
 
-If there were failures or concerns:
+### Step 5: Optional - Update Plan
 
-```
-⚠️ {Layer} Layer implementation completed with concerns
+**If implementation deviated from plan or has notes:**
 
-[Same structure as above, but highlight issues]
+Consider updating `docs/{feature_name}/plan.md` with implementation notes section (as skill may have added this already).
 
-🔴 Issues Found:
-  • [Issue 1: description]
-  • [Issue 2: description]
+## Error Handling
 
-🔧 Recommended Actions:
-  1. [Action needed to resolve issue 1]
-  2. [Action needed to resolve issue 2]
+**Plan not found:**
+- Skill returns error with clear message
+- Display to user with suggestion to run /plan:hex-arc first
 
-Do not proceed to next layer until these issues are resolved.
-```
+**Layer not found:**
+- Skill returns available layers
+- Display to user
 
-## Important Notes for Claude
+**Tests failing:**
+- Display as part of summary
+- Mark as warning (implementation complete but tests need fixing)
 
-**Scope Boundaries:**
-- **ONLY implement the specified layer** - don't implement other layers
-- **ONLY implement what's in the plan** - don't add extra features
-- **ONLY write tests for this layer** - don't write tests for other layers
+**TypeScript errors:**
+- Display as errors
+- Mark implementation as unsuccessful
 
-**When to Ask User:**
-- Before deviating from plan's design
-- Before skipping any component from the plan
-- Before changing public interfaces (method signatures, types)
-- If you discover the plan is incomplete or has errors
-- If tests are failing and you can't resolve
+## Notes for Claude
 
-**Pattern Compliance:**
-- Critical tactics are non-negotiable - find a way to follow them
-- If you must violate a constraint, explain why in Implementation Notes
-- Anti-patterns are red flags - avoid them at all costs
+**This command is now a thin wrapper:**
+- Validates inputs
+- Calls implementation-engine skill
+- Formats output for user display
 
-**Code Organization:**
-- Follow workspace directory structure
-- Match naming conventions from similar implementations
-- Keep files focused (one aggregate per file, one handler per file)
-- Use barrel exports (index.ts) for clean imports
+**All implementation logic is in the skill:**
+- Pattern loading
+- Code generation
+- Testing
+- Verification
 
-**Testing Priority:**
-- Tests are not optional - they're part of implementation
-- Failing tests mean incomplete implementation
-- If plan's test scenarios are unclear, ask for clarification
+**User interaction:**
+- This command handles user-facing presentation
+- Clear, formatted output
+- Actionable next steps
 
-**Documentation:**
-- Code should match plan's pseudo-code interfaces
-- JSDoc comments for public APIs
-- Implementation Notes for any deviations
-- Clear commit messages describing what was implemented
-
-**Success Criteria:**
-All of these must be true before reporting completion:
-- ✅ All components from plan's layer section implemented
-- ✅ All tests from plan's test strategy passing
-- ✅ Critical pattern tactics followed
-- ✅ Plan.md checklist updated
-- ✅ No TypeScript errors
-- ✅ No linting errors
+**Skill returns structured data:**
+- Parse and format for human reading
+- Use emojis for visual clarity (✅ ⚠️ ❌ 📦 🧪 📁 📋 💡)
+- Keep output concise but informative

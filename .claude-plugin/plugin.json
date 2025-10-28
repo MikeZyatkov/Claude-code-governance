@@ -18,6 +18,16 @@
   "commands": [
     "./commands/plan-hex-arc.md",
     "./commands/implement-hex-arc.md",
-    "./commands/review-hex-arc.md"
+    "./commands/review-hex-arc.md",
+    "./commands/orchestrate-hex-arc.md"
+  ],
+  "skills": [
+    "./skills/pattern-loader/SKILL.md",
+    "./skills/implementation-engine/SKILL.md",
+    "./skills/review-engine/SKILL.md",
+    "./skills/quality-gate/SKILL.md",
+    "./skills/audit-logger/SKILL.md",
+    "./skills/git-ops/SKILL.md",
+    "./skills/fix-coordinator/SKILL.md"
   ]
 }
