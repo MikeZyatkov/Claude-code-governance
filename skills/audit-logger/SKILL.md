@@ -210,85 +210,89 @@ Constraints:
 
 ## Instructions for Claude
 
-### CRITICAL: Getting Current Timestamp
-
-**BEFORE doing anything else in this skill, you MUST get the current timestamp using the Bash tool.**
-
-**DO THIS:**
-1. Use the Bash tool to run: `date '+%Y-%m-%d %H:%M:%S'`
-2. Capture the exact output (e.g., "2025-10-30 16:23:45")
-3. Store this value in a variable to use throughout the skill
-
-**DO NOT:**
-- Generate placeholder timestamps like "12:00am" or "{timestamp}"
-- Use ISO format like "2025-10-30T12:00:00.000Z"
-- Make up any timestamp value
-- Skip running the Bash tool
-
-**Example of correct usage:**
-```
-Step 1: Call Bash tool with command "date '+%Y-%m-%d %H:%M:%S'"
-Step 2: Receive output: "2025-10-30 16:23:45"
-Step 3: Use "2025-10-30 16:23:45" in all templates below
-```
-
 ### For Initialize Action
 
-**Steps:**
+**STEP 1 - GET TIMESTAMP (MANDATORY - DO THIS FIRST):**
 
-1. **Get current timestamp using Bash tool** (see CRITICAL section above)
-2. Extract date portion: split timestamp on space, take first part (e.g., "2025-10-30")
-3. Create file at `docs/{feature}/implementation-audit.md`
-4. Write initial content using the timestamp from step 1
+Call the Bash tool RIGHT NOW before reading anything else:
 
-Template:
+```
+Tool: Bash
+Command: date '+%Y-%m-%d %H:%M:%S'
+```
+
+Wait for the result. You will get output like "2025-10-30 13:27:45". Store this exact string.
+
+**DO NOT CONTINUE until you have called the Bash tool and received the actual timestamp.**
+
+---
+
+**STEP 2 - Extract date portion:**
+
+From the timestamp you got from Bash (e.g., "2025-10-30 13:27:45"), extract just the date part before the space: "2025-10-30"
+
+**STEP 3 - Create audit file:**
+
+Create file at `docs/{feature}/implementation-audit.md`
+
+**STEP 4 - Write content:**
+
+Write the content below, using the ACTUAL timestamp from Step 1 (not "12:00am", not a placeholder, the REAL output from the Bash tool):
+
+Template (replace {feature}, {threshold}, etc. with actual values, and use the REAL timestamp from Step 1):
 ```markdown
 # Implementation Audit Trail: {feature}
 
-Started: {use timestamp from Bash tool - step 1}
+Started: {ACTUAL timestamp from Step 1 - e.g., "2025-10-30 13:27:45"}
 Threshold: {threshold}/5.0
 Max iterations: {max_iterations}
 Layers: {layers}
 
 ---
 
-## Session: {use date portion from Bash tool timestamp}
+## Session: {ACTUAL date from Step 2 - e.g., "2025-10-30"}
 
 ```
 
-Example (using actual Bash output "2025-10-30 16:23:45"):
-```markdown
-# Implementation Audit Trail: tenant-onboarding
-
-Started: 2025-10-30 16:23:45
-Threshold: 4.5/5.0
-Max iterations: 3
-Layers: domain, application, infrastructure
+**STEP 5 - Return success**
 
 ---
 
-## Session: 2025-10-30
-
-```
-
-5. Return success
-
 ### For Append Action
 
-**Steps:**
+**STEP 1 - GET TIMESTAMP (MANDATORY - DO THIS FIRST):**
 
-1. **Get current timestamp using Bash tool** (see CRITICAL section above)
-2. Format entry based on entry_type, using the timestamp from step 1
-3. Use appropriate template below
-4. Fill in data from content object
-5. Format issues if present
+Call the Bash tool RIGHT NOW before reading anything else:
 
-3. **Append to file**
-   - Add blank line before entry
-   - Write formatted entry
-   - Ensure proper markdown formatting
+```
+Tool: Bash
+Command: date '+%Y-%m-%d %H:%M:%S'
+```
 
-4. **Return success**
+Wait for the result. You will get output like "2025-10-30 13:27:45". Store this exact string.
+
+**DO NOT CONTINUE until you have called the Bash tool and received the actual timestamp.**
+
+---
+
+**STEP 2 - Format the entry:**
+
+Based on the entry_type, format the entry using the ACTUAL timestamp from Step 1.
+
+**STEP 3 - Fill in data:**
+
+Fill in the data from the content object.
+
+**STEP 4 - Format issues (if present):**
+
+If there are issues, format them.
+
+**STEP 5 - Append to file:**
+- Add blank line before entry
+- Write formatted entry using the timestamp from Step 1
+- Ensure proper markdown formatting
+
+**STEP 6 - Return success**
 
 ### Issue Formatting Helper
 
@@ -361,12 +365,33 @@ Call audit-logger skill with:
 
 ## Notes for Claude
 
-**Timestamps:**
-- **YOU MUST generate timestamps using the Bash tool** - see CRITICAL section
-- Run `date '+%Y-%m-%d %H:%M:%S'` at the START of every action
-- Use the exact output from Bash in all entries
-- Format: "YYYY-MM-DD HH:MM:SS" (e.g., "2025-10-30 16:23:45")
-- Never use placeholders, ISO format, or made-up times
+**CRITICAL - Timestamps:**
+
+⚠️ **THE MOST IMPORTANT RULE IN THIS SKILL:**
+
+1. **FIRST ACTION** in both Initialize and Append: Call Bash tool with `date '+%Y-%m-%d %H:%M:%S'`
+2. **WAIT** for the actual result (e.g., "2025-10-30 13:27:45")
+3. **USE** that exact string everywhere you need a timestamp
+4. **NEVER** use:
+   - "12:00am" or "12:00pm"
+   - "{timestamp}" or "{current_time}"
+   - ISO format like "2025-10-30T12:00:00.000Z"
+   - Any made-up or placeholder value
+
+**If you write "12:00am" anywhere in the output, you have failed this skill.**
+
+The expected format is 24-hour time: "2025-10-30 13:27:45" (not AM/PM format)
+
+**WRONG (DO NOT DO THIS):**
+```markdown
+Started: 2025-10-30 12:00am   ❌ WRONG - placeholder time
+```
+
+**RIGHT (DO THIS):**
+```
+Step 1: Call Bash tool → Get "2025-10-30 13:27:45"
+Step 2: Use it → Started: 2025-10-30 13:27:45   ✅ CORRECT - actual time
+```
 
 **Markdown Formatting:**
 - Consistent structure
