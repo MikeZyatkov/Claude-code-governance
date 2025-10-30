@@ -52,16 +52,18 @@ Provides centralized audit logging functionality - initializing trails, appendin
 ```markdown
 # Implementation Audit Trail: {feature}
 
-Started: {ISO timestamp}
+Started: {timestamp from bash date command: 'YYYY-MM-DD HH:MM:SS'}
 Threshold: {threshold}/5.0
 Max iterations: {max_iterations}
 Layers: {layers}
 
 ---
 
-## Session: {date}
+## Session: {date from bash date command: 'YYYY-MM-DD'}
 
 ```
+
+**IMPORTANT:** Always get the timestamp by running `date '+%Y-%m-%d %H:%M:%S'` - never use placeholder or generated timestamps.
 
 ### Action: Append
 
@@ -214,14 +216,19 @@ Constraints:
 
 ### For Initialize Action
 
-1. Get current timestamp:
+1. **Get current timestamp using bash:**
 ```bash
-date '+%Y-%m-%d %H:%M:%S'
+timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+date_only=$(date '+%Y-%m-%d')
 ```
+
+**CRITICAL:** You MUST run this bash command to get the actual system time. Do NOT generate or infer timestamps.
 
 2. Create file at `docs/{feature}/implementation-audit.md`
 
-3. Write initial content with configuration
+3. Write initial content with configuration, substituting:
+   - `Started: $timestamp`
+   - `## Session: $date_only`
 
 4. Return success
 

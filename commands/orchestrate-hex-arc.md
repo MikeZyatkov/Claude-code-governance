@@ -64,13 +64,17 @@ If any criterion fails, enter fix cycle (up to 3 iterations).
 ## Instructions for Claude
 
 **IMPORTANT - Timestamps:**
-Every time you need a timestamp for audit logging, run this bash command:
+Every time you need a timestamp (for display, audit logging, etc.), you MUST run this bash command:
 ```bash
 date '+%Y-%m-%d %H:%M:%S'
 ```
-This gives the actual current system time in format: "2025-01-23 15:35:42" (24-hour format with seconds)
+This gives the actual current system time in format: "2025-10-30 15:35:42" (24-hour format with seconds)
 
-DO NOT use placeholder timestamps. Always use bash `date` command.
+**CRITICAL:**
+- DO NOT generate timestamps yourself
+- DO NOT use placeholder timestamps like "12:00pm" or "12:00am"
+- ALWAYS execute the bash `date` command and use its output
+- The audit-logger skill will also run this command - trust its output
 
 ---
 
