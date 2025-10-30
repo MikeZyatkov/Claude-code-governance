@@ -23,7 +23,13 @@ Provides centralized git operations - commit message generation, staging, commit
   "pattern_scores": [
     {"name": "DDD Aggregates v1", "score": 4.8},
     {"name": "Event Sourcing v1", "score": 4.5}
-  ]
+  ],
+  "implementation_result": {
+    "files": {
+      "created": ["src/domain/Tenant.aggregate.ts", ...],
+      "modified": ["src/domain/index.ts", ...]
+    }
+  }
 }
 ```
 
@@ -68,9 +74,22 @@ Patterns: DDD Aggregates v1 (4.8), Event Sourcing v1 (4.5)
 
 ### Step 2: Stage Changes
 
+**Stage only implementation-related changes:**
+
 ```bash
-git add .
+# Stage all modified and deleted tracked files
+git add -u
+
+# Stage new files from implementation result
+for file in implementation_result.files.created:
+  git add "$file"
 ```
+
+**Important:**
+- Only stage files from `implementation_result.files.created` and `implementation_result.files.modified`
+- `git add -u` handles modified tracked files
+- Explicitly add each new file from the `created` array
+- Do NOT stage unrelated untracked files
 
 ### Step 3: Create Commit
 
@@ -142,6 +161,7 @@ Call git-ops skill with:
 - review_score: 4.6
 - fix_iterations: 1
 - pattern_scores: [...]
+- implementation_result: {files: {created: [...], modified: [...]}}
 
 Receive result.
 
@@ -162,7 +182,8 @@ If NOT result.success:
 - Professional and concise
 
 **Git Operations:**
-- Stage all changes (git add .)
+- Stage implementation changes only (git add -u for tracked files, explicit adds for new files)
+- Do NOT stage unrelated untracked files
 - Use heredoc for multi-line messages
 - Capture commit hash for audit trail
 
