@@ -48,22 +48,7 @@ Provides centralized audit logging functionality - initializing trails, appendin
 
 **Creates file:** `docs/{feature}/implementation-audit.md`
 
-**Content template:**
-```markdown
-# Implementation Audit Trail: {feature}
-
-Started: {timestamp from bash date command: 'YYYY-MM-DD HH:MM:SS'}
-Threshold: {threshold}/5.0
-Max iterations: {max_iterations}
-Layers: {layers}
-
----
-
-## Session: {date from bash date command: 'YYYY-MM-DD'}
-
-```
-
-**IMPORTANT:** Always get the timestamp by running `date '+%Y-%m-%d %H:%M:%S'` - never use placeholder or generated timestamps.
+**Content structure:** See "For Initialize Action" instructions below for exact template with real timestamps.
 
 ### Action: Append
 
@@ -216,30 +201,52 @@ Constraints:
 
 ### For Initialize Action
 
-1. **Get current timestamp using bash:**
+1. **Execute bash command to get timestamp:**
+
+Run this FIRST:
 ```bash
-timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-date_only=$(date '+%Y-%m-%d')
+date '+%Y-%m-%d %H:%M:%S'
+```
+Capture the output - this is your timestamp. Do not proceed without running this command.
+
+2. **Get date only:**
+
+Run this:
+```bash
+date '+%Y-%m-%d'
+```
+Capture the output - this is your date.
+
+3. Create file at `docs/{feature}/implementation-audit.md`
+
+4. Write initial content using the ACTUAL OUTPUT from step 1 and 2:
+```markdown
+# Implementation Audit Trail: {feature}
+
+Started: {paste actual output from step 1 here}
+Threshold: {threshold}/5.0
+Max iterations: {max_iterations}
+Layers: {layers}
+
+---
+
+## Session: {paste actual output from step 2 here}
+
 ```
 
-**CRITICAL:** You MUST run this bash command to get the actual system time. Do NOT generate or infer timestamps.
-
-2. Create file at `docs/{feature}/implementation-audit.md`
-
-3. Write initial content with configuration, substituting:
-   - `Started: $timestamp`
-   - `## Session: $date_only`
-
-4. Return success
+5. Return success
 
 ### For Append Action
 
-1. **Get current timestamp:**
-```bash
-timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-```
+1. **Execute bash command to get timestamp:**
 
-2. **Format entry based on entry_type**
+Run this FIRST:
+```bash
+date '+%Y-%m-%d %H:%M:%S'
+```
+Capture the output - this is your timestamp. Do not proceed without running this command.
+
+2. **Format entry based on entry_type**, using the ACTUAL OUTPUT from step 1
    - Use appropriate template
    - Fill in data from content object
    - Format issues if present
@@ -322,9 +329,10 @@ Call audit-logger skill with:
 
 ## Notes for Claude
 
-**Timestamps:**
-- ALWAYS use bash date command
-- Format: "2025-01-23 15:35:42" (24-hour format with seconds)
+**Timestamps - CRITICAL:**
+- Step 1 of EVERY action: Run `date '+%Y-%m-%d %H:%M:%S'` via Bash tool
+- Use the ACTUAL OUTPUT from that command (e.g., "2025-10-30 15:35:42")
+- Never generate, infer, or use placeholder timestamps
 - Get fresh timestamp for EVERY entry
 
 **Markdown Formatting:**
