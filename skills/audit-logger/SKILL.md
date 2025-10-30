@@ -211,7 +211,7 @@ date '+%Y-%m-%d %H:%M:%S'
 
 1. **Get current timestamp:**
 ```bash
-timestamp=$(date '+%Y-%m-%d %-I:%M%p' | tr 'A-Z' 'a-z')
+timestamp=$(date '+%Y-%m-%d %H:%M:%S')
 ```
 
 2. **Format entry based on entry_type**
@@ -299,7 +299,7 @@ Call audit-logger skill with:
 
 **Timestamps:**
 - ALWAYS use bash date command
-- Format: "2025-01-23 2:35pm"
+- Format: "2025-01-23 15:35:42" (24-hour format with seconds)
 - Get fresh timestamp for EVERY entry
 
 **Markdown Formatting:**
