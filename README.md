@@ -7,10 +7,11 @@
 
 ## What is it?
 
-A Claude Code plugin that brings **Governance-Driven Development (GDD)** to AI-assisted coding. It encodes your architectural standards as versioned patterns (YAML), guides AI to generate compliant code, and automatically enforces quality through LLM-as-judge evaluation and fix loops.
+A Claude Code plugin that brings **Governance-Driven Development (GDD)** to AI-assisted coding. GDD means your architecture patterns guide code generation, while automated evaluation enforces standards through quality gates.
 
-**Your architecture patterns become executable governance** 
-- Claude generates code following your tactics, scores it against calibrated rubrics, and iteratively fixes issues until it passes quality gates.
+It encodes your architectural standards as versioned patterns (YAML), guides AI to generate compliant code, and automatically enforces quality through LLM-as-judge evaluation and fix loops.
+
+**Your architecture patterns become executable governance** - Claude generates code following your tactics, scores it against calibrated rubrics, and iteratively fixes issues until it passes quality gates.
 
 ## Why use it?
 
@@ -28,7 +29,7 @@ This leads to "vibe-coded" architectures that drift from your standards over tim
 ### The Solution
 
 This framework provides:
-- ✅ **Versioned architectural patterns** - 11+ battle-tested patterns as YAML definitions
+- ✅ **Versioned architectural patterns** - 12 patterns as YAML definitions
 - ✅ **Pattern-guided planning** - Generate implementation plans that reference specific tactics
 - ✅ **Automated quality evaluation** - LLM-as-judge with calibrated scoring rubrics (0-5 scale)
 - ✅ **Quality gates with fix loops** - Automatic fix cycles until code passes thresholds
@@ -63,6 +64,8 @@ This framework provides:
            (Skills: fix-coordinator)
 ```
 
+**Note:** Steps 2-5 use specialised Claude Code Skills (automation workflows) that run automatically - you don't need to understand them to use the framework.
+
 ### Pattern-Based Evaluation
 
 Each pattern defines:
@@ -72,17 +75,67 @@ Each pattern defines:
 - **Constraints** - MUST/MUST NOT rules
 - **Calibrated rubrics** - 0-5 scoring criteria for each tactic
 
-Example tactics from included DDD pattern:
+Example tactics (from included DDD Aggregates pattern - you can define any tactics for your architecture):
 - `encapsulate-state` (critical) - All state private with _ prefix
 - `apply-via-events` (critical) - Mutations via applyChange() only
 - `validate-before-events` (important) - Check invariants before events
 
 Code is scored against these rubrics, weighted by priority (critical=3.0, important=2.0, optional=1.0).
 
-**You can create patterns for any architectural style** 
-- the framework is pattern-agnostic. The included patterns focus on hexagonal architecture with DDD/CQRS/Event Sourcing, but you can add patterns for Clean Architecture, microservices, or your own team conventions.
+**Framework is pattern-agnostic** - The included 12 patterns focus on hexagonal architecture with DDD/CQRS/Event Sourcing, but you can add patterns for Clean Architecture, microservices, or your own team conventions.
+
+### What Outputs Look Like
+
+**Generated Plan** (`docs/{feature}/plan.md`):
+- **Pattern Compliance** - Which patterns apply and why they matter
+- **Key Tactics** - Critical/important actions to follow during implementation
+- **Layer Designs** - Public interfaces (inputs/outputs) in pseudo-code for domain, application, and infrastructure layers
+- **Test Strategy** - Given-When-Then scenarios for each component
+
+The plan focuses on **contracts, not implementation details** - detailed enough for AI to generate compliant code, manageable in size for thorough developer review, and clear enough to spot misalignment before coding starts.
+
+**Review Report** (from `/review:hex-arc`):
+```
+Overall Score: 4.2/5.0
+
+DDD Aggregates v1 - Score: 4.0/5.0
+├─ encapsulate-state (critical): 3/5
+│  Problem: Fields 'companyName' and 'adminEmail' lack _ prefix
+│  Required: All state private with _ prefix, public getters only
+│
+├─ apply-via-events (critical): 5/5
+│  ✓ All mutations go through applyChange()
+│
+└─ validate-before-events (important): 3/5
+   Problem: activate() doesn't check if tenant already active
+   Required: Validate business rules before emitting events
+
+Event Sourcing v1 - Score: 4.4/5.0
+└─ register-event-handlers (critical): 4/5
+   Problem: Missing handler registration for TenantSuspended event
+```
+
+**What Happens on Quality Gate Failure:**
+- Automatic fix loop initiates (max 3 iterations)
+- Detailed fix prompts generated from review issues
+- Code re-reviewed after each fix attempt
+- User intervention requested if score doesn't improve or max iterations reached
+
+## Requirements
+
+- **Claude Code CLI** installed and authenticated
+- **Git repository** initialised
+- **docs/ directory** for artifacts (requirements, plans, audit logs - created automatically)
+- **Any language/framework** - included patterns use TypeScript/Node.js examples, but framework is language-agnostic
 
 ## Two Approaches to Use It
+
+**Automated:** `/orchestrate` runs full implementation lifecycle with automatic quality gates
+
+**Manual:** `/implement` + `/review` for each layer, giving you full control over each step
+
+<details>
+<summary><b>See detailed workflows</b></summary>
 
 ### Approach 1: Automated (Agentic)
 
@@ -159,6 +212,8 @@ Code is scored against these rubrics, weighted by priority (critical=3.0, import
 
 You control when to commit, what to fix, and how to iterate.
 
+</details>
+
 ## Installation
 
 ### Option 1: Via Marketplace (Recommended)
@@ -209,7 +264,7 @@ mkdir -p docs/my-feature
 
 ## Included Patterns
 
-**11+ battle-tested patterns for hexagonal architecture:**
+**12 patterns for hexagonal architecture:**
 
 - **Domain:** DDD Aggregates, Value Objects, Domain Events, Event Sourcing, Repository
 - **Application:** CQRS, Domain Services, Projectors, Ports and Adapters
@@ -219,6 +274,17 @@ mkdir -p docs/my-feature
 Each pattern is versioned (v1, v2, ...) and includes calibrated scoring rubrics.
 
 **Extensible:** Add your own patterns for different architectures (Clean, Onion, microservices) or team-specific conventions. See [Contributing](#contributing) for pattern authoring guide.
+
+## When NOT to Use This
+
+This framework adds structure and governance, which may not fit every context:
+
+- **Rapid prototyping** - When architecture needs to evolve freely without constraints
+- **Simple CRUD applications** - Overhead may outweigh benefits for straightforward data operations
+- **No established standards** - Framework enforces patterns you define; teams without architectural conventions should establish them first
+- **Exploratory projects** - Early-stage projects where you're still discovering the right architecture
+
+Best suited for: Production systems, team environments, and projects with clear architectural requirements.
 
 ## License
 
