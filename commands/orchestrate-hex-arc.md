@@ -65,7 +65,7 @@ If any criterion fails, enter fix cycle (up to 3 iterations).
 
 **IMPORTANT:**
 
-The audit-logger skill handles timestamp generation internally using the Bash tool. You do not need to provide timestamps when calling it.
+The audit-logger skill handles timestamp generation internally using an executable script. You do not need to provide timestamps when calling it - each call will automatically get a fresh timestamp.
 
 ---
 
@@ -550,9 +550,9 @@ This command orchestrates 7 skills:
 - All skills return structured data
 
 **Timestamps:**
-- Handled automatically by audit-logger skill
+- Handled automatically by audit-logger skill via executable script
 - You do not need to provide timestamps when calling audit-logger
-- The skill will use the Bash tool internally to get current time
+- Each audit-logger call gets a fresh timestamp automatically
 
 **Progress Reporting:**
 - Show real-time progress after each phase

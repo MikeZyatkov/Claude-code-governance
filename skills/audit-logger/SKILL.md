@@ -212,87 +212,62 @@ Constraints:
 
 ### For Initialize Action
 
-**STEP 1 - GET TIMESTAMP (MANDATORY - DO THIS FIRST):**
+**Steps:**
 
-Call the Bash tool RIGHT NOW before reading anything else:
+1. **Get current timestamp:**
+   - Run the script: `python3 skills/audit-logger/get_timestamp.py`
+   - Capture the output (e.g., "2025-10-30 13:27:45")
+   - Extract date portion by splitting on space and taking first part (e.g., "2025-10-30")
 
-```
-Tool: Bash
-Command: date '+%Y-%m-%d %H:%M:%S'
-```
+2. **Create audit file:**
+   - Create file at `docs/{feature}/implementation-audit.md`
 
-Wait for the result. You will get output like "2025-10-30 13:27:45". Store this exact string.
+3. **Write initial content:**
+   - Use the timestamp from step 1 (the script output)
 
-**DO NOT CONTINUE until you have called the Bash tool and received the actual timestamp.**
-
----
-
-**STEP 2 - Extract date portion:**
-
-From the timestamp you got from Bash (e.g., "2025-10-30 13:27:45"), extract just the date part before the space: "2025-10-30"
-
-**STEP 3 - Create audit file:**
-
-Create file at `docs/{feature}/implementation-audit.md`
-
-**STEP 4 - Write content:**
-
-Write the content below, using the ACTUAL timestamp from Step 1 (not "12:00am", not a placeholder, the REAL output from the Bash tool):
-
-Template (replace {feature}, {threshold}, etc. with actual values, and use the REAL timestamp from Step 1):
+Template:
 ```markdown
 # Implementation Audit Trail: {feature}
 
-Started: {ACTUAL timestamp from Step 1 - e.g., "2025-10-30 13:27:45"}
+Started: {timestamp from step 1}
 Threshold: {threshold}/5.0
 Max iterations: {max_iterations}
 Layers: {layers}
 
 ---
 
-## Session: {ACTUAL date from Step 2 - e.g., "2025-10-30"}
+## Session: {date portion from step 1}
 
 ```
 
-**STEP 5 - Return success**
+4. **Return success**
 
 ---
 
 ### For Append Action
 
-**STEP 1 - GET TIMESTAMP (MANDATORY - DO THIS FIRST):**
+**Steps:**
 
-Call the Bash tool RIGHT NOW before reading anything else:
+1. **Get current timestamp:**
+   - Run the script: `python3 skills/audit-logger/get_timestamp.py`
+   - Capture the output (e.g., "2025-10-30 13:27:45")
 
-```
-Tool: Bash
-Command: date '+%Y-%m-%d %H:%M:%S'
-```
+2. **Format the entry:**
+   - Based on entry_type, format the entry using the timestamp from step 1
+   - Use appropriate template below
 
-Wait for the result. You will get output like "2025-10-30 13:27:45". Store this exact string.
+3. **Fill in data:**
+   - Fill in data from the content object
 
-**DO NOT CONTINUE until you have called the Bash tool and received the actual timestamp.**
+4. **Format issues (if present):**
+   - Format issues using the helper function below
 
----
+5. **Append to file:**
+   - Add blank line before entry
+   - Write formatted entry using timestamp from step 1
+   - Ensure proper markdown formatting
 
-**STEP 2 - Format the entry:**
-
-Based on the entry_type, format the entry using the ACTUAL timestamp from Step 1.
-
-**STEP 3 - Fill in data:**
-
-Fill in the data from the content object.
-
-**STEP 4 - Format issues (if present):**
-
-If there are issues, format them.
-
-**STEP 5 - Append to file:**
-- Add blank line before entry
-- Write formatted entry using the timestamp from Step 1
-- Ensure proper markdown formatting
-
-**STEP 6 - Return success**
+6. **Return success**
 
 ### Issue Formatting Helper
 
@@ -365,33 +340,11 @@ Call audit-logger skill with:
 
 ## Notes for Claude
 
-**CRITICAL - Timestamps:**
-
-⚠️ **THE MOST IMPORTANT RULE IN THIS SKILL:**
-
-1. **FIRST ACTION** in both Initialize and Append: Call Bash tool with `date '+%Y-%m-%d %H:%M:%S'`
-2. **WAIT** for the actual result (e.g., "2025-10-30 13:27:45")
-3. **USE** that exact string everywhere you need a timestamp
-4. **NEVER** use:
-   - "12:00am" or "12:00pm"
-   - "{timestamp}" or "{current_time}"
-   - ISO format like "2025-10-30T12:00:00.000Z"
-   - Any made-up or placeholder value
-
-**If you write "12:00am" anywhere in the output, you have failed this skill.**
-
-The expected format is 24-hour time: "2025-10-30 13:27:45" (not AM/PM format)
-
-**WRONG (DO NOT DO THIS):**
-```markdown
-Started: 2025-10-30 12:00am   ❌ WRONG - placeholder time
-```
-
-**RIGHT (DO THIS):**
-```
-Step 1: Call Bash tool → Get "2025-10-30 13:27:45"
-Step 2: Use it → Started: 2025-10-30 13:27:45   ✅ CORRECT - actual time
-```
+**Timestamps:**
+- You MUST run `python3 skills/audit-logger/get_timestamp.py` as the first step in both Initialize and Append actions
+- This script returns the current time in format "YYYY-MM-DD HH:MM:SS"
+- Use the exact output from this script in all audit entries
+- Never use placeholder times like "12:00am" or make up timestamps
 
 **Markdown Formatting:**
 - Consistent structure
