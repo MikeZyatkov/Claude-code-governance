@@ -63,23 +63,9 @@ If any criterion fails, enter fix cycle (up to 3 iterations).
 
 ## Instructions for Claude
 
-**IMPORTANT - Timestamps:**
+**IMPORTANT:**
 
-Whenever you need to display a timestamp to the user, you MUST:
-
-1. Run this bash command FIRST:
-```bash
-date '+%Y-%m-%d %H:%M:%S'
-```
-
-2. Use the ACTUAL OUTPUT from that command (e.g., "2025-10-30 15:35:42")
-
-3. DO NOT:
-   - Generate timestamps yourself
-   - Use placeholders like "{timestamp}" or "12:00pm"
-   - Use ISO format like "2025-10-30T00:00:00.000Z"
-
-The audit-logger skill will handle its own timestamps - you just need to display progress to the user using actual bash outputs.
+The audit-logger skill handles timestamp generation internally using the Bash tool. You do not need to provide timestamps when calling it.
 
 ---
 
@@ -163,7 +149,9 @@ quality_gate_passed = false
 
 #### 3.1 Implementation Phase
 
-**Call audit-logger skill (log start):**
+**Log implementation start:**
+
+**Call audit-logger skill:**
 ```json
 {
   "action": "append",
@@ -193,7 +181,9 @@ quality_gate_passed = false
 - If result.success = false: Log error, abort orchestration
 - If result.success = true: Continue
 
-**Call audit-logger skill (log completion):**
+**Log implementation completion:**
+
+**Call audit-logger skill:**
 ```json
 {
   "action": "append",
@@ -219,7 +209,9 @@ quality_gate_passed = false
 
 #### 3.2 Review Phase
 
-**Call audit-logger skill (log start):**
+**Log review start:**
+
+**Call audit-logger skill:**
 ```json
 {
   "action": "append",
@@ -254,7 +246,9 @@ quality_gate_passed = false
 }
 ```
 
-**Call audit-logger skill (log review result):**
+**Log review result:**
+
+**Call audit-logger skill:**
 ```json
 {
   "action": "append",
@@ -324,7 +318,9 @@ If result.intervention_needed = true:
 
 #### 3.5 Commit Phase (after quality gate passed)
 
-**Call audit-logger skill (log commit start):**
+**Log commit start:**
+
+**Call audit-logger skill:**
 ```json
 {
   "action": "append",
@@ -394,7 +390,9 @@ Commit: {commit_result.commit_hash}
 
 **After all layers complete:**
 
-**Call audit-logger skill (log completion):**
+**Log orchestration completion:**
+
+**Call audit-logger skill:**
 ```json
 {
   "action": "append",
@@ -491,7 +489,9 @@ Resolve conflicts and try again.
 
 **When fix-coordinator requests intervention:**
 
-**Log to audit:**
+**Log intervention request:**
+
+**Call audit-logger skill:**
 ```json
 {
   "action": "append",
@@ -550,9 +550,9 @@ This command orchestrates 7 skills:
 - All skills return structured data
 
 **Timestamps:**
-- CRITICAL: Always use bash date command for timestamps
-- Get fresh timestamp from bash for EVERY audit log entry
-- Never use placeholder or hardcoded timestamps
+- Handled automatically by audit-logger skill
+- You do not need to provide timestamps when calling audit-logger
+- The skill will use the Bash tool internally to get current time
 
 **Progress Reporting:**
 - Show real-time progress after each phase
