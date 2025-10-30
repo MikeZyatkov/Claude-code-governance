@@ -27,13 +27,29 @@ Executes the implementation of a specific layer for a feature, following the pla
 {
   "success": true,
   "layer": "domain",
+  "summary": "Implemented Tenant aggregate root with value objects, domain events, and repository interface following DDD patterns",
   "components": [
-    "Tenant aggregate with create() and activate()",
-    "EmailAddress value object",
-    "CompanyName value object",
-    "TenantCreated event",
-    "TenantActivated event",
-    "ITenantRepository interface"
+    {
+      "name": "Tenant aggregate",
+      "description": "Aggregate root managing tenant lifecycle with create() and activate() methods",
+      "rationale": "Encapsulates tenant business rules and ensures state changes produce domain events"
+    },
+    {
+      "name": "EmailAddress value object",
+      "description": "Validates and encapsulates email addresses",
+      "rationale": "Prevents invalid emails from entering the system"
+    },
+    {
+      "name": "CompanyName value object",
+      "description": "Validates company name constraints",
+      "rationale": "Ensures company names meet business requirements"
+    }
+  ],
+  "deviations": [
+    {
+      "description": "Added TenantSuspended event not in original plan",
+      "rationale": "Discovered during implementation that suspension is a critical business state that needs tracking"
+    }
   ],
   "tests": {
     "total": 8,
@@ -255,31 +271,44 @@ Extract pattern names from plan's "Pattern Compliance" section for this layer.
 
 **Build output JSON:**
 
-1. **List components implemented:**
-   - Extract from created files
-   - Describe what each component does
+1. **Write implementation summary:**
+   - Brief 1-2 sentence overview of what was implemented
+   - Example: "Implemented Tenant aggregate root with value objects, domain events, and repository interface following DDD patterns"
 
-2. **Collect test results:**
+2. **List components implemented with rationale:**
+   - For each component (aggregate, value object, handler, etc.):
+     - `name`: Component name (e.g., "Tenant aggregate")
+     - `description`: What it does (e.g., "Aggregate root managing tenant lifecycle")
+     - `rationale`: Why it was implemented this way (e.g., "Encapsulates business rules and ensures state changes produce events")
+
+3. **Identify deviations from plan:**
+   - Compare implementation to plan
+   - If you added/changed something not in plan:
+     - `description`: What deviated
+     - `rationale`: Why it was necessary
+   - If no deviations: return empty array
+
+4. **Collect test results:**
    - Total test count
    - Passed count
    - Failed count (if any)
    - List test file paths
 
-3. **List files:**
+5. **List files:**
    - Created files (new)
    - Modified files (existing)
 
-4. **List patterns applied:**
+6. **List patterns applied:**
    - Which patterns were followed
    - Version numbers
 
-5. **Collect errors/warnings:**
+7. **Collect errors/warnings:**
    - Test failures
    - TypeScript errors
    - Linting errors
    - Pattern violations (if any)
 
-6. **Return structured JSON** as specified in Output section
+8. **Return structured JSON** as specified in Output section
 
 ### Error Handling
 

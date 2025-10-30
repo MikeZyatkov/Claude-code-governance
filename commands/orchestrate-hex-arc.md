@@ -66,9 +66,9 @@ If any criterion fails, enter fix cycle (up to 3 iterations).
 **IMPORTANT - Timestamps:**
 Every time you need a timestamp for audit logging, run this bash command:
 ```bash
-date '+%Y-%m-%d %-I:%M%p' | tr 'A-Z' 'a-z'
+date '+%Y-%m-%d %H:%M:%S'
 ```
-This gives the actual current system time in format: "2025-01-23 2:35pm"
+This gives the actual current system time in format: "2025-01-23 15:35:42" (24-hour format with seconds)
 
 DO NOT use placeholder timestamps. Always use bash `date` command.
 
@@ -366,6 +366,20 @@ Commit: {commit_result.commit_hash}
 {layers_completed}/{total_layers} layers complete
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
+
+#### 3.5 Update Plan with Completion
+
+**Mark layer as completed in plan:**
+
+1. Read `docs/{feature_name}/plan.md`
+2. Find the `## {Layer} Layer` section
+3. Add completion marker at the start of the section:
+   ```markdown
+   ## Domain Layer ✅
+   ```
+4. Write updated plan back to file
+
+**Note:** This provides visual progress tracking when reviewing the plan document.
 
 ### Step 4: Final Summary
 

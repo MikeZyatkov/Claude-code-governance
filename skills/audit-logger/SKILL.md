@@ -92,9 +92,27 @@ Goal: {goal}
 ```markdown
 **{timestamp}: Implementation Agent → Orchestrator**
 Status: ✅ Complete
-- Implemented: {components list}
-- Tests: {test_count} test cases, {passing}/{total} passing
-- Files: {file_list}
+
+Summary: {brief_summary_of_what_was_implemented}
+
+Components Implemented:
+- {component_1_name}: {what_it_does_and_why}
+- {component_2_name}: {what_it_does_and_why}
+- ...
+
+Key Changes:
+- {change_1}: {rationale}
+- {change_2}: {rationale}
+- ...
+
+Deviations from Plan:
+{If any deviations:}
+- {deviation_description}: {why_it_was_necessary}
+{If no deviations:}
+- None - implementation follows plan as specified
+
+Tests: {passing}/{total} passing ({test_count} test cases)
+Files: {created_count} created, {modified_count} modified
 ```
 
 #### review_start
