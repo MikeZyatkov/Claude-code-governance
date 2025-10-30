@@ -70,14 +70,21 @@ Provides centralized audit logging functionality - initializing trails, appendin
 
 #### implementation_start
 ```markdown
-**{timestamp}: Orchestrator → Implementation Agent**
+**{timestamp_value}: Orchestrator → Implementation Agent**
 Command: Implement {layer} layer
 Goal: {goal}
 ```
 
+Example:
+```markdown
+**2025-10-30 16:23:45: Orchestrator → Implementation Agent**
+Command: Implement domain layer
+Goal: Build Tenant aggregate with value objects
+```
+
 #### implementation_complete
 ```markdown
-**{timestamp}: Implementation Agent → Orchestrator**
+**{timestamp_value}: Implementation Agent → Orchestrator**
 Status: ✅ Complete
 
 Summary: {brief_summary_of_what_was_implemented}
@@ -101,6 +108,8 @@ Deviations from Plan:
 Tests: {passing}/{total} passing ({test_count} test cases)
 Files: {created_count} created, {modified_count} modified
 ```
+
+**Remember:** `{timestamp_value}` must be replaced with the ACTUAL output from the Bash date command (e.g., "2025-10-30 16:23:45")
 
 #### review_start
 ```markdown
@@ -199,54 +208,86 @@ Constraints:
 
 ## Instructions for Claude
 
-### For Initialize Action
+⚠️ **CRITICAL - READ THIS FIRST** ⚠️
 
-1. **Execute bash command to get timestamp:**
-
-Run this FIRST:
+Every action in this skill MUST start by running the Bash tool to get the current timestamp:
 ```bash
 date '+%Y-%m-%d %H:%M:%S'
 ```
-Capture the output - this is your timestamp. Do not proceed without running this command.
 
-2. **Get date only:**
+You will get output like: `2025-10-30 16:23:45`
 
-Run this:
-```bash
-date '+%Y-%m-%d'
-```
-Capture the output - this is your date.
+Use this EXACT output string whenever you see `{timestamp_value}` in the templates below.
 
-3. Create file at `docs/{feature}/implementation-audit.md`
+DO NOT generate timestamps yourself. DO NOT use placeholders. ALWAYS use the Bash tool FIRST.
 
-4. Write initial content using the ACTUAL OUTPUT from step 1 and 2:
+---
+
+### For Initialize Action
+
+**STOP - Before doing ANYTHING else, you MUST use the Bash tool:**
+
+1. Use Bash tool with command: `date '+%Y-%m-%d %H:%M:%S'`
+2. Wait for the result (example: "2025-10-30 16:23:45")
+3. Store this result as `timestamp_value`
+
+Then:
+
+4. Use Bash tool with command: `date '+%Y-%m-%d'`
+5. Wait for the result (example: "2025-10-30")
+6. Store this result as `date_value`
+
+Now you can proceed:
+
+7. Create file at `docs/{feature}/implementation-audit.md`
+
+8. Write initial content - substitute the variables with ACTUAL values:
+   - Replace `{timestamp_value}` with the exact string from step 3
+   - Replace `{date_value}` with the exact string from step 6
+
+Template:
 ```markdown
 # Implementation Audit Trail: {feature}
 
-Started: {paste actual output from step 1 here}
+Started: {timestamp_value}
 Threshold: {threshold}/5.0
 Max iterations: {max_iterations}
 Layers: {layers}
 
 ---
 
-## Session: {paste actual output from step 2 here}
+## Session: {date_value}
 
 ```
 
-5. Return success
+Example of what the file should look like:
+```markdown
+# Implementation Audit Trail: tenant-onboarding
+
+Started: 2025-10-30 16:23:45
+Threshold: 4.5/5.0
+Max iterations: 3
+Layers: domain, application, infrastructure
+
+---
+
+## Session: 2025-10-30
+
+```
+
+9. Return success
 
 ### For Append Action
 
-1. **Execute bash command to get timestamp:**
+**STOP - Before doing ANYTHING else, you MUST use the Bash tool:**
 
-Run this FIRST:
-```bash
-date '+%Y-%m-%d %H:%M:%S'
-```
-Capture the output - this is your timestamp. Do not proceed without running this command.
+1. Use Bash tool with command: `date '+%Y-%m-%d %H:%M:%S'`
+2. Wait for the result (example: "2025-10-30 16:23:45")
+3. Store this result as `timestamp_value`
 
-2. **Format entry based on entry_type**, using the ACTUAL OUTPUT from step 1
+Now you can proceed:
+
+4. **Format entry based on entry_type**, using `timestamp_value` from step 3
    - Use appropriate template
    - Fill in data from content object
    - Format issues if present
