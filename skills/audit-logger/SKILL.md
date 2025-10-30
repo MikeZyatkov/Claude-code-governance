@@ -214,29 +214,36 @@ Constraints:
 
 **Steps:**
 
-1. **Get current timestamp:**
-   - Run the script: `python3 skills/audit-logger/get_timestamp.py`
-   - Capture the output (e.g., "2025-10-30 13:27:45")
-   - Extract date portion by splitting on space and taking first part (e.g., "2025-10-30")
+1. **Get current timestamp - RUN THIS PYTHON CODE:**
+
+```python
+from datetime import datetime
+timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+print(timestamp)
+```
+
+This will output the current time like "2025-10-30 13:27:45". Capture this exact output.
+
+Then extract the date portion by splitting on space and taking the first part (e.g., "2025-10-30")
 
 2. **Create audit file:**
    - Create file at `docs/{feature}/implementation-audit.md`
 
 3. **Write initial content:**
-   - Use the timestamp from step 1 (the script output)
+   - Use the ACTUAL timestamp from step 1 (NOT "12:00pm", use the real Python output!)
 
-Template:
+Template (replace {feature}, {threshold}, etc. with actual values, and USE THE REAL TIMESTAMP FROM STEP 1):
 ```markdown
 # Implementation Audit Trail: {feature}
 
-Started: {timestamp from step 1}
+Started: {USE THE ACTUAL TIMESTAMP FROM PYTHON CODE - e.g., "2025-10-30 13:27:45"}
 Threshold: {threshold}/5.0
 Max iterations: {max_iterations}
 Layers: {layers}
 
 ---
 
-## Session: {date portion from step 1}
+## Session: {USE THE DATE FROM TIMESTAMP - e.g., "2025-10-30"}
 
 ```
 
@@ -248,9 +255,15 @@ Layers: {layers}
 
 **Steps:**
 
-1. **Get current timestamp:**
-   - Run the script: `python3 skills/audit-logger/get_timestamp.py`
-   - Capture the output (e.g., "2025-10-30 13:27:45")
+1. **Get current timestamp - RUN THIS PYTHON CODE:**
+
+```python
+from datetime import datetime
+timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+print(timestamp)
+```
+
+This will output the current time like "2025-10-30 13:27:45". Capture this exact output.
 
 2. **Format the entry:**
    - Based on entry_type, format the entry using the timestamp from step 1
@@ -340,11 +353,22 @@ Call audit-logger skill with:
 
 ## Notes for Claude
 
-**Timestamps:**
-- You MUST run `python3 skills/audit-logger/get_timestamp.py` as the first step in both Initialize and Append actions
-- This script returns the current time in format "YYYY-MM-DD HH:MM:SS"
-- Use the exact output from this script in all audit entries
-- Never use placeholder times like "12:00am" or make up timestamps
+**CRITICAL - Timestamps:**
+
+⚠️ **YOU MUST EXECUTE THE PYTHON CODE IN STEP 1 OF BOTH ACTIONS**
+
+The Python code blocks in Initialize and Append actions are NOT examples - they are code you must RUN.
+
+Execute this code:
+```python
+from datetime import datetime
+timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+print(timestamp)
+```
+
+Then use the ACTUAL output (like "2025-10-30 13:27:45") in the audit file.
+
+**NEVER write "12:00pm" or "12:00am" - these are placeholders and are WRONG.**
 
 **Markdown Formatting:**
 - Consistent structure
