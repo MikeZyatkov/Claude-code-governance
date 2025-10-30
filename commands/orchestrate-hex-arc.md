@@ -111,10 +111,10 @@ If specified layer not found, show error with available layers.
 ```
 🚀 Starting Orchestrated Implementation
 
-Feature: {feature_name}
-Layers: {layer_list}
-Quality threshold: {threshold}/5.0
-Max fix iterations per layer: 3
+Feature: {feature_name} 
+Layers: {layer_list} 
+Quality threshold: {threshold}/5.0 
+Max fix iterations per layer: 3 
 
 Plan: docs/{feature_name}/plan.md
 Audit trail: docs/{feature_name}/implementation-audit.md
