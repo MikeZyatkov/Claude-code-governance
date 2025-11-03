@@ -63,9 +63,14 @@ If any criterion fails, enter fix cycle (up to 3 iterations).
 
 ## Instructions for Claude
 
-**IMPORTANT:**
+**IMPORTANT - Timestamps:**
 
-The audit-logger skill handles timestamp generation internally by executing Python code. You do not need to provide timestamps when calling it - each call will automatically get a fresh timestamp.
+Before EVERY call to audit-logger skill, you MUST:
+1. Run: `date '+%Y-%m-%d %H:%M:%S'` using the Bash tool
+2. Capture the output (e.g., "2025-10-30 14:20:15")
+3. Pass it as the `timestamp` parameter to audit-logger
+
+This ensures accurate timestamps for each audit entry.
 
 ---
 
@@ -123,11 +128,17 @@ If the user says no, exit gracefully.
 
 ### Step 2: Initialize Audit Trail
 
+**Get current timestamp:**
+```bash
+date '+%Y-%m-%d %H:%M:%S'
+```
+
 **Call audit-logger skill:**
 ```json
 {
   "action": "initialize",
   "feature": "{feature_name}",
+  "timestamp": "{output from date command}",
   "data": {
     "threshold": {threshold},
     "max_iterations": {max_iterations},
@@ -151,11 +162,17 @@ quality_gate_passed = false
 
 **Log implementation start:**
 
+**Get current timestamp:**
+```bash
+date '+%Y-%m-%d %H:%M:%S'
+```
+
 **Call audit-logger skill:**
 ```json
 {
   "action": "append",
   "feature": "{feature_name}",
+  "timestamp": "{output from date command}",
   "data": {
     "entry_type": "implementation_start",
     "from": "Orchestrator",
@@ -183,11 +200,17 @@ quality_gate_passed = false
 
 **Log implementation completion:**
 
+**Get current timestamp:**
+```bash
+date '+%Y-%m-%d %H:%M:%S'
+```
+
 **Call audit-logger skill:**
 ```json
 {
   "action": "append",
   "feature": "{feature_name}",
+  "timestamp": "{output from date command}",
   "data": {
     "entry_type": "implementation_complete",
     "from": "Implementation Agent",
@@ -211,11 +234,17 @@ quality_gate_passed = false
 
 **Log review start:**
 
+**Get current timestamp:**
+```bash
+date '+%Y-%m-%d %H:%M:%S'
+```
+
 **Call audit-logger skill:**
 ```json
 {
   "action": "append",
   "feature": "{feature_name}",
+  "timestamp": "{output from date command}",
   "data": {
     "entry_type": "review_start",
     "from": "Orchestrator",
@@ -248,11 +277,17 @@ quality_gate_passed = false
 
 **Log review result:**
 
+**Get current timestamp:**
+```bash
+date '+%Y-%m-%d %H:%M:%S'
+```
+
 **Call audit-logger skill:**
 ```json
 {
   "action": "append",
   "feature": "{feature_name}",
+  "timestamp": "{output from date command}",
   "data": {
     "entry_type": "review_complete",
     "from": "Review Agent",
@@ -320,11 +355,17 @@ If result.intervention_needed = true:
 
 **Log commit start:**
 
+**Get current timestamp:**
+```bash
+date '+%Y-%m-%d %H:%M:%S'
+```
+
 **Call audit-logger skill:**
 ```json
 {
   "action": "append",
   "feature": "{feature_name}",
+  "timestamp": "{output from date command}",
   "data": {
     "entry_type": "commit",
     "from": "Orchestrator",
@@ -392,11 +433,17 @@ Commit: {commit_result.commit_hash}
 
 **Log orchestration completion:**
 
+**Get current timestamp:**
+```bash
+date '+%Y-%m-%d %H:%M:%S'
+```
+
 **Call audit-logger skill:**
 ```json
 {
   "action": "append",
   "feature": "{feature_name}",
+  "timestamp": "{output from date command}",
   "data": {
     "entry_type": "completion",
     "from": "Orchestrator",
@@ -491,11 +538,17 @@ Resolve conflicts and try again.
 
 **Log intervention request:**
 
+**Get current timestamp:**
+```bash
+date '+%Y-%m-%d %H:%M:%S'
+```
+
 **Call audit-logger skill:**
 ```json
 {
   "action": "append",
   "feature": "{feature_name}",
+  "timestamp": "{output from date command}",
   "data": {
     "entry_type": "intervention",
     "from": "Orchestrator",
@@ -550,9 +603,10 @@ This command orchestrates 7 skills:
 - All skills return structured data
 
 **Timestamps:**
-- Handled automatically by audit-logger skill via embedded Python code
-- You do not need to provide timestamps when calling audit-logger
-- Each audit-logger call executes Python to get a fresh timestamp automatically
+- You MUST run `date '+%Y-%m-%d %H:%M:%S'` before EVERY audit-logger call
+- Capture the output and pass it as the `timestamp` parameter
+- This ensures accurate timestamps for each audit entry
+- Format: "YYYY-MM-DD HH:MM:SS" (24-hour format)
 
 **Progress Reporting:**
 - Show real-time progress after each phase
