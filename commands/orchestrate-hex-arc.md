@@ -152,7 +152,10 @@ If the user says no, exit gracefully.
 
 **Invoke audit-logger skill to initialize:**
 
-Invoke the audit-logger skill to create the audit trail for `{feature_name}`.
+Invoke the audit-logger skill using the FULLY-QUALIFIED name:
+  Skill(claude-code-governance:audit-logger)
+
+This will create the audit trail for `{feature_name}`.
 
 Context to provide:
 - Feature: {feature_name}
@@ -177,7 +180,9 @@ quality_gate_passed = false
 
 **Invoke audit-logger skill:**
 
-Invoke the audit-logger skill to log implementation start for the {layer_name} layer.
+Invoke using FULLY-QUALIFIED name: Skill(claude-code-governance:audit-logger)
+
+Log implementation start for the {layer_name} layer.
 
 Context:
 - Feature: {feature_name}
@@ -204,12 +209,15 @@ You are implementing the {layer_name} layer for the {feature_name} feature.
 Read the implementation-engine skill instructions from:
 skills/implementation-engine/SKILL.md
 
-Then execute the skill with this context:
+Then invoke the skill using the Skill tool with the FULLY-QUALIFIED name:
+  Skill(claude-code-governance:implementation-engine)
+
+Provide this context to the skill:
 - Feature: {feature_name}
 - Layer: {layer_name}
 - Plan: docs/{feature_name}/plan.md
 
-Build all components specified in the plan, following governance patterns and writing tests.
+The skill will build all components specified in the plan, following governance patterns and writing tests.
 
 When complete, return a structured summary:
 {
@@ -230,7 +238,7 @@ When complete, return a structured summary:
 
 **Invoke audit-logger skill:**
 
-Invoke the audit-logger skill to log implementation completion for the {layer_name} layer.
+Invoke using Skill(claude-code-governance:audit-logger) to log implementation completion for the {layer_name} layer.
 
 Context:
 - Feature: {feature_name}
@@ -253,7 +261,7 @@ The skill will generate a timestamp and append the completion entry to the audit
 
 **Invoke audit-logger skill:**
 
-Invoke the audit-logger skill to log review start for the {layer_name} layer.
+Invoke using Skill(claude-code-governance:audit-logger) to log review start for the {layer_name} layer.
 
 Context:
 - Feature: {feature_name}
@@ -280,7 +288,10 @@ You are reviewing the {layer_name} layer for the {feature_name} feature.
 Step 1: Read the review-engine skill instructions from:
 skills/review-engine/SKILL.md
 
-Execute the skill with this context:
+Then invoke the skill using the Skill tool with the FULLY-QUALIFIED name:
+  Skill(claude-code-governance:review-engine)
+
+Provide this context to the skill:
 - Feature: {feature_name}
 - Layer: {layer_name}
 - Implementation files: contexts/{feature_name}/{layer_name}/
@@ -291,7 +302,10 @@ This will evaluate code against governance patterns, score each tactic, and iden
 Step 2: Read the quality-gate skill instructions from:
 skills/quality-gate/SKILL.md
 
-Execute the quality gate with:
+Then invoke the skill using the Skill tool with the FULLY-QUALIFIED name:
+  Skill(claude-code-governance:quality-gate)
+
+Provide this context to the skill:
 - Review results: {from review-engine output above}
 - Threshold: {threshold}
 
@@ -324,7 +338,7 @@ When complete, return a structured summary:
 
 **Invoke audit-logger skill:**
 
-Invoke the audit-logger skill to log review completion for the {layer_name} layer.
+Invoke using Skill(claude-code-governance:audit-logger) to log review completion for the {layer_name} layer.
 
 Context:
 - Feature: {feature_name}
@@ -369,7 +383,10 @@ You are coordinating fixes for the {layer_name} layer of the {feature_name} feat
 Read the fix-coordinator skill instructions from:
 skills/fix-coordinator/SKILL.md
 
-Execute the skill with this context:
+Then invoke the skill using the Skill tool with the FULLY-QUALIFIED name:
+  Skill(claude-code-governance:fix-coordinator)
+
+Provide this context to the skill:
 - Feature: {feature_name}
 - Layer: {layer_name}
 - Issues to fix: {gate_result.issues categorized by priority}
@@ -425,7 +442,7 @@ If `result.intervention_needed = true`:
 
 **Invoke audit-logger skill:**
 
-Invoke the audit-logger skill to log commit action for the {layer_name} layer.
+Invoke using Skill(claude-code-governance:audit-logger) to log commit action for the {layer_name} layer.
 
 Context:
 - Feature: {feature_name}
@@ -437,7 +454,9 @@ The skill will generate a timestamp internally.
 
 **Invoke git-ops skill:**
 
-Invoke the git-ops skill to create a commit for the {layer_name} layer.
+Invoke using FULLY-QUALIFIED name: Skill(claude-code-governance:git-ops)
+
+Create a commit for the {layer_name} layer.
 
 Context:
 - Feature: {feature_name}
@@ -491,7 +510,7 @@ Commit: {commit_result.commit_hash}
 
 **Invoke audit-logger skill:**
 
-Invoke the audit-logger skill to log orchestration completion.
+Invoke using Skill(claude-code-governance:audit-logger) to log orchestration completion.
 
 Context:
 - Feature: {feature_name}
@@ -585,7 +604,7 @@ Resolve conflicts and try again.
 
 **Invoke audit-logger skill:**
 
-Invoke the audit-logger skill to log user intervention request.
+Invoke using Skill(claude-code-governance:audit-logger) to log user intervention request.
 
 Context:
 - Feature: {feature_name}
