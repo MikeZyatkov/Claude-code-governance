@@ -252,7 +252,25 @@ Without this configuration, you'll be prompted for approval 20-30+ times during 
 
 **Quick Setup (1 minute):**
 
-Edit `~/.claude/settings.json` and add:
+**First, check if you have local settings:**
+
+```bash
+ls .claude/settings.local.json
+```
+
+**If the file exists** (local settings take precedence), edit `.claude/settings.local.json`:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Skill(claude-code-governance:*)"
+    ]
+  }
+}
+```
+
+**If the file doesn't exist**, edit `~/.claude/settings.json`:
 
 ```json
 {
@@ -264,9 +282,11 @@ Edit `~/.claude/settings.json` and add:
 }
 ```
 
-Then restart Claude Code.
+Then restart Claude Code or start a new conversation.
 
 **Why this is needed:** The `/orchestrate:hex-arc` command coordinates multiple skills (implementation → review → quality gate → fix → commit). Each skill invocation requires approval by default. This configuration whitelists all plugin skills for seamless autonomous execution.
+
+**Note:** Local workspace settings (`.claude/settings.local.json`) take precedence over global settings (`~/.claude/settings.json`). The syntax is also different: `permissions.allow` for local vs `iam.allow` for global.
 
 See the [full configuration guide](./post-install-configuration.md) for detailed instructions, security considerations, and troubleshooting.
 

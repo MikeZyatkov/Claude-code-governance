@@ -28,7 +28,79 @@ You need to whitelist all skills from this plugin so they can execute without ma
 
 ## Configuration Steps
 
-**Step 1:** Open your Claude Code settings file:
+### Step 1: Check Which Settings File to Update
+
+Claude Code uses two settings files:
+- **Local (workspace)**: `.claude/settings.local.json` in your project root
+- **Global (user)**: `~/.claude/settings.json` in your home directory
+
+**⚠️ Important:** Local settings take precedence over global settings. If you have a local settings file, you MUST add the permission there.
+
+**Check if you have local settings:**
+
+```bash
+# Check in your project directory
+ls -la .claude/settings.local.json
+```
+
+If the file exists → Use **Option A: Local Settings** (recommended)
+If the file doesn't exist → Use **Option B: Global Settings**
+
+---
+
+### Option A: Local Workspace Settings (Recommended)
+
+**When to use:** If `.claude/settings.local.json` exists in your project
+
+**Step 1:** Open your local settings file:
+
+```bash
+# macOS/Linux
+nano .claude/settings.local.json
+
+# Windows
+notepad .claude\settings.local.json
+```
+
+**Step 2:** Add the skill permission to the `permissions.allow` array:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Skill(claude-code-governance:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
+```
+
+**If you already have permissions**, just add the new rule to the existing array:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Read(//path/to/project/**)",
+      "Skill(claude-code-governance:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
+```
+
+**Step 3:** Restart Claude Code or start a new conversation.
+
+---
+
+### Option B: Global User Settings
+
+**When to use:** If no local `.claude/settings.local.json` file exists
+
+**Step 1:** Open your global settings file:
 
 ```bash
 # macOS/Linux
@@ -53,20 +125,33 @@ notepad %USERPROFILE%\.claude\settings.json
 }
 ```
 
-**Important:** If you already have an `iam` section, just add the new rule to the existing `allow` array:
+**If you already have an `iam` section**, just add the new rule to the existing `allow` array:
 
 ```json
 {
   "iam": {
     "allow": [
       "Bash(npm test)",
-      "Skill(claude-code-governance:*)"  // Add this line
+      "Skill(claude-code-governance:*)"
     ]
   }
 }
 ```
 
 **Step 3:** Restart Claude Code for changes to take effect.
+
+---
+
+### Key Differences Between Local and Global Settings
+
+| Aspect | Local (`.claude/settings.local.json`) | Global (`~/.claude/settings.json`) |
+|--------|---------------------------------------|-----------------------------------|
+| **Scope** | Single workspace/project | All workspaces |
+| **Precedence** | Takes priority (overrides global) | Used if no local settings exist |
+| **Syntax** | `permissions.allow` | `iam.allow` |
+| **Location** | Project root `.claude/` directory | User home `~/.claude/` directory |
+
+**Best Practice:** Use local settings for project-specific permissions, global settings for universal tools you trust everywhere.
 
 ## What This Configuration Does
 
