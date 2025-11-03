@@ -37,25 +37,24 @@ Example: /implement:hex-arc tenant-onboarding domain
 
 ### Step 2: Invoke Implementation Engine Skill
 
-**Call the `implementation-engine` skill:**
+**Invoke the implementation-engine skill:**
 
-```json
-{
-  "feature": "{feature_name}",
-  "layer": "{layer}",
-  "plan_path": "docs/{feature_name}/plan.md"
-}
-```
+Invoke the implementation-engine skill to implement the {layer} layer for {feature_name}.
+
+Context:
+- Feature: {feature_name}
+- Layer: {layer}
+- Plan: docs/{feature_name}/plan.md
 
 The skill will:
 - Validate plan exists and layer is in plan
 - Load implementation plan details
-- Load governance patterns
+- Load governance patterns via pattern-loader
 - Explore codebase for conventions
 - Implement components following patterns
 - Write tests
 - Verify pattern compliance
-- Return structured result
+- Report completion with summary
 
 ### Step 3: Handle Result
 

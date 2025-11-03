@@ -103,44 +103,44 @@ Proceeding to review {layer_list}...
 
 **For each detected layer:**
 
-**Call review-engine skill:**
-```json
-{
-  "feature": "{feature_name}",
-  "layer": "{layer}",
-  "code_source": "git_diff",
-  "plan_path": "docs/{feature_name}/plan.md"
-}
-```
+**Invoke review-engine skill:**
+
+Invoke the review-engine skill to review the {layer} layer implementation.
+
+Context:
+- Feature: {feature_name}
+- Layer: {layer}
+- Code source: git diff (recent changes)
+- Plan: docs/{feature_name}/plan.md
 
 The skill will:
 - Load code from git diff
 - Load implementation plan for context
-- Load patterns and calibrations
-- Build LLM-as-judge evaluation prompt
-- Execute evaluation
+- Load patterns and calibrations via pattern-loader
+- Evaluate code against pattern tactics using LLM-as-judge
 - Calculate weighted scores
-- Return structured review results
+- Identify issues by priority
+- Report review results
 
 ### Step 5: Evaluate Quality Gate
 
-**Call quality-gate skill:**
-```json
-{
-  "review": {review_result from review-engine},
-  "threshold": 4.0
-}
-```
+**Invoke quality-gate skill:**
 
-Note: Use default threshold 4.0 for manual reviews (orchestrator uses 4.5).
+Invoke the quality-gate skill to evaluate if the review passed the quality threshold.
+
+Context:
+- Review results: {from review-engine output above}
+- Threshold: 4.0 (default for manual reviews; orchestrator uses 4.5)
+
+Note: Use default threshold 4.0 for manual reviews to be slightly more lenient.
 
 The skill will:
 - Check overall score >= threshold
 - Check no critical tactics < 4
 - Check no important tactics < 4
 - Check no constraint violations
-- Categorize issues
-- Return pass/fail decision
+- Categorize issues by priority
+- Make pass/fail decision
 
 ### Step 6: Display Review Report
 

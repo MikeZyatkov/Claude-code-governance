@@ -1,371 +1,186 @@
 ---
 name: review-engine
-description: Performs code review using LLM-as-judge with calibrated scoring rubrics. Evaluates code against governance patterns and returns structured review results with scores and reasoning.
+description: Reviews code against governance patterns using LLM-as-judge with calibrated scoring rubrics. Evaluates implementation quality and identifies issues.
+allowed-tools: Read, Bash, Glob, Grep
 ---
 
 # Review Engine Skill
 
-Performs code review using LLM-as-judge with calibrated scoring rubrics.
+Reviews code implementation against governance patterns using LLM-as-judge with calibrated scoring rubrics.
 
 ## Purpose
 
-Evaluates code against governance patterns and returns structured review results. Does NOT make pass/fail decisions - that's quality-gate's job.
+Evaluates code quality by scoring against pattern tactics and constraints, identifying issues that need fixing.
 
-## Input
+## When to Use
 
-```json
-{
-  "feature": "tenant-onboarding",
-  "layer": "domain",
-  "code_source": "git_diff" | "files",
-  "plan_path": "docs/tenant-onboarding/plan.md"
-}
-```
+Invoked by orchestrator after layer implementation completes to assess quality before committing.
 
-## Output
+## How It Works
 
-```json
-{
-  "feature": "tenant-onboarding",
-  "layer": "domain",
-  "overall_score": 4.2,
-  "patterns": [
-    {
-      "name": "DDD Aggregates v1",
-      "version": "v1",
-      "score": 4.0,
-      "tactics": [
-        {
-          "tactic_id": "encapsulate-state",
-          "tactic_name": "Encapsulate aggregate state",
-          "priority": "critical",
-          "score": 3,
-          "reasoning": "Some state fields in Tenant aggregate are declared as public or lack the underscore prefix. Found: 'companyName' and 'adminEmail' without '_' prefix, and 'status' declared as public instead of private.",
-          "rubric_level": "Score 3: Some fields are encapsulated..."
-        },
-        {
-          "tactic_id": "invariant-methods",
-          "tactic_name": "Validate invariants in methods",
-          "priority": "important",
-          "score": 3,
-          "reasoning": "The activate() method doesn't validate business rules before state change. Missing validation: Should check that tenant is not already active, should verify admin email is confirmed before activation."
-        }
-      ],
-      "constraints": [
-        {
-          "rule": "Aggregate root MUST be only entry point for modifications",
-          "status": "PASS",
-          "reasoning": "All modifications go through aggregate root methods. No direct access to child entities."
-        }
-      ]
-    }
-  ],
-  "overall_reasoning": "Implementation follows most DDD patterns but has some encapsulation issues and missing invariant validations that need to be addressed."
-}
-```
+### Context from Orchestrator
 
-## Instructions for Claude
+Reads context from:
+1. **Feature name:** From command or recent messages
+2. **Layer:** domain, application, or infrastructure
+3. **Patterns:** Already loaded or to be loaded
+4. **Implementation files:** Located in `contexts/{feature}/{layer}/`
 
-### Step 1: Load Code to Review
+### Workflow
 
-**If code_source = "git_diff":**
-```bash
-git diff HEAD
-```
-Parse changed files and extract code.
+#### 1. Load Context
 
-**If code_source = "files":**
-Read files matching layer pattern:
-- Domain: `src/domain/**/*.ts` and `test/domain/**/*.ts`
-- Application: `src/application/**/*.ts` and `test/application/**/*.ts`
-- Infrastructure: `src/infrastructure/**/*.ts` and `test/infrastructure/**/*.ts`
+**Steps:**
+1. Identify feature and layer from context
+2. Find implementation files: `find contexts/{feature}/{layer}/ -name "*.ts" -type f`
+3. Read implementation code
+4. Load patterns via pattern-loader skill (with calibrations)
 
-**Combine code into single block:**
-```typescript
-// File: src/domain/Tenant.aggregate.ts
-{file_content}
-
-// File: src/domain/EmailAddress.ts
-{file_content}
-
-...
-```
-
-### Step 2: Load Implementation Plan
-
-**Read plan:**
-- Extract relevant layer section
-- Understand what was supposed to be implemented
-- This helps evaluate if planned features are present
-
-**Use this to check:**
-- Are all planned components implemented?
-- Are planned event registrations present?
-- Do planned methods exist?
-- Any regressions or missing implementations?
-
-### Step 3: Load Patterns and Calibrations
-
-**Use pattern-loader skill:**
-
-From plan's "Pattern Compliance" section, extract pattern names for this layer.
-
-```json
-{
-  "action": "load",
-  "filter": {
-    "pattern_names": ["ddd-aggregates", "event-sourcing", ...]
-  }
-}
-```
-
-**Extract from loaded patterns:**
-- Goal and guiding_policy
-- All tactics (id, name, priority, description)
-- All constraints (rule, description, exceptions, evaluation)
-- Calibration rubrics (tactic_id → score → description)
-
-### Step 4: Build Evaluation Prompt
-
-**Construct LLM-as-judge prompt:**
-
-```
-# Code Evaluation Task
-
-You are an expert code reviewer evaluating code against established architecture patterns.
-
-## Pattern to Evaluate Against
-
-**Pattern Name**: {pattern.pattern_name} ({pattern.version})
-**Domain**: {pattern.domain}
-
-### Goal
-{pattern.goal}
-
-### Guiding Policy
-{pattern.guiding_policy}
-
-## Implementation Plan (What Was Supposed to Be Implemented)
-
-{relevant_section_from_plan_for_this_layer}
-
-**IMPORTANT**: Use this implementation plan to understand what was supposed to be implemented. When evaluating the code:
-- Check if all planned features are actually implemented
-- Verify that planned event registrations are present
-- Confirm that planned methods and fields exist
-- Look for any regressions or missing implementations
-
-If the implementation plan specifies certain events should be registered, methods should exist, or specific functionality should be present, and you don't see them in the code, this is a critical issue that should result in low scores for relevant tactics.
-
-## Code to Evaluate
-
-```typescript
-{combined_code_from_all_files}
-```
-
-## Evaluation Instructions
-
-### Part 1: Evaluate Tactics
-
-Score each tactic on a scale of 0-5 using the provided rubric:
-
-{For each tactic:}
-
-#### Tactic: {tactic.name}
-**ID**: {tactic.id}
-**Priority**: {tactic.priority}
-**Description**: {tactic.description}
-
-**Scoring Rubric**:
-- **5**: {rubric[5]}
-- **4**: {rubric[4]}
-- **3**: {rubric[3]}
-- **2**: {rubric[2]}
-- **1**: {rubric[1]}
-- **0**: {rubric[0]}
-
-{...repeat for all tactics}
-
-For each tactic, provide:
-1. Score (0-5, or -1 if not applicable)
-2. Brief reasoning (2-3 sentences with specific code examples)
-
-**IMPORTANT**: If a tactic is not applicable to the code being evaluated (e.g., entity-related tactics when there are no child entities), use a score of **-1** and explain why it's not applicable in the reasoning. Non-applicable tactics will be excluded from scoring calculations.
-
-### Part 2: Evaluate Constraints
-
-Check each constraint and determine: PASS, FAIL, or EXCEPTION_ALLOWED
-
-{For each constraint:}
-
-#### Constraint: {constraint.rule}
-**Description**: {constraint.description}
-**Evaluation Type**: {constraint.evaluation}
-**Allowed Exceptions**:
-  - {exception1}
-  - {exception2}
-
-{...repeat for all constraints}
-
-For each constraint, provide:
-1. Status (PASS/FAIL/EXCEPTION_ALLOWED)
-2. Brief reasoning
-3. If EXCEPTION_ALLOWED, specify which exception applies
-
-## Output Format
-
-**CRITICAL**: You MUST respond with ONLY a JSON code block. Do not include explanatory text, summaries, or markdown formatting outside the JSON block.
-
-Your response should be exactly this format (nothing else):
-
-```json
-{
-  "tactic_scores": [
-    {
-      "tactic_id": "...",
-      "tactic_name": "...",
-      "score": 4,
-      "reasoning": "..."
-    }
-  ],
-  "constraint_checks": [
-    {
-      "constraint_rule": "...",
-      "status": "PASS",
-      "reasoning": "...",
-      "exception_used": "..." // only if EXCEPTION_ALLOWED
-    }
-  ],
-  "overall_reasoning": "Summary of the evaluation (2-3 sentences)"
-}
-```
-
-**IMPORTANT**:
-- Start your response with ```json
-- Include ALL tactics and constraints in the JSON
-- End with ```
-- Do NOT add any text before or after the JSON block
-
-Be objective and precise. Focus on observable patterns in the code, not potential improvements.
-```
-
-### Step 5: Execute LLM Evaluation
-
-**Send prompt to LLM** (Task tool or direct invocation)
-
-**Parse JSON response:**
-- Extract tactic_scores array
-- Extract constraint_checks array
-- Extract overall_reasoning
-
-**Handle errors:**
-- If JSON is malformed, return error
-- If LLM doesn't follow format, return error
-
-### Step 6: Calculate Scores
+#### 2. Evaluate Each Pattern
 
 **For each pattern:**
 
-1. **Filter out non-applicable tactics** (score = -1)
+1. **Score each tactic** (0-5 scale):
+   - Read calibrated rubric for the tactic
+   - Analyze code against rubric criteria
+   - Assign score (5=excellent, 4=good, 3=acceptable, 2=poor, 1=bad, 0=not applicable)
+   - Provide reasoning for score
 
-2. **Calculate weighted tactics score:**
+2. **Check constraints:**
+   - MUST rules: Critical violations
+   - SHOULD rules: Important best practices
+   - MUST_NOT rules: Anti-patterns to avoid
+   - Note any violations
+
+3. **Calculate pattern score:**
+   - Average scores of critical and important tactics
+   - Exclude N/A tactics (score 0)
+   - Weight: Critical tactics matter most
+
+#### 3. Identify Issues
+
+**Categorize issues by priority:**
+
+**Critical issues:** (Score < 4 for critical tactics, or MUST constraint violated)
+- Tactic with score
+- Problem description
+- What pattern expects
+- Impact on system
+
+**Important issues:** (Score < 4 for important tactics, or SHOULD constraint violated)
+- Similar format to critical
+- Less severe impact
+
+**Optional improvements:** (Nice tactics score < 4)
+- Enhancement opportunities
+- Not required for quality gate
+
+#### 4. Calculate Overall Score
+
+**Formula:**
 ```
-applicable_tactics = tactics.filter(t => t.score >= 0)
-
-weighted_sum = Σ(tactic.score × weight) for applicable tactics
-total_weight = Σ(weight) for applicable tactics
-
-tactics_score = weighted_sum / total_weight
-
-where weight = {
-  critical: 3.0,
-  important: 2.0,
-  optional: 1.0
-}
-```
-
-3. **Check constraints:**
-```
-constraints_passed = (FAIL count == 0)
-```
-
-4. **Calculate overall pattern score:**
-```
-pattern_score = (tactics_score / 5.0) × 0.7 + (constraints_passed ? 1 : 0) × 0.3
-
-Result: 0.0 to 1.0, then multiply by 5.0 for 0-5 scale
-```
-
-5. **Calculate overall score:**
-```
-overall_score = average(all pattern_scores)
-```
-
-### Step 7: Build Output JSON
-
-**Structure output as specified:**
-- feature
-- layer
-- overall_score
-- patterns array (with scores, tactics, constraints)
-- overall_reasoning
-
-**Return structured JSON.**
-
-## Usage Examples
-
-**Caller (review command):**
-```markdown
-Call review-engine skill.
-Receive review results.
-
-Format for user display:
-"# Code Review Report
-
-Overall Score: 4.2/5.0
-
-## DDD Aggregates v1 - 4.0/5.0
-
-### Issues:
-1. [CRITICAL] encapsulate-state - 3/5
-   {reasoning}
-
-2. [IMPORTANT] invariant-methods - 3/5
-   {reasoning}"
+overall_score = average(all_pattern_scores)
 ```
 
-**Caller (orchestrate command):**
-```markdown
-Call review-engine skill.
-Receive review results.
+Only include applicable tactics (exclude N/A).
 
-Pass to quality-gate skill for pass/fail decision.
-Log to audit trail with detailed issues.
+## Instructions for Claude
+
+### Reading Context
+
+**Feature/Layer:** From orchestrator
+
+**Implementation files:**
+```bash
+find contexts/{feature}/{layer}/ -name "*.ts" -type f
 ```
 
-## Notes for Claude
+**Patterns:** Invoke pattern-loader to get patterns with calibrations
 
-**LLM-as-Judge Prompt:**
-- Use the EXACT prompt structure shown above
-- This ensures consistency with evaluation framework
-- Improvements benefit both review and evaluation
+### Scoring Guidelines
 
-**JSON Parsing:**
-- Expect JSON response from LLM
-- Parse carefully
-- Handle malformed JSON gracefully
+**Use Calibrated Rubrics:**
+- Each tactic has a rubric with score descriptions
+- Match code behavior to rubric criteria
+- Be objective and consistent
+- Provide specific evidence from code
 
-**Score Calculation:**
-- Use weights: critical=3.0, important=2.0, optional=1.0
-- Exclude non-applicable tactics (score=-1)
-- Calculate weighted average
+**Score Meanings:**
+- **5:** Exceeds expectations, best practices applied
+- **4:** Meets expectations, pattern followed correctly
+- **3:** Acceptable but has minor issues
+- **2:** Significant problems, pattern partially followed
+- **1:** Major problems, pattern mostly ignored
+- **0:** Not applicable (tactic doesn't apply to this code)
 
-**Non-Applicable Tactics:**
-- Entity tactics when no child entities
-- Collection tactics when no collections
-- Score -1 and exclude from calculations
+**Critical vs Important:**
+- Critical tactics: Core to pattern success
+- Important tactics: Strongly recommended
+- Nice tactics: Optional enhancements
 
-**Output Format:**
-- Always valid JSON
-- Structure exactly as specified
-- Include all fields
+### Issue Formatting
+
+For each issue, provide:
+1. **Tactic name** and **pattern name**
+2. **Score** (out of 5)
+3. **Problem:** What's wrong in the code
+4. **Required:** What pattern expects
+5. **Impact:** Why this matters (business/technical consequence)
+
+### Reporting Results
+
+Present results clearly:
+```
+Review Results for {feature} - {layer} layer
+
+Overall Score: {score}/5.0
+
+Pattern: DDD Aggregates and Entities
+- encapsulate-state: 3/5 (Some state is public)
+- apply-via-events: 5/5 (All state changes emit events)
+- invariant-methods: 4/5 (Most invariants enforced)
+  Pattern Score: 4.0/5.0
+
+Issues Found:
+
+CRITICAL:
+1. encapsulate-state - Score: 3/5
+   Problem: Several fields are public (email, name, status)
+   Required: All state private with _ prefix, access via getters
+   Impact: Breaks encapsulation, allows direct mutation bypassing domain logic
+
+IMPORTANT:
+2. [No important issues]
+
+Constraints: All passed
+```
+
+## Example Workflow
+
+**Context:**
+- Feature: tenant-onboarding
+- Layer: domain
+- Orchestrator: "Review the domain layer implementation"
+
+**Actions:**
+1. Find files: contexts/tenant-onboarding/domain/model/*.ts
+2. Read: Tenant.ts, EmailAddress.ts, CompanyName.ts
+3. Load pattern: ddd-aggregates with calibration
+4. Score each tactic:
+   - encapsulate-state: Read rubric, check if state is private → Score 3 (some public fields)
+   - apply-via-events: Check if events emitted → Score 5 (all state changes emit events)
+   - invariant-methods: Check validation → Score 4 (most enforced)
+5. Calculate pattern score: (3+5+4)/3 = 4.0
+6. Identify issues: encapsulate-state scored below 4 (critical)
+7. Format issue with problem/required/impact
+8. Report results with overall score 4.0/5.0
+
+## Notes
+
+**LLM-as-judge:** This skill uses Claude's judgment to score code quality
+
+**Calibration:** Rubrics provide consistency across reviews
+
+**Objectivity:** Base scores on evidence from code, not assumptions
+
+**Tool Restrictions:** Read-only - cannot modify code during review

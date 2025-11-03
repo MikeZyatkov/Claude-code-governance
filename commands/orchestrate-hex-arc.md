@@ -133,19 +133,16 @@ If the user says no, exit gracefully.
 date '+%Y-%m-%d %H:%M:%S'
 ```
 
-**Call audit-logger skill:**
-```json
-{
-  "action": "initialize",
-  "feature": "{feature_name}",
-  "timestamp": "{output from date command}",
-  "data": {
-    "threshold": {threshold},
-    "max_iterations": {max_iterations},
-    "layers": {layers_to_implement}
-  }
-}
-```
+**Invoke audit-logger skill to initialize:**
+
+Invoke the audit-logger skill to create the audit trail for `{feature_name}`.
+
+Context to provide:
+- Feature: {feature_name}
+- Timestamp: {output from date command above}
+- Threshold: {threshold}
+- Max iterations: {max_iterations}
+- Layers: {layers_to_implement}
 
 The skill will create `docs/{feature_name}/implementation-audit.md` with initial metadata.
 
@@ -167,36 +164,32 @@ quality_gate_passed = false
 date '+%Y-%m-%d %H:%M:%S'
 ```
 
-**Call audit-logger skill:**
-```json
-{
-  "action": "append",
-  "feature": "{feature_name}",
-  "timestamp": "{output from date command}",
-  "data": {
-    "entry_type": "implementation_start",
-    "from": "Orchestrator",
-    "to": "Implementation Agent",
-    "content": {
-      "layer": "{layer_name}",
-      "goal": "{extract from plan}"
-    }
-  }
-}
-```
+**Invoke audit-logger skill:**
 
-**Call implementation-engine skill:**
-```json
-{
-  "feature": "{feature_name}",
-  "layer": "{layer_name}",
-  "plan_path": "docs/{feature_name}/plan.md"
-}
-```
+Invoke the audit-logger skill to log implementation start for the {layer_name} layer.
 
-**Handle result:**
-- If result.success = false: Log error, abort orchestration
-- If result.success = true: Continue
+Context:
+- Feature: {feature_name}
+- Timestamp: {output from date command above}
+- Entry type: implementation_start
+- Layer: {layer_name}
+- Goal: {extract goal from plan}
+
+**Invoke implementation-engine skill:**
+
+Invoke the implementation-engine skill to implement the {layer_name} layer.
+
+Context:
+- Feature: {feature_name}
+- Layer: {layer_name}
+- Plan: docs/{feature_name}/plan.md
+
+The skill will build all components specified in the plan, following governance patterns and writing tests.
+
+**Monitor implementation:**
+- Watch for completion or errors
+- If errors occur: Log error, abort orchestration
+- If successful: Continue to completion logging
 
 **Log implementation completion:**
 
@@ -205,25 +198,20 @@ date '+%Y-%m-%d %H:%M:%S'
 date '+%Y-%m-%d %H:%M:%S'
 ```
 
-**Call audit-logger skill:**
-```json
-{
-  "action": "append",
-  "feature": "{feature_name}",
-  "timestamp": "{output from date command}",
-  "data": {
-    "entry_type": "implementation_complete",
-    "from": "Implementation Agent",
-    "to": "Orchestrator",
-    "content": {
-      "success": true,
-      "components": result.components,
-      "tests": result.tests,
-      "files": result.files.created
-    }
-  }
-}
-```
+**Invoke audit-logger skill:**
+
+Invoke the audit-logger skill to log implementation completion for the {layer_name} layer.
+
+Context:
+- Feature: {feature_name}
+- Timestamp: {output from date command above}
+- Entry type: implementation_complete
+- Success: true
+- Components: {list components from implementation-engine output}
+- Tests: {test results from implementation}
+- Files: {files created during implementation}
+
+The skill will append the completion entry to the audit trail.
 
 **Display progress to user:**
 ```
@@ -239,41 +227,38 @@ date '+%Y-%m-%d %H:%M:%S'
 date '+%Y-%m-%d %H:%M:%S'
 ```
 
-**Call audit-logger skill:**
-```json
-{
-  "action": "append",
-  "feature": "{feature_name}",
-  "timestamp": "{output from date command}",
-  "data": {
-    "entry_type": "review_start",
-    "from": "Orchestrator",
-    "to": "Review Agent",
-    "content": {
-      "layer": "{layer_name}",
-      "threshold": {threshold}
-    }
-  }
-}
-```
+**Invoke audit-logger skill:**
 
-**Call review-engine skill:**
-```json
-{
-  "feature": "{feature_name}",
-  "layer": "{layer_name}",
-  "code_source": "git_diff",
-  "plan_path": "docs/{feature_name}/plan.md"
-}
-```
+Invoke the audit-logger skill to log review start for the {layer_name} layer.
 
-**Call quality-gate skill:**
-```json
-{
-  "review": {review_result},
-  "threshold": {threshold}
-}
-```
+Context:
+- Feature: {feature_name}
+- Timestamp: {output from date command above}
+- Entry type: review_start
+- Layer: {layer_name}
+- Threshold: {threshold}
+
+**Invoke review-engine skill:**
+
+Invoke the review-engine skill to review the {layer_name} layer implementation.
+
+Context:
+- Feature: {feature_name}
+- Layer: {layer_name}
+- Implementation files: contexts/{feature_name}/{layer_name}/
+- Plan: docs/{feature_name}/plan.md
+
+The skill will evaluate code against governance patterns, score each tactic, and identify issues.
+
+**Invoke quality-gate skill:**
+
+Invoke the quality-gate skill to determine if the review passed the quality threshold.
+
+Context:
+- Review results: {from review-engine output above}
+- Threshold: {threshold}
+
+The skill will make a pass/fail decision and categorize any issues for fixing.
 
 **Log review result:**
 
@@ -282,26 +267,21 @@ date '+%Y-%m-%d %H:%M:%S'
 date '+%Y-%m-%d %H:%M:%S'
 ```
 
-**Call audit-logger skill:**
-```json
-{
-  "action": "append",
-  "feature": "{feature_name}",
-  "timestamp": "{output from date command}",
-  "data": {
-    "entry_type": "review_complete",
-    "from": "Review Agent",
-    "to": "Orchestrator",
-    "content": {
-      "passed": gate_result.passed,
-      "score": review_result.overall_score,
-      "threshold": {threshold},
-      "patterns": review_result.patterns,
-      "issues": gate_result.issues
-    }
-  }
-}
-```
+**Invoke audit-logger skill:**
+
+Invoke the audit-logger skill to log review completion for the {layer_name} layer.
+
+Context:
+- Feature: {feature_name}
+- Timestamp: {output from date command above}
+- Entry type: review_complete
+- Passed: {gate_result.passed}
+- Score: {review_result.overall_score}
+- Threshold: {threshold}
+- Patterns: {review_result.patterns with scores}
+- Issues: {gate_result.issues if any}
+
+The skill will append the review results to the audit trail.
 
 **Display progress to user:**
 ```
@@ -318,18 +298,20 @@ date '+%Y-%m-%d %H:%M:%S'
 
 #### 3.4 Fix Cycle (if quality gate failed)
 
-**Call fix-coordinator skill:**
-```json
-{
-  "feature": "{feature_name}",
-  "layer": "{layer_name}",
-  "gate_result": {gate_result},
-  "threshold": {threshold},
-  "max_iterations": {max_iterations},
-  "current_iteration": 0,
-  "previous_score": null
-}
-```
+**Invoke fix-coordinator skill:**
+
+Invoke the fix-coordinator skill to fix issues that caused quality gate failure.
+
+Context:
+- Feature: {feature_name}
+- Layer: {layer_name}
+- Issues to fix: {gate_result.issues categorized by priority}
+- Threshold: {threshold}
+- Max iterations: {max_iterations}
+- Current iteration: 1 (first attempt)
+- Previous score: {review_result.overall_score}
+
+The skill will apply fixes, then the orchestrator will re-run review and quality gate.
 
 The fix-coordinator skill will:
 - Manage up to 3 fix iterations
@@ -360,45 +342,37 @@ If result.intervention_needed = true:
 date '+%Y-%m-%d %H:%M:%S'
 ```
 
-**Call audit-logger skill:**
-```json
-{
-  "action": "append",
-  "feature": "{feature_name}",
-  "timestamp": "{output from date command}",
-  "data": {
-    "entry_type": "commit",
-    "from": "Orchestrator",
-    "to": "Git",
-    "content": {
-      "layer": "{layer_name}",
-      "action": "committing"
-    }
-  }
-}
-```
+**Invoke audit-logger skill:**
 
-**Call git-ops skill:**
-```json
-{
-  "action": "commit",
-  "feature": "{feature_name}",
-  "layer": "{layer_name}",
-  "review_score": {final_review.overall_score},
-  "fix_iterations": {iteration_count},
-  "pattern_scores": {extract from final_review}
-}
-```
+Invoke the audit-logger skill to log commit action for the {layer_name} layer.
 
-**Handle git result:**
+Context:
+- Feature: {feature_name}
+- Timestamp: {output from date command above}
+- Entry type: commit
+- Layer: {layer_name}
+- Action: Committing implementation
 
-If commit_result.success = true:
-- Log commit to audit with commit hash
-- Display progress: `[{timestamp}] 💾 Committed: {commit_result.commit_hash}`
+**Invoke git-ops skill:**
 
-If commit_result.success = false:
-- Log error
-- Ask user for intervention
+Invoke the git-ops skill to create a commit for the {layer_name} layer.
+
+Context:
+- Feature: {feature_name}
+- Layer: {layer_name}
+- Review score: {final_review.overall_score}
+- Fix iterations: {iteration_count}
+- Pattern scores: {extract from final_review.patterns}
+- Implementation details: {from implementation-engine output}
+
+The skill will stage files, generate a commit message with quality metrics, and create the commit.
+
+**Monitor commit result:**
+
+After git-ops completes:
+- If successful: Note commit hash for audit logging
+- If failed: Log error and ask user for intervention
+- Display progress: `[{timestamp}] 💾 Committed: {commit_hash}`
 
 **Display layer completion:**
 ```

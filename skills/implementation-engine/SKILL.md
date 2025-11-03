@@ -1,417 +1,170 @@
 ---
 name: implementation-engine
-description: Executes the implementation of a specific layer for a feature, following the plan and governance patterns. Builds components with tests, validates pattern compliance, and returns structured results.
+description: Implements a specific layer following the plan and governance patterns. Builds components with tests and validates pattern compliance.
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 # Implementation Engine Skill
 
-Core implementation logic for building a layer following governance patterns and implementation plans.
+Implements a specific layer for a feature following governance patterns and implementation plans.
 
 ## Purpose
 
-Executes the implementation of a specific layer for a feature, following the plan and governance patterns. Returns structured results that callers can format and use as needed.
+Executes layer implementation with pattern guidance, creates components, writes tests, and validates correctness.
 
-## Input
+## When to Use
 
-```json
-{
-  "feature": "tenant-onboarding",
-  "layer": "domain",
-  "plan_path": "docs/tenant-onboarding/plan.md"
-}
-```
+Invoked by orchestrator when it's time to implement a specific layer (domain, application, infrastructure).
 
-## Output
+## How It Works
 
-```json
-{
-  "success": true,
-  "layer": "domain",
-  "summary": "Implemented Tenant aggregate root with value objects, domain events, and repository interface following DDD patterns",
-  "components": [
-    {
-      "name": "Tenant aggregate",
-      "description": "Aggregate root managing tenant lifecycle with create() and activate() methods",
-      "rationale": "Encapsulates tenant business rules and ensures state changes produce domain events"
-    },
-    {
-      "name": "EmailAddress value object",
-      "description": "Validates and encapsulates email addresses",
-      "rationale": "Prevents invalid emails from entering the system"
-    },
-    {
-      "name": "CompanyName value object",
-      "description": "Validates company name constraints",
-      "rationale": "Ensures company names meet business requirements"
-    }
-  ],
-  "deviations": [
-    {
-      "description": "Added TenantSuspended event not in original plan",
-      "rationale": "Discovered during implementation that suspension is a critical business state that needs tracking"
-    }
-  ],
-  "tests": {
-    "total": 8,
-    "passed": 8,
-    "failed": 0,
-    "test_files": [
-      "test/domain/Tenant.test.ts",
-      "test/domain/EmailAddress.test.ts"
-    ]
-  },
-  "files": {
-    "created": [
-      "src/domain/Tenant.aggregate.ts",
-      "src/domain/value-objects/EmailAddress.ts",
-      "src/domain/value-objects/CompanyName.ts",
-      "src/domain/events/TenantCreated.ts",
-      "src/domain/events/TenantActivated.ts",
-      "src/domain/interfaces/ITenantRepository.ts"
-    ],
-    "modified": []
-  },
-  "patterns_applied": [
-    "DDD Aggregates v1",
-    "Value Objects v1",
-    "Domain Events v1",
-    "Event Sourcing v1"
-  ],
-  "errors": [],
-  "warnings": []
-}
-```
+### Context from Orchestrator
+
+Reads context from:
+1. **Feature name:** From command argument or recent messages
+2. **Layer:** domain, application, or infrastructure
+3. **Plan:** Located at `docs/{feature}/plan.md`
+4. **Patterns:** To be loaded via pattern-loader skill
+
+### Workflow
+
+#### 1. Load Context
+
+**Steps:**
+1. Identify feature name from orchestrator context
+2. Identify layer from context (domain/application/infrastructure)
+3. Read plan file: `docs/{feature}/plan.md`
+4. Find layer section in plan (e.g., "## Domain Layer")
+5. Extract goals, components, patterns to follow
+
+#### 2. Load Patterns
+
+**Steps:**
+1. Invoke pattern-loader skill for the layer's domain
+2. Get full pattern details with tactics and constraints
+3. Understand requirements: encapsulation, events, invariants, etc.
+
+#### 3. Implement Components
+
+**Steps:**
+1. For each component in the plan:
+   - Create file in appropriate directory
+   - Implement following pattern tactics
+   - Add inline documentation
+   - Ensure pattern compliance (private state, event sourcing, etc.)
+
+2. Follow pattern tactics:
+   - **encapsulate-state:** All state private with `_` prefix
+   - **apply-via-events:** State changes produce domain events
+   - **invariant-methods:** Business rules enforced in methods
+   - **aggregate-root:** Single entry point for consistency
+
+3. File organization:
+   - Domain layer: `contexts/{feature}/{layer}/model/`
+   - Application layer: `contexts/{feature}/{layer}/services/`
+   - Infrastructure: `contexts/{feature}/{layer}/adapters/`
+
+#### 4. Write Tests
+
+**Steps:**
+1. For each component, create test file
+2. Test pattern compliance:
+   - State encapsulation (can't access private state)
+   - Event emission (events produced on state changes)
+   - Invariant enforcement (invalid operations rejected)
+   - Edge cases and error conditions
+
+3. Run tests: `npm test -- {test_pattern}`
+4. Fix any failures
+5. Ensure all tests pass before completing
+
+#### 5. Validate Implementation
+
+**Steps:**
+1. Check all planned components are implemented
+2. Verify pattern compliance
+3. Confirm tests pass
+4. Document any deviations from plan
 
 ## Instructions for Claude
 
-### Step 1: Validate Inputs
+### Reading Context
 
-**Check plan exists:**
-```bash
-test -f docs/{feature}/plan.md
-```
+**Feature name:** From orchestrator, e.g., "tenant-onboarding"
 
-If not found:
-```json
-{
-  "success": false,
-  "error": "Implementation plan not found",
-  "path": "docs/{feature}/plan.md",
-  "message": "Please run /plan:hex-arc {feature} first"
-}
-```
+**Layer:** From orchestrator, e.g., "domain", "application", "infrastructure"
 
-**Validate layer exists in plan:**
-1. Read `docs/{feature}/plan.md`
-2. Search for section `## {Layer} Layer` (case-insensitive)
-3. Verify section has content (not empty)
+**Plan:** Read from `docs/{feature}/plan.md`, find layer section
 
-If layer not found:
-```json
-{
-  "success": false,
-  "error": "Layer not found in plan",
-  "layer": "{layer}",
-  "available_layers": ["domain", "application", "infrastructure"]
-}
-```
+### Implementation Guidelines
 
-### Step 2: Load Implementation Plan
+**Follow the Plan:**
+- Implement components as specified in plan
+- Use technologies specified in plan
+- Maintain consistency with architecture
 
-**Read plan thoroughly:**
+**Follow Patterns:**
+- Load patterns via pattern-loader skill
+- Apply all critical and important tactics
+- Satisfy all must/should constraints
+- Avoid anti-patterns
 
-1. **Extract Overview:**
-   - Feature summary
-   - Approach
-   - Scope
+**Write Tests:**
+- Test-driven or test-alongside development
+- Cover happy paths and edge cases
+- Ensure pattern compliance is testable
+- All tests must pass
 
-2. **Extract Pattern Compliance:**
-   - Which patterns apply to this layer
-   - Key tactics to follow
-   - Constraints to respect
-
-3. **Extract Layer Design:**
-   - Read full `## {Layer} Layer` section
-   - Extract "What and Why" (understanding)
-   - Extract "Public Interface" (pseudo-code contracts)
-
-4. **Extract Test Strategy:**
-   - Critical scenarios (Given-When-Then)
-   - Edge cases
-   - Test layers mapping
-
-### Step 3: Load Governance Patterns
-
-**Use pattern-loader skill:**
-
-```json
-{
-  "action": "load",
-  "filter": {
-    "pattern_names": ["ddd-aggregates", "event-sourcing", ...]
-  }
-}
-```
-
-Extract pattern names from plan's "Pattern Compliance" section for this layer.
-
-**Focus on:**
-- **Critical tactics** (priority: critical) - MUST follow
-- **Important tactics** (priority: important) - Should follow
-- **Constraints** - MUST/MUST NOT rules
-- **Anti-patterns** - Avoid these
-
-### Step 4: Explore Codebase
-
-**Find reference implementations:**
-
-1. Search for similar aggregates/handlers/adapters
-2. Understand established coding patterns
-3. Identify reusable components:
-   - Base classes
-   - Existing value objects
-   - Existing utilities
-   - Testing helpers
-
-**Review workspace conventions:**
-- Read `./CLAUDE.md` if exists
-- Understand naming conventions
-- Understand directory structure
-- Understand testing patterns
-
-### Step 5: Implement Components
-
-**Implementation order by layer:**
-
-**Domain Layer:**
-1. Value Objects (no dependencies)
-2. Domain Events (simple DTOs)
-3. Aggregates (use VOs and events)
-4. Repository interfaces (reference aggregates)
-
-**Application Layer:**
-1. Commands and Queries (DTOs)
-2. Port interfaces (external dependencies)
-3. Command Handlers (orchestrate domain)
-4. Query Handlers (read from repositories)
-5. Projectors (subscribe to events)
-6. Domain Services (if needed)
-
-**Infrastructure Layer:**
-1. API types (request/response DTOs)
-2. Adapters (implement ports)
-3. Repository implementations (implement domain interfaces)
-4. Lambda handlers (call application handlers)
-
-**For each component:**
-
-1. **Follow plan's pseudo-code interface** (your contract)
-2. **Apply pattern tactics:**
-   - Use pattern descriptions as guide
-   - Follow critical tactics strictly
-   - Apply important tactics unless strong reason not to
-3. **Match coding style** from reference implementations
-4. **Add JSDoc comments** for public APIs
-5. **Use TypeScript** with strict types
-
-**Quality guidelines:**
-- No infrastructure dependencies in domain layer
-- Application layer depends on domain, defines ports for infrastructure
-- Infrastructure implements ports, depends on application and domain
-
-### Step 6: Write Tests
-
-**Test strategy from plan:**
-
-**Domain layer → Unit tests:**
-- Aggregate business methods with in-memory event store
-- Value object validation
-- Domain service logic
-- Use fakes for all external dependencies
-
-**Application layer → Integration tests:**
-- Command handlers with test database
-- Query handlers with seeded read models
-- Projectors with test event streams
-- Use real repositories, fake adapters
-
-**Infrastructure layer → Component tests:**
-- API endpoint → Lambda → Application → Domain → Infrastructure
-- Real database (ephemeral test DB)
-- Fake external services (SES, third-party APIs)
-
-**For each implementation file:**
-1. Create corresponding test file
-2. Implement Given-When-Then scenarios from plan
-3. Implement edge case tests
-4. Run tests: `npm test` (or appropriate command)
-5. Verify all tests pass
-
-**Test naming:**
-- Descriptive test names from plan
-- Follow Given-When-Then structure
-- Group related tests
-
-### Step 7: Verify Pattern Compliance
-
-**Self-check:**
-
-- [ ] All critical tactics followed
-- [ ] All important tactics followed (or deviation documented)
-- [ ] All constraints satisfied
-- [ ] No anti-patterns present
-- [ ] All pseudo-code interfaces implemented
-- [ ] All public methods match signatures in plan
-- [ ] Return types match plan specifications
-- [ ] All tests pass
-- [ ] No linting errors
-- [ ] TypeScript compiles without errors
-
-### Step 8: Collect Results
-
-**Build output JSON:**
-
-1. **Write implementation summary:**
-   - Brief 1-2 sentence overview of what was implemented
-   - Example: "Implemented Tenant aggregate root with value objects, domain events, and repository interface following DDD patterns"
-
-2. **List components implemented with rationale:**
-   - For each component (aggregate, value object, handler, etc.):
-     - `name`: Component name (e.g., "Tenant aggregate")
-     - `description`: What it does (e.g., "Aggregate root managing tenant lifecycle")
-     - `rationale`: Why it was implemented this way (e.g., "Encapsulates business rules and ensures state changes produce events")
-
-3. **Identify deviations from plan:**
-   - Compare implementation to plan
-   - If you added/changed something not in plan:
-     - `description`: What deviated
-     - `rationale`: Why it was necessary
-   - If no deviations: return empty array
-
-4. **Collect test results:**
-   - Total test count
-   - Passed count
-   - Failed count (if any)
-   - List test file paths
-
-5. **List files:**
-   - Created files (new)
-   - Modified files (existing)
-
-6. **List patterns applied:**
-   - Which patterns were followed
-   - Version numbers
-
-7. **Collect errors/warnings:**
-   - Test failures
-   - TypeScript errors
-   - Linting errors
-   - Pattern violations (if any)
-
-8. **Return structured JSON** as specified in Output section
+**Document Deviations:**
+- If you deviate from plan, note why
+- If you add components, explain rationale
+- Transparency helps reviewers understand decisions
 
 ### Error Handling
 
-**If tests fail:**
-```json
-{
-  "success": false,
-  "layer": "domain",
-  "components": [...],
-  "tests": {
-    "total": 8,
-    "passed": 6,
-    "failed": 2
-  },
-  "errors": [
-    "Test: 'Tenant.create throws error for invalid email' failed",
-    "Test: 'Tenant.activate validates state' failed"
-  ]
-}
-```
+**Plan not found:**
+- Check if file exists: `[ -f docs/{feature}/plan.md ]`
+- If not, tell orchestrator plan is missing
 
-**If TypeScript compilation fails:**
-```json
-{
-  "success": false,
-  "errors": [
-    "TypeScript error in Tenant.aggregate.ts:45: Type 'string' is not assignable to type 'EmailAddress'"
-  ]
-}
-```
+**Test failures:**
+- Fix issues causing failures
+- Don't proceed until tests pass
+- Document what was fixed
 
-**If pattern violation detected:**
-```json
-{
-  "success": true,
-  "warnings": [
-    "Potential pattern violation: Some state fields in Tenant lack _ prefix (encapsulate-state tactic)"
-  ]
-}
-```
+**Pattern conflicts:**
+- If patterns contradict, ask orchestrator
+- Document the conflict and resolution
 
-## Usage Example
+## Example Workflow
 
-**Caller (implement-hex-arc command):**
-```markdown
-Call implementation-engine skill with:
-- feature: "tenant-onboarding"
-- layer: "domain"
+**Context:**
+- Feature: tenant-onboarding
+- Layer: domain
+- Orchestrator says: "Implement the domain layer"
 
-Receive result JSON.
+**Actions:**
+1. Read plan from docs/tenant-onboarding/plan.md
+2. Extract domain layer requirements:
+   - Tenant aggregate root
+   - EmailAddress, CompanyName value objects
+   - TenantCreated, TenantActivated events
+3. Invoke pattern-loader for domain patterns
+4. Implement each component:
+   - Create contexts/tenant-onboarding/domain/model/Tenant.ts
+   - Create contexts/tenant-onboarding/domain/model/EmailAddress.ts
+   - Create contexts/tenant-onboarding/domain/model/CompanyName.ts
+   - Create event files
+5. Write tests for each component
+6. Run tests: `npm test -- tenant-onboarding/domain`
+7. All tests pass ✅
+8. Report completion with summary
 
-If result.success:
-  Display to user:
-  "✅ Domain layer implementation complete
+## Notes
 
-   Components:
-   • Tenant aggregate with create() and activate()
-   • EmailAddress value object
-   • CompanyName value object
-   ...
+**Components:** Aggregates, entities, value objects, services, repositories, adapters (depending on layer)
 
-   Tests: 8/8 passing
-   Files: src/domain/..."
+**Patterns:** DDD for domain, CQRS for application, Hexagonal for infrastructure
 
-If NOT result.success:
-  Display errors:
-  "❌ Implementation failed:
-   {result.errors}"
-```
+**Testing:** Unit tests for domain/application, integration tests for infrastructure
 
-**Caller (orchestrate command):**
-```markdown
-Call implementation-engine skill with same inputs.
-
-Receive result JSON.
-
-Log to audit trail:
-"Status: ✅ Complete
-- Implemented: {result.components}
-- Tests: {result.tests.passed}/{result.tests.total}
-- Files: {result.files.created}"
-
-Use result.success to decide next step (review or abort).
-```
-
-## Notes for Claude
-
-**Implementation is your responsibility:**
-- Write actual code that follows patterns
-- Don't just outline or create stubs
-- Implement complete functionality per plan
-
-**Pattern adherence:**
-- Critical tactics are non-negotiable
-- Find a way to follow them
-- If you must deviate, include in warnings
-
-**Testing is mandatory:**
-- Tests are part of implementation
-- Not optional
-- Failing tests mean incomplete implementation
-
-**Output format:**
-- Always return valid JSON
-- Structure exactly as specified
-- Include all fields even if empty arrays
+**Documentation:** Inline comments explaining business rules and pattern compliance

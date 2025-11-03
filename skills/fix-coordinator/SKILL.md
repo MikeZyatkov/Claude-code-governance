@@ -1,6 +1,7 @@
 ---
 name: fix-coordinator
-description: Manages fix cycles with iteration tracking, progress monitoring, and user intervention triggers. Coordinates multiple fix iterations for code that fails quality gate, generates detailed fix prompts, and triggers user intervention when needed.
+description: Manages fix cycles with iteration tracking and progress monitoring. Coordinates fixes for code that fails quality gate.
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 # Fix Coordinator Skill
@@ -9,329 +10,217 @@ Manages fix cycles with iteration tracking, progress monitoring, and user interv
 
 ## Purpose
 
-Coordinates multiple fix iterations for code that fails quality gate. Tracks progress, generates detailed fix prompts, spawns fix agents, and triggers user intervention when needed.
+Coordinates multiple fix iterations for code that fails quality gate. Tracks progress and triggers user intervention when needed.
 
-## Input
+## When to Use
 
-```json
-{
-  "feature": "tenant-onboarding",
-  "layer": "domain",
-  "gate_result": {
-    "passed": false,
-    "issues": {
-      "critical": [...],
-      "important": [...],
-      "constraint_failures": [...]
-    }
-  },
-  "threshold": 4.5,
-  "max_iterations": 3,
-  "current_iteration": 0,
-  "previous_score": null
-}
-```
+Invoked by orchestrator when quality gate fails. Manages the fix-review-gate loop until code passes or max iterations reached.
 
-## Output
+## How It Works
 
-```json
-{
-  "fixed": true | false,
-  "final_review": {
-    "overall_score": 4.6,
-    "patterns": [...]
-  },
-  "iterations_used": 2,
-  "intervention_needed": false,
-  "intervention_reason": null
-}
-```
+### Context from Orchestrator
+
+Reads context from:
+1. **Feature/Layer:** From recent workflow
+2. **Issues to fix:** From quality-gate categorization
+3. **Current iteration:** Which fix attempt this is (1, 2, 3...)
+4. **Max iterations:** Limit before triggering user intervention (usually 3)
+5. **Previous attempts:** What was tried before
+
+### Workflow
+
+#### 1. Initialize Fix Cycle
+
+**Steps:**
+1. Read issues from quality-gate output
+2. Categorize by priority (must fix, should fix)
+3. Initialize iteration counter: iteration = 1
+4. Set max_iterations from orchestrator (default: 3)
+
+#### 2. Generate Fix Prompt
+
+**Steps:**
+1. Create detailed prompt for fixing issues:
+   - List all must-fix issues with context
+   - Explain what pattern expects
+   - Provide specific code locations
+   - Reference pattern requirements
+   - Include previous attempt info (if not first iteration)
+
+2. Prompt structure:
+   ```
+   Fix the following issues in {feature} - {layer} layer:
+
+   CRITICAL ISSUES (Must Fix):
+   1. {tactic_name} - Score: {score}/5
+      Problem: {problem_description}
+      Required: {what_pattern_expects}
+      Location: {file}:{line}
+      Fix: {specific_guidance}
+
+   2. [...]
+
+   Pattern Requirements:
+   - {relevant_tactic_details}
+   - {constraint_details}
+
+   [If iteration > 1:]
+   Previous Attempt:
+   - {what_was_tried}
+   - {why_it_didn't_work}
+   ```
+
+#### 3. Apply Fixes
+
+**Steps:**
+1. Read code files that need fixing
+2. Apply fixes following pattern requirements
+3. Ensure all must-fix issues addressed
+4. Update tests if needed
+5. Run tests to verify fixes don't break functionality
+
+#### 4. Track Progress
+
+**Steps:**
+1. Increment iteration counter
+2. Record what was fixed
+3. Note any remaining issues
+4. Check iteration limit
+
+#### 5. Decision Point
+
+**After fixes applied:**
+
+**If iteration < max_iterations:**
+- Return to orchestrator
+- Orchestrator invokes review-engine again
+- If gate passes: Success!
+- If gate fails: Return to step 2 (next iteration)
+
+**If iteration ≥ max_iterations:**
+- Trigger user intervention
+- Present situation to user
+- Let user decide next steps
 
 ## Instructions for Claude
 
-### Step 1: Check Iteration Limit
-
-```
-if current_iteration >= max_iterations:
-  return {
-    "fixed": false,
-    "intervention_needed": true,
-    "intervention_reason": "Max iterations reached"
-  }
-```
-
-### Step 2: Analyze Issues
-
-**Categorize issues:**
-- Critical issues (must fix)
-- Important issues (must fix)
-- Constraint failures (must fix)
-- Optional issues (nice to fix, but not blocking)
-
-**Check if fixable:**
-- Code-fixable: Syntax, patterns, validation logic
-- Architectural: Design decisions, boundary choices → needs user
-
-```
-if has_architectural_issues(gate_result.issues):
-  return {
-    "fixed": false,
-    "intervention_needed": true,
-    "intervention_reason": "Architectural issues detected"
-  }
-```
-
-### Step 3: Generate Fix Prompt
-
-**Build detailed fix prompt:**
-
-```
-You are fixing code review issues for the {layer} layer of "{feature}".
-
-Current Score: {previous_score or "N/A"}/5.0 (threshold: {threshold})
-Iteration: {current_iteration + 1}/{max_iterations}
-
-Issues to fix (in priority order):
-
-{format_issues_for_fix(gate_result.issues)}
-
-Instructions:
-1. Focus ONLY on fixing these specific issues
-2. Do not refactor unrelated code
-3. Maintain existing functionality
-4. Run tests after fixes to ensure nothing broke
-5. Report what was changed
-
-Fix these issues now.
-```
-
-**Format issues for fix:**
-
-```markdown
-1. **[CRITICAL]** {issue.tactic_name} ({issue.pattern_name}) - Score: {issue.score}/5
-
-   Problem Found:
-   {issue.reasoning}
-
-   What's Required:
-   {generate_required_description(issue)}
-
-   Why It Matters:
-   {issue.impact or generate_impact(issue)}
-
-   Specific Fixes Needed:
-   {extract_specific_fixes(issue.reasoning)}
-
-2. **[IMPORTANT]** {issue.tactic_name}...
-
-{...}
-
-{If constraint_failures:}
-
-N. **[CONSTRAINT FAILED]** {constraint.rule}
-
-   Problem Found:
-   {constraint.reasoning}
-
-   What's Required:
-   {constraint.description}
-
-   Why It Matters:
-   Hard constraint violation - must be fixed before proceeding
-```
-
-### Step 4: Spawn Fix Agent
-
-**Use Task tool:**
-```
-Call Task tool with:
-- subagent_type: "general-purpose"
-- prompt: {fix_prompt}
-```
-
-**Capture result:**
-- What was fixed
-- Which files modified
-- Test results
-
-### Step 5: Re-Review After Fixes
-
-**Call review-engine skill:**
-```json
-{
-  "feature": "{feature}",
-  "layer": "{layer}",
-  "code_source": "git_diff"
-}
-```
-
-**Call quality-gate skill:**
-```json
-{
-  "review": {review_result},
-  "threshold": {threshold}
-}
-```
-
-### Step 6: Check Progress
-
-**If quality gate passed:**
-```json
-{
-  "fixed": true,
-  "final_review": {review_result},
-  "iterations_used": current_iteration + 1,
-  "intervention_needed": false
-}
-```
-
-**If quality gate still failing:**
-
-Check if score improved:
-```
-if new_score <= previous_score:
-  return {
-    "fixed": false,
-    "intervention_needed": true,
-    "intervention_reason": "Score not improving"
-  }
-```
-
-If improved but not enough, and iterations remaining:
-```
-Recurse: call fix-coordinator again with:
-- current_iteration: current_iteration + 1
-- previous_score: new_score
-- gate_result: new_gate_result
-```
-
-**If max iterations reached:**
-```json
-{
-  "fixed": false,
-  "final_review": {review_result},
-  "iterations_used": max_iterations,
-  "intervention_needed": true,
-  "intervention_reason": "Max iterations reached without passing"
-}
-```
-
-## Architectural Issue Detection
-
-**Check for architectural issues:**
-
-```
-function has_architectural_issues(issues):
-  architectural_tactics = [
-    "aggregate-boundary",
-    "consistency-boundary",
-    "port-definition",
-    "adapter-pattern"
-  ]
-
-  for issue in issues.critical + issues.important:
-    if issue.tactic_id in architectural_tactics:
-      if score < 3:  // Very low score suggests design issue
-        return true
-
-  return false
-```
-
-## Specific Fixes Extraction
-
-**Parse reasoning for actionable fixes:**
-
-```
-function extract_specific_fixes(reasoning):
-  fixes = []
-
-  // Look for patterns:
-  if "without _ prefix" in reasoning:
-    fixes.append("Make field private: Rename to _{field_name}, add getter")
-
-  if "doesn't validate" in reasoning:
-    fixes.append("Add validation: Check {condition} before {action}")
-
-  if "missing" in reasoning:
-    fixes.append("Add missing: {what_is_missing}")
-
-  return fixes
-```
-
-## Usage Example
-
-**Orchestrator after quality gate fails:**
-```markdown
-Call fix-coordinator skill with:
-- feature: "tenant-onboarding"
-- layer: "domain"
-- gate_result: {from quality-gate}
-- threshold: 4.5
-- max_iterations: 3
-- current_iteration: 0
-- previous_score: null
-
-Receive result.
-
-If result.fixed:
-  Log success to audit
-  Proceed to commit
-
-If result.intervention_needed:
-  Log intervention request
-  Ask user:
-    "⚠️ Intervention required: {result.intervention_reason}
-
-    Current score: {result.final_review.overall_score}
-    Iterations used: {result.iterations_used}
-
-    What would you like to do?"
-```
-
-## Error Handling
-
-**Fix agent fails:**
-```json
-{
-  "fixed": false,
-  "intervention_needed": true,
-  "intervention_reason": "Fix agent failed: {error}"
-}
-```
-
-**Review fails after fix:**
-```json
-{
-  "fixed": false,
-  "intervention_needed": true,
-  "intervention_reason": "Review failed after fixes"
-}
-```
-
-## Notes for Claude
-
-**Iteration Tracking:**
-- Start at 0
-- Increment for each fix attempt
-- Max 3 iterations (configurable)
-
-**Progress Monitoring:**
-- Track score changes between iterations
-- If score not improving → intervention
-- If score improved but not enough → continue
-
-**Fix Prompts:**
-- Be specific and actionable
-- Reference exact code locations if available
-- Include pattern context
+### Reading Issues
+
+**From quality-gate context:**
+- Must-fix issues (critical, blocking)
+- Should-fix issues (important)
+- Pattern requirements
+- Failing tactics with scores
+
+### Generating Fix Prompts
+
+**Be Specific:**
+- Exact file and line numbers
+- Clear problem description
+- Concrete fix guidance
+- Pattern expectations
+
+**Use Pattern Details:**
+- Reference tactic requirements
 - Explain why it matters
+- Provide examples if helpful
 
-**User Intervention:**
-- Trigger early if architectural issues detected
-- Don't waste iterations on unfixable issues
-- Provide clear context for user decision
+### Applying Fixes
 
-**Recursion:**
-- Call self for next iteration if needed
-- Pass updated state (score, iteration)
-- Stop at max iterations
+**Systematic Approach:**
+1. Fix one issue at a time
+2. Verify each fix
+3. Run tests after each change
+4. Don't introduce new issues
+
+**Pattern Compliance:**
+- Follow pattern tactics exactly
+- Don't compromise on critical requirements
+- Ensure constraints satisfied
+
+### Iteration Tracking
+
+**Keep count:**
+- iteration = 1, 2, 3...
+- max_iterations (usually 3)
+- When iteration ≥ max: intervene
+
+**Record attempts:**
+- What was tried
+- What worked / didn't work
+- Learn from previous iterations
+
+### User Intervention
+
+**When to trigger:**
+- Reached max_iterations without passing
+- Issues can't be auto-fixed
+- Fundamental design problem
+
+**What to present:**
+```
+⚠️ User Intervention Required
+
+Feature: {feature}
+Layer: {layer}
+Iteration: {iteration}/{max_iterations}
+Current Score: {score}/5.0 (threshold: {threshold})
+
+Issues remaining after {iteration} fix attempts:
+{issues_list}
+
+Recommendation:
+- [Lower threshold] if current quality acceptable
+- [Manual fix] if issues need human judgment
+- [Redesign] if fundamental architecture problem
+
+What would you like to do?
+```
+
+## Example Workflow
+
+**Context:**
+- Feature: tenant-onboarding, Layer: domain
+- Quality gate failed: score 4.2, threshold 4.5
+- Issues: encapsulate-state (score 3)
+- Iteration: 1, Max: 3
+
+**Actions:**
+1. Read issues from quality-gate
+2. Generate fix prompt:
+   ```
+   Fix encapsulate-state issue:
+   - Problem: Fields email, name, status are public
+   - Required: All state private with _ prefix
+   - Location: Tenant.ts lines 10-12
+   - Fix: Change public fields to private with _ prefix, add getters
+   ```
+3. Apply fixes:
+   - Change `email` to `_email` (private)
+   - Add `getEmail()` getter
+   - Same for name, status
+4. Run tests: All pass ✅
+5. Increment iteration: iteration = 2
+6. Return to orchestrator
+7. Orchestrator runs review again
+8. New score: 4.6 → Quality gate PASSED! ✅
+
+**Context 2:**
+- After 3 iterations, score still 4.2
+- Issues remain: fundamental design problem
+
+**Actions:**
+1. Check: iteration = 3 = max_iterations
+2. Trigger user intervention
+3. Present situation with recommendations
+4. Let user decide (lower threshold, manual fix, or redesign)
+
+## Notes
+
+**Max Iterations:** Usually 3, configurable by orchestrator
+
+**Learning:** Each iteration should learn from previous attempts
+
+**Intervention:** Don't keep trying indefinitely - get user involved
+
+**Tool Access:** Full edit access to apply fixes

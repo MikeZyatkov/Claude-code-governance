@@ -1,375 +1,171 @@
 ---
 name: quality-gate
-description: Makes pass/fail decisions based on review results against configurable quality criteria. Evaluates review results and determines whether code passes quality gate, categorizing issues by priority for fix cycles.
+description: Makes pass/fail decisions based on review results against quality thresholds. Determines if code is ready to commit or needs fixes.
+allowed-tools: Read, Bash
 ---
 
 # Quality Gate Skill
 
-Makes pass/fail decisions based on review results against configurable quality criteria.
+Makes pass/fail decisions based on review results against configurable quality thresholds.
 
 ## Purpose
 
-Evaluates review results from review-engine and determines whether code passes quality gate. Categorizes issues by priority for fix cycles.
+Evaluates review results and determines whether code passes quality gate or needs fixing.
 
-## Input
+## When to Use
 
-```json
-{
-  "review": {
-    "overall_score": 4.2,
-    "patterns": [...]
-  },
-  "threshold": 4.5
-}
-```
+Invoked by orchestrator immediately after review-engine completes to make go/no-go decision.
 
-## Output
+## How It Works
 
-```json
-{
-  "passed": false,
-  "reasons": [
-    "Overall score 4.2 < threshold 4.5",
-    "1 critical tactic scored below 4",
-    "1 important tactic scored below 4"
-  ],
-  "issues": {
-    "critical": [
-      {
-        "tactic_id": "encapsulate-state",
-        "tactic_name": "Encapsulate aggregate state",
-        "pattern_name": "DDD Aggregates v1",
-        "score": 3,
-        "reasoning": "Some state fields lack _ prefix...",
-        "priority": "critical"
-      }
-    ],
-    "important": [
-      {
-        "tactic_id": "invariant-methods",
-        "tactic_name": "Validate invariants in methods",
-        "pattern_name": "DDD Aggregates v1",
-        "score": 3,
-        "reasoning": "activate() doesn't validate...",
-        "priority": "important"
-      }
-    ],
-    "optional": [],
-    "constraint_failures": []
-  },
-  "summary": {
-    "overall_score": 4.2,
-    "threshold": 4.5,
-    "critical_issues_count": 1,
-    "important_issues_count": 1,
-    "constraint_failures_count": 0
-  }
-}
-```
+### Context from Orchestrator
+
+Reads context from:
+1. **Review results:** From most recent review-engine output
+2. **Threshold:** Quality score threshold (e.g., 4.5/5.0)
+3. **Feature/Layer:** From recent workflow
+
+### Workflow
+
+#### 1. Read Review Results
+
+**Steps:**
+1. Get review results from orchestrator context
+2. Extract:
+   - Overall score (e.g., 4.2/5.0)
+   - Issues categorized by priority (critical, important)
+   - Pattern scores
+   - Constraint violations
+
+#### 2. Apply Quality Gate Logic
+
+**Pass Criteria (ALL must be true):**
+1. Overall score ≥ threshold
+2. No critical issues with score < 4
+3. No MUST constraint violations
+
+**Fail Criteria (ANY triggers failure):**
+1. Overall score < threshold
+2. Any critical issue with score < 4
+3. Any MUST constraint violated
+
+#### 3. Make Decision
+
+**If PASS:**
+- Code is ready to commit
+- Proceed to git-ops
+
+**If FAIL:**
+- Code needs fixes
+- Proceed to fix-coordinator
+- Categorize issues for fixing
+
+#### 4. Categorize Issues for Fixes
+
+**For failed gate:**
+
+**Must fix** (blocks commit):
+- Critical tactics with score < 4
+- MUST constraints violated
+- Blocks: High severity issues
+
+**Should fix** (important but not blocking):
+- Important tactics with score < 4
+- SHOULD constraints violated
+- Can be addressed in iteration
+
+**Could fix** (optional):
+- Nice-to-have improvements
+- Not required for passing gate
 
 ## Instructions for Claude
 
-### Step 1: Initialize Evaluation
+### Reading Review Results
 
-**Set up tracking:**
+**From orchestrator context:**
+- Look for review-engine output in recent messages
+- Extract overall_score, issues, pattern_scores
+- Identify which tactics failed (score < 4)
+
+### Applying Threshold
+
+**Threshold from orchestrator:**
+- Usually 4.5/5.0 or 4.0/5.0
+- Compare overall_score to threshold
+- Account for rounding (4.45 rounds to 4.5)
+
+### Decision Logic
+
+**Simple rule:**
 ```
-passed = true
-reasons = []
-issues = {
-  critical: [],
-  important: [],
-  optional: [],
-  constraint_failures: []
-}
-```
-
-### Step 2: Check Overall Score
-
-**Criterion 1: Overall score >= threshold**
-
-```
-if review.overall_score < threshold:
-  passed = false
-  reasons.append(f"Overall score {review.overall_score} < threshold {threshold}")
-```
-
-### Step 3: Check Critical Tactics
-
-**Criterion 2: No critical tactics with score < 4**
-
-```
-for each pattern in review.patterns:
-  for each tactic in pattern.tactics:
-    if tactic.priority == "critical" AND tactic.score >= 0 AND tactic.score < 4:
-      passed = false
-      reasons.append(f"Critical tactic '{tactic.tactic_name}' scored {tactic.score} (< 4)")
-      issues.critical.append({
-        tactic_id: tactic.tactic_id,
-        tactic_name: tactic.tactic_name,
-        pattern_name: pattern.name,
-        score: tactic.score,
-        reasoning: tactic.reasoning,
-        priority: "critical"
-      })
+if overall_score >= threshold AND no_critical_issues AND no_must_violations:
+    decision = PASS
+else:
+    decision = FAIL
+    categorize_issues_for_fixes()
 ```
 
-Note: Exclude tactics with score = -1 (not applicable)
+### Reporting Decision
 
-### Step 4: Check Important Tactics
-
-**Criterion 3: No important tactics with score < 4**
-
+**For PASS:**
 ```
-for each pattern in review.patterns:
-  for each tactic in pattern.tactics:
-    if tactic.priority == "important" AND tactic.score >= 0 AND tactic.score < 4:
-      passed = false
-      reasons.append(f"Important tactic '{tactic.tactic_name}' scored {tactic.score} (< 4)")
-      issues.important.append({
-        tactic_id: tactic.tactic_id,
-        tactic_name: tactic.tactic_name,
-        pattern_name: pattern.name,
-        score: tactic.score,
-        reasoning: tactic.reasoning,
-        priority: "important"
-      })
+✅ Quality Gate: PASSED
+
+Score: {overall_score}/5.0 (threshold: {threshold})
+Ready to commit
 ```
 
-### Step 5: Check Constraints
-
-**Criterion 4: No constraint violations**
-
+**For FAIL:**
 ```
-for each pattern in review.patterns:
-  for each constraint in pattern.constraints:
-    if constraint.status == "FAIL":
-      passed = false
-      reasons.append(f"Constraint violation: {constraint.rule}")
-      issues.constraint_failures.append({
-        rule: constraint.rule,
-        description: constraint.description,
-        reasoning: constraint.reasoning,
-        pattern_name: pattern.name
-      })
+⚠️ Quality Gate: FAILED
+
+Score: {overall_score}/5.0 (threshold: {threshold})
+
+Must Fix (Critical):
+- {issue_1}
+- {issue_2}
+
+Should Fix (Important):
+- {issue_3}
+
+Proceeding to fix cycle...
 ```
 
-### Step 6: Collect Optional Issues (For Awareness)
+## Example Workflow
 
-**Not a pass/fail criterion, but useful for reporting:**
+**Context:**
+- Feature: tenant-onboarding, Layer: domain
+- Review complete with score 4.2/5.0
+- Threshold: 4.5/5.0
+- 1 critical issue found (encapsulate-state: 3/5)
 
-```
-for each pattern in review.patterns:
-  for each tactic in pattern.tactics:
-    if tactic.priority == "optional" AND tactic.score >= 0 AND tactic.score < 3:
-      issues.optional.append({
-        tactic_id: tactic.tactic_id,
-        tactic_name: tactic.tactic_name,
-        pattern_name: pattern.name,
-        score: tactic.score,
-        reasoning: tactic.reasoning,
-        priority: "optional"
-      })
-```
+**Actions:**
+1. Read review results from context
+2. Check score: 4.2 < 4.5 → FAIL
+3. Check issues: 1 critical (score 3 < 4) → FAIL
+4. Categorize:
+   - Must fix: encapsulate-state (score 3, critical)
+5. Report: Quality gate FAILED, must fix encapsulate-state
+6. Orchestrator proceeds to fix-coordinator
 
-Optional issues don't fail the gate, but worth noting.
+**Context 2:**
+- Score: 4.7/5.0, Threshold: 4.5
+- No critical issues below 4
+- No constraint violations
 
-### Step 7: Build Summary
+**Actions:**
+1. Read review results
+2. Check: 4.7 ≥ 4.5 → PASS
+3. No critical issues → PASS
+4. Report: Quality gate PASSED, ready to commit
+5. Orchestrator proceeds to git-ops
 
-```
-summary = {
-  overall_score: review.overall_score,
-  threshold: threshold,
-  critical_issues_count: issues.critical.length,
-  important_issues_count: issues.important.length,
-  constraint_failures_count: issues.constraint_failures.length
-}
-```
+## Notes
 
-### Step 8: Return Result
+**Threshold:** Configurable per orchestration run (default: 4.5)
 
-**Build output JSON as specified:**
-- passed (boolean)
-- reasons (array of strings)
-- issues (categorized)
-- summary
+**Critical matters:** Even if overall score passes, critical issues can fail the gate
 
-**Return structured JSON.**
+**Constraints:** MUST violations always fail, SHOULD violations are warnings
 
-## Quality Gate Logic
-
-**Pass if ALL of these are true:**
-1. ✅ `overall_score >= threshold`
-2. ✅ No critical tactics with `score < 4`
-3. ✅ No important tactics with `score < 4`
-4. ✅ No constraints with `status = "FAIL"`
-
-**Fail if ANY of these are true:**
-1. ❌ `overall_score < threshold`
-2. ❌ Any critical tactic has `score < 4`
-3. ❌ Any important tactic has `score < 4`
-4. ❌ Any constraint has `status = "FAIL"`
-
-## Usage Examples
-
-### Example 1: Gate Passes
-
-**Input:**
-```json
-{
-  "review": {
-    "overall_score": 4.6,
-    "patterns": [{
-      "tactics": [
-        {"priority": "critical", "score": 5},
-        {"priority": "important", "score": 4}
-      ],
-      "constraints": [{"status": "PASS"}]
-    }]
-  },
-  "threshold": 4.5
-}
-```
-
-**Output:**
-```json
-{
-  "passed": true,
-  "reasons": [],
-  "issues": {
-    "critical": [],
-    "important": [],
-    "optional": [],
-    "constraint_failures": []
-  },
-  "summary": {
-    "overall_score": 4.6,
-    "threshold": 4.5,
-    "critical_issues_count": 0,
-    "important_issues_count": 0,
-    "constraint_failures_count": 0
-  }
-}
-```
-
-### Example 2: Gate Fails (Multiple Criteria)
-
-**Input:**
-```json
-{
-  "review": {
-    "overall_score": 4.2,
-    "patterns": [{
-      "name": "DDD Aggregates v1",
-      "tactics": [
-        {
-          "tactic_id": "encapsulate-state",
-          "tactic_name": "Encapsulate state",
-          "priority": "critical",
-          "score": 3,
-          "reasoning": "Fields lack _ prefix"
-        },
-        {
-          "tactic_id": "invariant-methods",
-          "tactic_name": "Validate invariants",
-          "priority": "important",
-          "score": 3,
-          "reasoning": "Missing validation"
-        }
-      ],
-      "constraints": [{"status": "PASS"}]
-    }]
-  },
-  "threshold": 4.5
-}
-```
-
-**Output:**
-```json
-{
-  "passed": false,
-  "reasons": [
-    "Overall score 4.2 < threshold 4.5",
-    "Critical tactic 'Encapsulate state' scored 3 (< 4)",
-    "Important tactic 'Validate invariants' scored 3 (< 4)"
-  ],
-  "issues": {
-    "critical": [
-      {
-        "tactic_id": "encapsulate-state",
-        "tactic_name": "Encapsulate state",
-        "pattern_name": "DDD Aggregates v1",
-        "score": 3,
-        "reasoning": "Fields lack _ prefix",
-        "priority": "critical"
-      }
-    ],
-    "important": [
-      {
-        "tactic_id": "invariant-methods",
-        "tactic_name": "Validate invariants",
-        "pattern_name": "DDD Aggregates v1",
-        "score": 3,
-        "reasoning": "Missing validation",
-        "priority": "important"
-      }
-    ],
-    "optional": [],
-    "constraint_failures": []
-  },
-  "summary": {
-    "overall_score": 4.2,
-    "threshold": 4.5,
-    "critical_issues_count": 1,
-    "important_issues_count": 1,
-    "constraint_failures_count": 0
-  }
-}
-```
-
-## Caller Usage
-
-**Orchestrator:**
-```markdown
-1. Call review-engine skill → get review results
-2. Call quality-gate skill with review + threshold
-3. Check gate_result.passed:
-   - If true → proceed to commit
-   - If false → send gate_result.issues to fix-coordinator
-```
-
-**Review command:**
-```markdown
-1. Call review-engine skill → get review results
-2. Call quality-gate skill with review + threshold
-3. Display to user:
-   "Quality Gate: {PASSED/FAILED}
-
-   Score: {overall_score}/{threshold}
-
-   {If failed:}
-   Issues to fix:
-   - {critical_issues}
-   - {important_issues}"
-```
-
-## Notes for Claude
-
-**Threshold Flexibility:**
-- Default: 4.5
-- User can configure (e.g., 4.0 for lenient, 4.8 for strict)
-- All criteria must still pass (critical/important < 4, constraints)
-
-**Non-Applicable Tactics:**
-- Tactics with score = -1 are not applicable
-- Exclude from all checks
-- Don't count as issues
-
-**Optional Issues:**
-- Don't fail the gate
-- Useful for awareness and improvement suggestions
-- Only collect if score < 3 (not too strict)
-
-**Output Format:**
-- Always valid JSON
-- Categorized issues for fix coordinator
-- Clear reasons for failure
+**Tool Restrictions:** Read-only decision logic

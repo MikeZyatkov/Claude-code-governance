@@ -1,6 +1,7 @@
 ---
 name: git-ops
-description: Handles git operations with standardized commit messages including quality metrics. Provides centralized git operations - commit message generation, staging, and committing, with clean professional format.
+description: Handles git operations with standardized commit messages including quality metrics. Creates clean, professional commits.
+allowed-tools: Bash, Read, Grep
 ---
 
 # Git Ops Skill
@@ -9,185 +10,222 @@ Handles git operations with standardized commit messages including quality metri
 
 ## Purpose
 
-Provides centralized git operations - commit message generation, staging, committing, with clean format (no Claude footer).
+Creates clean commits with professional messages that include implementation details and quality scores.
 
-## Input
+## When to Use
 
-```json
-{
-  "action": "commit",
-  "feature": "tenant-onboarding",
-  "layer": "domain",
-  "review_score": 4.6,
-  "fix_iterations": 1,
-  "pattern_scores": [
-    {"name": "DDD Aggregates v1", "score": 4.8},
-    {"name": "Event Sourcing v1", "score": 4.5}
-  ],
-  "implementation_result": {
-    "files": {
-      "created": ["src/domain/Tenant.aggregate.ts", ...],
-      "modified": ["src/domain/index.ts", ...]
-    }
-  }
-}
-```
+Invoked by orchestrator after quality gate passes, when code is ready to commit.
 
-## Output
+## How It Works
 
-```json
-{
-  "success": true,
-  "commit_hash": "abc1234",
-  "commit_message": "feat(tenant-onboarding): implement domain layer\n\nReview score: 4.6/5.0\nFix iterations: 1\nPatterns: DDD Aggregates v1 (4.8), Event Sourcing v1 (4.5)"
-}
-```
+### Context from Orchestrator
 
-## Instructions for Claude
+Reads context from:
+1. **Feature/Layer:** From recent workflow
+2. **Review results:** Score, patterns evaluated
+3. **Implementation details:** From implementation-engine output
+4. **Fix iterations:** How many fix cycles occurred
 
-### Step 1: Generate Commit Message
+### Workflow
+
+#### 1. Stage Files
+
+**Steps:**
+1. Identify files to stage:
+   - New files created during implementation
+   - Modified files from implementation or fixes
+   - Exclude: node_modules, dist, build artifacts
+
+2. Stage files:
+   ```bash
+   # For tracked files that were modified
+   git add -u
+
+   # For new files explicitly listed
+   git add {file_paths}
+   ```
+
+**Don't use `git add .`** - only stage files from this implementation.
+
+#### 2. Generate Commit Message
 
 **Format:**
 ```
 feat({feature}): implement {layer} layer
 
-Review score: {review_score}/5.0
-Fix iterations: {fix_iterations}
-Patterns: {pattern_list}
+{Brief description of what was implemented}
+
+Components:
+- {component_1}: {description}
+- {component_2}: {description}
+
+Quality: {score}/5.0 ({iterations} iteration(s))
+Patterns: {pattern_scores}
 ```
 
 **Example:**
 ```
 feat(tenant-onboarding): implement domain layer
 
-Review score: 4.6/5.0
-Fix iterations: 1
-Patterns: DDD Aggregates v1 (4.8), Event Sourcing v1 (4.5)
+Created Tenant aggregate with value objects and domain events following DDD patterns.
+
+Components:
+- Tenant aggregate: Manages tenant lifecycle with encapsulated state
+- EmailAddress VO: Validates email format
+- CompanyName VO: Validates company name constraints
+- TenantCreated/Activated events: Track state changes
+
+Quality: 4.7/5.0 (2 iterations)
+Patterns: ddd-aggregates (4.7/5.0)
 ```
 
-**Pattern list format:**
-```
-{pattern.name} ({pattern.score}), {pattern.name} ({pattern.score}), ...
-```
+#### 3. Create Commit
 
-**NO Claude footer** - clean, professional commit messages only.
-
-### Step 2: Stage Changes
-
-**Stage only implementation-related changes:**
-
-```bash
-# Stage all modified and deleted tracked files
-git add -u
-
-# Stage new files from implementation result
-for file in implementation_result.files.created:
-  git add "$file"
-```
+**Steps:**
+1. Generate commit message (see format above)
+2. Commit with message:
+   ```bash
+   git commit -m "$(cat <<'EOF'
+   {commit_message}
+   EOF
+   )"
+   ```
+3. Capture commit hash: `git rev-parse HEAD`
+4. Return hash for audit logging
 
 **Important:**
-- Only stage files from `implementation_result.files.created` and `implementation_result.files.modified`
-- `git add -u` handles modified tracked files
-- Explicitly add each new file from the `created` array
-- Do NOT stage unrelated untracked files
+- Use HEREDOC for message formatting
+- No `--no-verify` or `--no-gpg-sign` (respect hooks)
+- No force push
+- Clean, professional format
 
-### Step 3: Create Commit
+#### 4. Verify Commit
 
-**Use heredoc for proper formatting:**
+**Steps:**
+1. Check commit was created: `git log -1 --oneline`
+2. Verify files were staged correctly
+3. Return commit hash and message
+
+## Instructions for Claude
+
+### Staging Files
+
+**Read implementation results:**
+- Check which files were created/modified
+- Get file list from implementation-engine context
+- Only stage those specific files
+
+**Commands:**
+```bash
+# Modified tracked files
+git add -u
+
+# New files (explicit list)
+git add contexts/tenant-onboarding/domain/model/Tenant.ts
+git add contexts/tenant-onboarding/domain/model/EmailAddress.ts
+# ... etc
+```
+
+**Don't:**
+- Use `git add .` (stages everything)
+- Stage unrelated files
+- Skip files that should be committed
+
+### Generating Messages
+
+**Message Structure:**
+1. **Header:** `feat({feature}): implement {layer} layer`
+2. **Body:** Brief description
+3. **Components:** List what was built
+4. **Quality:** Score and iterations
+5. **Patterns:** Pattern names and scores
+
+**Read from context:**
+- Feature name
+- Layer name
+- Components list (from implementation-engine)
+- Review score (from review-engine)
+- Fix iterations (from fix-coordinator)
+- Pattern scores (from review-engine)
+
+### Commit Creation
+
+**Use HEREDOC:**
 ```bash
 git commit -m "$(cat <<'EOF'
-feat({feature}): implement {layer} layer
+feat(tenant-onboarding): implement domain layer
 
-Review score: {review_score}/5.0
-Fix iterations: {fix_iterations}
-Patterns: {pattern_list}
+Created Tenant aggregate with value objects...
+
+Components:
+- Tenant aggregate: ...
+- EmailAddress VO: ...
+
+Quality: 4.7/5.0 (2 iterations)
+Patterns: ddd-aggregates (4.7/5.0)
 EOF
 )"
 ```
 
-### Step 4: Get Commit Hash
+**Respect hooks:**
+- Don't use `--no-verify`
+- Let pre-commit hooks run
+- If hooks modify files, that's okay
 
-```bash
-git rev-parse --short HEAD
-```
-
-### Step 5: Return Result
-
-```json
-{
-  "success": true,
-  "commit_hash": "{hash}",
-  "commit_message": "{full_message}"
-}
-```
-
-## Error Handling
+### Error Handling
 
 **Nothing to commit:**
-```json
-{
-  "success": false,
-  "error": "Nothing to commit",
-  "message": "Working directory clean, no changes to commit"
-}
-```
+- Check `git status`
+- If no changes, tell orchestrator
+- Don't create empty commit
 
-**Commit failed:**
-```json
-{
-  "success": false,
-  "error": "Commit failed",
-  "details": "{error_message from git}"
-}
-```
+**Commit hook failures:**
+- Show hook output
+- Let orchestrator decide next steps
+- Don't force commit
 
 **Conflicts:**
-```json
-{
-  "success": false,
-  "error": "Merge conflicts detected",
-  "message": "Resolve conflicts manually before committing"
-}
-```
+- Check for merge conflicts
+- Resolve if possible
+- Ask user if complex
 
-## Usage Example
+## Example Workflow
 
-**Orchestrator after passing quality gate:**
-```markdown
-Call git-ops skill with:
-- action: "commit"
-- feature: "tenant-onboarding"
-- layer: "domain"
-- review_score: 4.6
-- fix_iterations: 1
-- pattern_scores: [...]
-- implementation_result: {files: {created: [...], modified: [...]}}
+**Context:**
+- Feature: tenant-onboarding
+- Layer: domain
+- Orchestrator: "Create commit for domain layer"
+- Review score: 4.7/5.0, 2 iterations
+- Pattern: ddd-aggregates (4.7/5.0)
 
-Receive result.
+**Actions:**
+1. Read implementation results
+2. Files to commit:
+   - Tenant.ts (new)
+   - EmailAddress.ts (new)
+   - CompanyName.ts (new)
+   - Tenant.test.ts (new)
+3. Stage files:
+   ```bash
+   git add -u
+   git add contexts/tenant-onboarding/domain/model/Tenant.ts
+   git add contexts/tenant-onboarding/domain/model/EmailAddress.ts
+   git add contexts/tenant-onboarding/domain/model/CompanyName.ts
+   git add test/domain/Tenant.test.ts
+   ```
+4. Generate message (see format above)
+5. Commit with HEREDOC
+6. Get hash: `git rev-parse HEAD` → `abc123def`
+7. Return hash for audit logging
 
-If result.success:
-  Log to audit: "Commit: {result.commit_hash}"
-  Proceed to next layer
+## Notes
 
-If NOT result.success:
-  Handle error (ask user for intervention)
-```
+**Message Format:** Clean, professional, no Claude footer
 
-## Notes for Claude
+**Staging:** Only stage files from this implementation
 
-**Commit Message Format:**
-- Subject: feat({feature}): implement {layer} layer
-- Body: Quality metrics (review score, iterations, patterns)
-- NO Claude footer or co-authorship
-- Professional and concise
+**Hooks:** Respect pre-commit hooks, don't bypass
 
-**Git Operations:**
-- Stage implementation changes only (git add -u for tracked files, explicit adds for new files)
-- Do NOT stage unrelated untracked files
-- Use heredoc for multi-line messages
-- Capture commit hash for audit trail
+**Quality Metrics:** Include score and iterations for transparency
 
-**Error Recovery:**
-- Check git status before committing
-- Detect conflicts
-- Provide actionable error messages
+**Tool Restrictions:** Git and read-only operations

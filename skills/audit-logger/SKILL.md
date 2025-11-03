@@ -1,363 +1,271 @@
 ---
 name: audit-logger
-description: Manages audit trail operations for orchestrated implementation workflows. Provides centralized audit logging functionality - initializing trails, appending timestamped entries, and formatting detailed issue descriptions.
+description: Manages audit trails for orchestrated implementation workflows. Creates and maintains audit logs at docs/{feature}/implementation-audit.md with timestamped entries tracking all orchestration activities.
+allowed-tools: Read, Write, Bash
 ---
 
 # Audit Logger Skill
 
-Manages audit trail operations for orchestrated implementation workflows.
+Creates and maintains audit trails for orchestrated implementation workflows.
 
 ## Purpose
 
-Provides centralized audit logging functionality - initializing trails, appending timestamped entries, formatting detailed issue descriptions.
+Tracks all orchestration activities in a chronological audit trail:
+- Initializes audit file when orchestration starts
+- Appends timestamped entries for each phase (implementation, review, fix, commit)
+- Formats issues with actionable details
+- Provides full traceability of decisions and outcomes
 
-## Input
+## File Location
 
-```json
-{
-  "action": "initialize" | "append",
-  "feature": "tenant-onboarding",
-  "timestamp": "2025-10-30 14:20:15",
-  "data": {...}
-}
-```
+Audit trails are stored at: `docs/{feature}/implementation-audit.md`
 
-**Note:** The `timestamp` parameter is REQUIRED and must be provided by the caller in format "YYYY-MM-DD HH:MM:SS".
+## When to Use
 
-## Output
+This skill is invoked by the orchestrator at key workflow moments:
+- **Start:** Initialize audit trail with configuration
+- **Implementation:** Log when layer implementation starts/completes
+- **Review:** Log when code review starts/completes
+- **Fix:** Log fix iterations
+- **Commit:** Log successful commits
+- **Intervention:** Log when user intervention is needed
 
-```json
-{
-  "success": true,
-  "file_path": "docs/tenant-onboarding/implementation-audit.md",
-  "message": "Audit entry appended"
-}
-```
+## How It Works
 
-## Actions
+### Context from Orchestrator
 
-### Action: Initialize
+When invoked, this skill reads context from:
+1. **Feature name:** From orchestrator's command argument or recent context
+2. **Timestamp:** From most recent `date '+%Y-%m-%d %H:%M:%S'` bash command output
+3. **Action:** Initialize (first time) or Append (subsequent entries)
+4. **Entry data:** From orchestrator's description of what to log
 
-**Purpose:** Create new audit trail file
+### Workflow
 
-**Input data:**
-```json
-{
-  "threshold": 4.5,
-  "max_iterations": 3,
-  "layers": ["domain", "application", "infrastructure"]
-}
-```
+#### Initializing Audit Trail
 
-**Creates file:** `docs/{feature}/implementation-audit.md`
-
-**Content structure:** See "For Initialize Action" instructions below for exact template with real timestamps.
-
-### Action: Append
-
-**Purpose:** Add timestamped entry to audit trail
-
-**Input data:**
-```json
-{
-  "entry_type": "implementation_start" | "implementation_complete" | "review_start" | "review_complete" | "fix_start" | "fix_complete" | "commit" | "intervention",
-  "from": "Orchestrator",
-  "to": "Implementation Agent",
-  "content": {
-    // entry-specific data
-  }
-}
-```
-
-**Entry formats by type:**
-
-**NOTE:** In all templates below, `{timestamp_value}` should be replaced with the exact timestamp string from the input `timestamp` parameter.
-
-#### implementation_start
-```markdown
-**{timestamp_value}: Orchestrator → Implementation Agent**
-Command: Implement {layer} layer
-Goal: {goal}
-```
-
-Example:
-```markdown
-**2025-10-30 16:23:45: Orchestrator → Implementation Agent**
-Command: Implement domain layer
-Goal: Build Tenant aggregate with value objects
-```
-
-#### implementation_complete
-```markdown
-**{timestamp_value}: Implementation Agent → Orchestrator**
-Status: ✅ Complete
-
-Summary: {brief_summary_of_what_was_implemented}
-
-Components Implemented:
-- {component_1_name}: {what_it_does_and_why}
-- {component_2_name}: {what_it_does_and_why}
-- ...
-
-Key Changes:
-- {change_1}: {rationale}
-- {change_2}: {rationale}
-- ...
-
-Deviations from Plan:
-{If any deviations:}
-- {deviation_description}: {why_it_was_necessary}
-{If no deviations:}
-- None - implementation follows plan as specified
-
-Tests: {passing}/{total} passing ({test_count} test cases)
-Files: {created_count} created, {modified_count} modified
-```
-
-**Remember:** `{timestamp_value}` must be replaced with the ACTUAL output from the Bash date command (e.g., "2025-10-30 16:23:45")
-
-#### review_start
-```markdown
-**{timestamp}: Orchestrator → Review Agent**
-Command: Review {layer} layer implementation
-Threshold: {threshold}/5.0
-```
-
-#### review_complete
-```markdown
-**{timestamp}: Review Agent → Orchestrator**
-Status: {✅ Quality gate passed | ⚠️ Quality gate failed}
-- Score: {score}/5.0 (threshold: {threshold})
-- Patterns evaluated: {pattern_list with scores}
-
-{If failed:}
-Issues found:
-
-{formatted_issues}
-
-{If passed:}
-All critical and important tactics: ✅ Score ≥ 4
-Constraints: All passed
-```
-
-#### fix_start
-```markdown
-**{timestamp}: Orchestrator → Fix Agent**
-Command: Fix issues from review (iteration {current}/{max})
-Target issues:
-{issue_list}
-```
-
-#### fix_complete
-```markdown
-**{timestamp}: Fix Agent → Orchestrator**
-Status: ✅ Complete
-Changes applied:
-{changes_list}
-Files modified: {file_list}
-```
-
-#### commit
-```markdown
-**{timestamp}: Orchestrator → Git**
-Action: Commit {layer} layer
-Message: "{commit_message}"
-Commit: {commit_hash}
-Details: Review score {score}/5.0, {iterations} fix iteration(s), {pattern_scores}
-```
-
-#### intervention
-```markdown
-**{timestamp}: Orchestrator → User**
-⚠️ User Intervention Required
-
-Layer: {layer}
-Iteration: {current}/{max}
-Current Score: {score}/5.0 (threshold: {threshold})
-
-Reason: {reason}
-
-{issue_details}
-
-Recommended actions:
-{actions}
-```
-
-## Issue Formatting
-
-**For review_complete entries with issues:**
-
-```markdown
-1. **[CRITICAL]** {tactic_name} ({pattern_name}) - Score: {score}/5
-   Problem: {reasoning from review}
-   Required: {what pattern expects}
-   Impact: {why this matters}
-
-2. **[IMPORTANT]** {tactic_name} ({pattern_name}) - Score: {score}/5
-   Problem: {reasoning}
-   Required: {requirement}
-   Impact: {impact}
-
-{...}
-
-Constraints:
-- {constraint_status}
-```
-
-**Impact descriptions by tactic type:**
-- `encapsulate-state`: "Breaks encapsulation, allows direct state mutation bypassing domain logic and events."
-- `apply-via-events`: "State changes not recorded in event store, breaks event sourcing and audit trail."
-- `invariant-methods`: "Business rules can be violated, invalid state transitions possible."
-- `aggregate-root`: "Breaks aggregate boundary, consistency guarantees compromised."
-- Default: "Violates architectural pattern, reduces code quality and maintainability."
-
-## Instructions for Claude
-
-### For Initialize Action
+**When:** First time orchestration starts for a feature
 
 **Steps:**
+1. Identify feature name from orchestrator context
+2. Capture timestamp from orchestrator's recent `date` command
+3. Extract configuration: threshold, max_iterations, layers
+4. Create directory: `mkdir -p docs/{feature}/`
+5. Create audit file: `docs/{feature}/implementation-audit.md`
+6. Write initial content with timestamp
 
-1. **Extract timestamp from input:**
-   - Read the `timestamp` parameter from input (e.g., "2025-10-30 14:20:15")
-   - Extract date portion by splitting on space and taking first part (e.g., "2025-10-30")
-
-2. **Create audit file:**
-   - Create file at `docs/{feature}/implementation-audit.md`
-
-3. **Write initial content:**
-   - Use the timestamp from input parameter
-
-Template:
+**Initial File Template:**
 ```markdown
 # Implementation Audit Trail: {feature}
 
-Started: {timestamp from input parameter}
+Started: {timestamp}
 Threshold: {threshold}/5.0
 Max iterations: {max_iterations}
-Layers: {layers}
+Layers: {layers_as_comma_separated_list}
 
 ---
 
-## Session: {date portion from timestamp}
+## Session: {date_from_timestamp}
 
 ```
 
-4. **Return success**
+**Example:**
+```markdown
+# Implementation Audit Trail: tenant-onboarding
+
+Started: 2025-10-30 16:23:45
+Threshold: 4.5/5.0
+Max iterations: 3
+Layers: domain, application, infrastructure
 
 ---
 
-### For Append Action
+## Session: 2025-10-30
+
+```
+
+---
+
+#### Appending Audit Entries
+
+**When:** Every major orchestration event (implementation, review, fix, commit)
 
 **Steps:**
+1. Identify feature name from context
+2. Capture timestamp from orchestrator's recent `date` command
+3. Determine entry type from context:
+   - implementation_start
+   - implementation_complete
+   - review_start
+   - review_complete
+   - fix_start
+   - fix_complete
+   - commit
+   - intervention
+4. Read entry format from ENTRY-FORMATS.md (see below)
+5. Fill in entry data from orchestrator's context
+6. Append to audit file with blank line separator
 
-1. **Extract timestamp from input:**
-   - Read the `timestamp` parameter from input (e.g., "2025-10-30 14:20:15")
+**Entry Format Reference:**
+For detailed entry templates, see [ENTRY-FORMATS.md](./ENTRY-FORMATS.md)
 
-2. **Format the entry:**
-   - Based on entry_type, format the entry using the timestamp from input
-   - Use appropriate template below
+**Quick Reference:**
+- **implementation_start:** `**{timestamp}: Orchestrator → Implementation Agent** Command: Implement {layer} layer`
+- **implementation_complete:** Status, summary, components, tests, files
+- **review_start:** `**{timestamp}: Orchestrator → Review Agent** Command: Review {layer} layer`
+- **review_complete:** Status, score, patterns, issues
+- **fix_start:** Fix iteration with target issues
+- **fix_complete:** Changes applied and files modified
+- **commit:** Commit details with hash and scores
+- **intervention:** User intervention request with reason
 
-3. **Fill in data:**
-   - Fill in data from the content object
+---
 
-4. **Format issues (if present):**
-   - Format issues using the helper function below
+## Instructions for Claude
 
-5. **Append to file:**
-   - Add blank line before entry
-   - Write formatted entry using timestamp from input
-   - Ensure proper markdown formatting
+### Reading Context
 
-6. **Return success**
+**Feature name:**
+- Look for the feature name in the orchestrator's recent messages
+- Check for command arguments like `/orchestrate:hex-arc tenant-onboarding`
+- Check for references to feature in recent workflow
 
-### Issue Formatting Helper
+**Timestamp:**
+- Look for the most recent `date '+%Y-%m-%d %H:%M:%S'` command output
+- The orchestrator runs this before invoking the audit-logger
+- Use this EXACT timestamp value (do not generate your own)
+- Format: "YYYY-MM-DD HH:MM:SS" (e.g., "2025-10-30 16:23:45")
 
-**For each issue:**
-```
-priority_label = issue.priority.toUpperCase()
-pattern_name = issue.pattern_name or "Unknown Pattern"
+**Action (Initialize vs Append):**
+- Initialize: When audit file doesn't exist yet, or orchestrator says "initialize"
+- Append: When audit file exists and orchestrator describes what to log
 
-formatted = f"""
-{index}. **[{priority_label}]** {issue.tactic_name} ({pattern_name}) - Score: {issue.score}/5
-   Problem: {issue.reasoning}
-   Required: {get_required_description(issue)}
-   Impact: {get_impact_description(issue)}
+**Entry Data:**
+- Read from orchestrator's description of the current phase
+- For implementation: layer name, goal
+- For review: layer name, score, threshold, issues
+- For commit: commit hash, message, score
+- For intervention: reason, iteration, issues
 
-"""
-```
+### Formatting Guidelines
 
-**get_impact_description:**
-- Map tactic_id to known impacts
-- Use pattern goal if available
-- Default generic description
-
-## Usage Examples
-
-**Orchestrator initializes:**
-```markdown
-Call audit-logger skill with:
-- action: "initialize"
-- feature: "tenant-onboarding"
-- data: {threshold: 4.5, max_iterations: 3, layers: ["domain", "application"]}
-```
-
-**Orchestrator logs implementation start:**
-```markdown
-Call audit-logger skill with:
-- action: "append"
-- feature: "tenant-onboarding"
-- data: {
-    entry_type: "implementation_start",
-    from: "Orchestrator",
-    to: "Implementation Agent",
-    content: {
-      layer: "domain",
-      goal: "Create Tenant aggregate, value objects, and domain events"
-    }
-  }
-```
-
-**Orchestrator logs review with issues:**
-```markdown
-Call audit-logger skill with:
-- action: "append"
-- feature: "tenant-onboarding"
-- data: {
-    entry_type: "review_complete",
-    from: "Review Agent",
-    to: "Orchestrator",
-    content: {
-      passed: false,
-      score: 4.2,
-      threshold: 4.5,
-      patterns: [...],
-      issues: {
-        critical: [...],
-        important: [...]
-      }
-    }
-  }
-```
-
-## Notes for Claude
+**Markdown Structure:**
+- Consistent indentation
+- Blank line before each entry
+- Use ✅ ⚠️ ❌ symbols for visual status
+- Proper markdown list formatting
 
 **Timestamps:**
-- The caller provides the `timestamp` parameter in format "YYYY-MM-DD HH:MM:SS"
-- You must use this exact timestamp value from the input in all entries
-- Do NOT generate or make up timestamps
-- Simply extract the timestamp from input and use it in the templates
+- Always use the exact timestamp from orchestrator's `date` command
+- Never generate or make up timestamps
+- Format: "YYYY-MM-DD HH:MM:SS" (24-hour format)
 
-**Markdown Formatting:**
-- Consistent structure
-- Proper indentation for nested lists
-- Use ✅ ⚠️ ❌ symbols for status
+**Issue Formatting:**
+- For review_complete with issues, format each issue with:
+  - Priority: [CRITICAL] or [IMPORTANT]
+  - Tactic name and pattern name
+  - Score out of 5
+  - Problem description (from review reasoning)
+  - Required (what pattern expects)
+  - Impact (why this matters)
+- See ENTRY-FORMATS.md for full details
 
-**Issue Details:**
-- Problem: Specific code examples from reasoning
-- Required: Pattern expectations
-- Impact: Business/technical consequences
+### Error Handling
+
+**File doesn't exist (for append):**
+- Check if audit file exists: `[ -f docs/{feature}/implementation-audit.md ]`
+- If not, switch to initialize action
+- Create directory if needed
+
+**Directory doesn't exist:**
+- Create directory first: `mkdir -p docs/{feature}/`
+- Then create audit file
+
+**Timestamp missing:**
+- If orchestrator didn't provide timestamp, ask for it
+- Remind orchestrator to run `date '+%Y-%m-%d %H:%M:%S'` first
+
+### Progressive Disclosure
+
+**Detailed Templates:**
+- Main workflow above covers the basics
+- For detailed entry format templates: [ENTRY-FORMATS.md](./ENTRY-FORMATS.md)
+- Reference that file when formatting complex entries (review_complete, intervention)
+
+---
+
+## Example Workflows
+
+### Example 1: Initialize
+
+**Context:**
+- Orchestrator starts: `/orchestrate:hex-arc tenant-onboarding --threshold 4.5`
+- Orchestrator runs: `date '+%Y-%m-%d %H:%M:%S'` → output: "2025-10-30 16:23:45"
+- Orchestrator invokes audit-logger to initialize
+
+**Actions:**
+1. Read feature name: "tenant-onboarding"
+2. Read timestamp: "2025-10-30 16:23:45"
+3. Read config: threshold=4.5, max_iterations=3, layers=[domain, application, infrastructure]
+4. Create directory: `mkdir -p docs/tenant-onboarding/`
+5. Write audit file with initial template (see above)
+6. Confirm: "Audit trail initialized at docs/tenant-onboarding/implementation-audit.md"
+
+---
+
+### Example 2: Append Implementation Start
+
+**Context:**
+- Orchestrator about to start domain layer implementation
+- Orchestrator runs: `date '+%Y-%m-%d %H:%M:%S'` → output: "2025-10-30 16:25:12"
+- Orchestrator invokes audit-logger: "Log implementation start for domain layer, goal is to create Tenant aggregate"
+
+**Actions:**
+1. Read feature name from context: "tenant-onboarding"
+2. Read timestamp: "2025-10-30 16:25:12"
+3. Read entry data: layer="domain", goal="create Tenant aggregate"
+4. Format entry (implementation_start template from ENTRY-FORMATS.md):
+   ```markdown
+   **2025-10-30 16:25:12: Orchestrator → Implementation Agent**
+   Command: Implement domain layer
+   Goal: Create Tenant aggregate with value objects
+   ```
+5. Append to docs/tenant-onboarding/implementation-audit.md
+6. Confirm: "Entry appended"
+
+---
+
+### Example 3: Append Review Complete with Issues
+
+**Context:**
+- Review just completed, found issues
+- Orchestrator runs: `date '+%Y-%m-%d %H:%M:%S'` → output: "2025-10-30 16:45:30"
+- Orchestrator invokes audit-logger with review results
+
+**Actions:**
+1. Read timestamp: "2025-10-30 16:45:30"
+2. Read review data: score=4.2, threshold=4.5, failed=true, issues=[...]
+3. Format entry (review_complete template from ENTRY-FORMATS.md)
+4. Format issues list with problem/required/impact
+5. Append to audit file
+6. Confirm: "Review results logged"
+
+---
+
+## Notes
+
+**Timestamps are Critical:**
+- The orchestrator MUST run `date` command before invoking this skill
+- Use the exact timestamp value from that command
+- Do not generate your own timestamps
+
+**Progressive Loading:**
+- Main SKILL.md provides workflow and quick reference
+- ENTRY-FORMATS.md has detailed templates (load when formatting complex entries)
+- Keep context focused - only load what's needed
 
 **File Operations:**
-- Create file if doesn't exist (initialize)
-- Append without overwriting (append)
-- Handle file permissions errors
+- Use Write tool to create initial file
+- Use Edit tool or append pattern to add entries
+- Ensure proper blank line separation between entries
+- Maintain markdown formatting consistency
