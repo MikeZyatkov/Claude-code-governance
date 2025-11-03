@@ -9,7 +9,7 @@ import { ILLMAdapter, LLMRequest, LLMResponse } from '../ILLMAdapter'
 export class ClaudeCodeCLIAdapter implements ILLMAdapter {
   private cliCommand: string
 
-  constructor(cliCommand: string = '/Users/mikhail/.claude/local/claude') {
+  constructor(cliCommand: string = process.env.CLAUDE_CLI_PATH || 'claude') {
     this.cliCommand = cliCommand
   }
 

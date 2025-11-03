@@ -63,14 +63,9 @@ If any criterion fails, enter fix cycle (up to 3 iterations).
 
 ## Instructions for Claude
 
-**IMPORTANT - Timestamps:**
+**IMPORTANT - Audit Logging:**
 
-Before EVERY call to audit-logger skill, you MUST:
-1. Run: `date '+%Y-%m-%d %H:%M:%S'` using the Bash tool
-2. Capture the output (e.g., "2025-10-30 14:20:15")
-3. Pass it as the `timestamp` parameter to audit-logger
-
-This ensures accurate timestamps for each audit entry.
+The audit-logger skill generates timestamps automatically by running `date '+%Y-%m-%d %H:%M:%S'` internally at the start of each action. You do NOT need to run `date` commands or pass timestamps to the skill - simply invoke it with the appropriate context (feature name, entry type, and relevant data).
 
 ---
 
@@ -128,23 +123,17 @@ If the user says no, exit gracefully.
 
 ### Step 2: Initialize Audit Trail
 
-**Get current timestamp:**
-```bash
-date '+%Y-%m-%d %H:%M:%S'
-```
-
 **Invoke audit-logger skill to initialize:**
 
 Invoke the audit-logger skill to create the audit trail for `{feature_name}`.
 
 Context to provide:
 - Feature: {feature_name}
-- Timestamp: {output from date command above}
 - Threshold: {threshold}
 - Max iterations: {max_iterations}
 - Layers: {layers_to_implement}
 
-The skill will create `docs/{feature_name}/implementation-audit.md` with initial metadata.
+The skill will generate a timestamp and create `docs/{feature_name}/implementation-audit.md` with initial metadata.
 
 ### Step 3: Orchestration Loop - For Each Layer
 
@@ -159,21 +148,17 @@ quality_gate_passed = false
 
 **Log implementation start:**
 
-**Get current timestamp:**
-```bash
-date '+%Y-%m-%d %H:%M:%S'
-```
-
 **Invoke audit-logger skill:**
 
 Invoke the audit-logger skill to log implementation start for the {layer_name} layer.
 
 Context:
 - Feature: {feature_name}
-- Timestamp: {output from date command above}
 - Entry type: implementation_start
 - Layer: {layer_name}
 - Goal: {extract goal from plan}
+
+The skill will generate a timestamp internally.
 
 **Invoke implementation-engine skill:**
 
@@ -193,25 +178,19 @@ The skill will build all components specified in the plan, following governance 
 
 **Log implementation completion:**
 
-**Get current timestamp:**
-```bash
-date '+%Y-%m-%d %H:%M:%S'
-```
-
 **Invoke audit-logger skill:**
 
 Invoke the audit-logger skill to log implementation completion for the {layer_name} layer.
 
 Context:
 - Feature: {feature_name}
-- Timestamp: {output from date command above}
 - Entry type: implementation_complete
 - Success: true
 - Components: {list components from implementation-engine output}
 - Tests: {test results from implementation}
 - Files: {files created during implementation}
 
-The skill will append the completion entry to the audit trail.
+The skill will generate a timestamp and append the completion entry to the audit trail.
 
 **Display progress to user:**
 ```
@@ -222,21 +201,17 @@ The skill will append the completion entry to the audit trail.
 
 **Log review start:**
 
-**Get current timestamp:**
-```bash
-date '+%Y-%m-%d %H:%M:%S'
-```
-
 **Invoke audit-logger skill:**
 
 Invoke the audit-logger skill to log review start for the {layer_name} layer.
 
 Context:
 - Feature: {feature_name}
-- Timestamp: {output from date command above}
 - Entry type: review_start
 - Layer: {layer_name}
 - Threshold: {threshold}
+
+The skill will generate a timestamp internally.
 
 **Invoke review-engine skill:**
 
@@ -262,18 +237,12 @@ The skill will make a pass/fail decision and categorize any issues for fixing.
 
 **Log review result:**
 
-**Get current timestamp:**
-```bash
-date '+%Y-%m-%d %H:%M:%S'
-```
-
 **Invoke audit-logger skill:**
 
 Invoke the audit-logger skill to log review completion for the {layer_name} layer.
 
 Context:
 - Feature: {feature_name}
-- Timestamp: {output from date command above}
 - Entry type: review_complete
 - Passed: {gate_result.passed}
 - Score: {review_result.overall_score}
@@ -281,7 +250,7 @@ Context:
 - Patterns: {review_result.patterns with scores}
 - Issues: {gate_result.issues if any}
 
-The skill will append the review results to the audit trail.
+The skill will generate a timestamp and append the review results to the audit trail.
 
 **Display progress to user:**
 ```
@@ -337,21 +306,17 @@ If result.intervention_needed = true:
 
 **Log commit start:**
 
-**Get current timestamp:**
-```bash
-date '+%Y-%m-%d %H:%M:%S'
-```
-
 **Invoke audit-logger skill:**
 
 Invoke the audit-logger skill to log commit action for the {layer_name} layer.
 
 Context:
 - Feature: {feature_name}
-- Timestamp: {output from date command above}
 - Entry type: commit
 - Layer: {layer_name}
 - Action: Committing implementation
+
+The skill will generate a timestamp internally.
 
 **Invoke git-ops skill:**
 
@@ -407,31 +372,20 @@ Commit: {commit_result.commit_hash}
 
 **Log orchestration completion:**
 
-**Get current timestamp:**
-```bash
-date '+%Y-%m-%d %H:%M:%S'
-```
+**Invoke audit-logger skill:**
 
-**Call audit-logger skill:**
-```json
-{
-  "action": "append",
-  "feature": "{feature_name}",
-  "timestamp": "{output from date command}",
-  "data": {
-    "entry_type": "completion",
-    "from": "Orchestrator",
-    "to": "User",
-    "content": {
-      "layers_completed": {layers_completed.length},
-      "total_layers": {total_layers},
-      "average_score": {average_score},
-      "total_fix_iterations": {sum of all iteration counts},
-      "total_commits": {total_commits}
-    }
-  }
-}
-```
+Invoke the audit-logger skill to log orchestration completion.
+
+Context:
+- Feature: {feature_name}
+- Entry type: completion
+- Layers completed: {layers_completed.length}
+- Total layers: {total_layers}
+- Average score: {average_score}
+- Total fix iterations: {sum of all iteration counts}
+- Total commits: {total_commits}
+
+The skill will generate a timestamp internally.
 
 **Display final summary to user:**
 ```
@@ -512,31 +466,20 @@ Resolve conflicts and try again.
 
 **Log intervention request:**
 
-**Get current timestamp:**
-```bash
-date '+%Y-%m-%d %H:%M:%S'
-```
+**Invoke audit-logger skill:**
 
-**Call audit-logger skill:**
-```json
-{
-  "action": "append",
-  "feature": "{feature_name}",
-  "timestamp": "{output from date command}",
-  "data": {
-    "entry_type": "intervention",
-    "from": "Orchestrator",
-    "to": "User",
-    "content": {
-      "layer": "{layer_name}",
-      "iteration": "{iteration}/{max_iterations}",
-      "score": "{current_score}",
-      "reason": "{intervention_reason}",
-      "issues": {categorized_issues}
-    }
-  }
-}
-```
+Invoke the audit-logger skill to log user intervention request.
+
+Context:
+- Feature: {feature_name}
+- Entry type: intervention
+- Layer: {layer_name}
+- Iteration: {iteration}/{max_iterations}
+- Score: {current_score}
+- Reason: {intervention_reason}
+- Issues: {categorized_issues}
+
+The skill will generate a timestamp internally.
 
 **Ask user:**
 ```
@@ -577,10 +520,10 @@ This command orchestrates 7 skills:
 - All skills return structured data
 
 **Timestamps:**
-- You MUST run `date '+%Y-%m-%d %H:%M:%S'` before EVERY audit-logger call
-- Capture the output and pass it as the `timestamp` parameter
-- This ensures accurate timestamps for each audit entry
-- Format: "YYYY-MM-DD HH:MM:SS" (24-hour format)
+- The audit-logger skill generates timestamps internally
+- Each skill invocation automatically runs `date '+%Y-%m-%d %H:%M:%S'`
+- You do NOT need to run date commands or manage timestamps
+- Timestamps follow "YYYY-MM-DD HH:MM:SS" format (24-hour)
 
 **Progress Reporting:**
 - Show real-time progress after each phase

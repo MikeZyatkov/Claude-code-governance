@@ -47,12 +47,12 @@ When invoked, this skill reads context from:
 **When:** First time orchestration starts for a feature
 
 **Steps:**
-1. Identify feature name from orchestrator context
-2. Capture timestamp from orchestrator's recent `date` command
+1. **Generate timestamp:** Run `date '+%Y-%m-%d %H:%M:%S'` and capture output
+2. Identify feature name from orchestrator context
 3. Extract configuration: threshold, max_iterations, layers
 4. Create directory: `mkdir -p docs/{feature}/`
 5. Create audit file: `docs/{feature}/implementation-audit.md`
-6. Write initial content with timestamp
+6. Write initial content with timestamp from step 1
 
 **Initial File Template:**
 ```markdown
@@ -91,8 +91,8 @@ Layers: domain, application, infrastructure
 **When:** Every major orchestration event (implementation, review, fix, commit)
 
 **Steps:**
-1. Identify feature name from context
-2. Capture timestamp from orchestrator's recent `date` command
+1. **Generate timestamp:** Run `date '+%Y-%m-%d %H:%M:%S'` and capture output
+2. Identify feature name from context
 3. Determine entry type from context:
    - implementation_start
    - implementation_complete
@@ -131,9 +131,9 @@ For detailed entry templates, see [ENTRY-FORMATS.md](./ENTRY-FORMATS.md)
 - Check for references to feature in recent workflow
 
 **Timestamp:**
-- Look for the most recent `date '+%Y-%m-%d %H:%M:%S'` command output
-- The orchestrator runs this before invoking the audit-logger
-- Use this EXACT timestamp value (do not generate your own)
+- Run `date '+%Y-%m-%d %H:%M:%S'` at the start of EVERY action (initialize or append)
+- Capture the output immediately
+- Use this timestamp in the audit entry
 - Format: "YYYY-MM-DD HH:MM:SS" (e.g., "2025-10-30 16:23:45")
 
 **Action (Initialize vs Append):**
@@ -181,9 +181,9 @@ For detailed entry templates, see [ENTRY-FORMATS.md](./ENTRY-FORMATS.md)
 - Create directory first: `mkdir -p docs/{feature}/`
 - Then create audit file
 
-**Timestamp missing:**
-- If orchestrator didn't provide timestamp, ask for it
-- Remind orchestrator to run `date '+%Y-%m-%d %H:%M:%S'` first
+**Timestamp generation fails:**
+- If `date` command fails, report error to orchestrator
+- Don't proceed without valid timestamp
 
 ### Progressive Disclosure
 
@@ -200,15 +200,14 @@ For detailed entry templates, see [ENTRY-FORMATS.md](./ENTRY-FORMATS.md)
 
 **Context:**
 - Orchestrator starts: `/orchestrate:hex-arc tenant-onboarding --threshold 4.5`
-- Orchestrator runs: `date '+%Y-%m-%d %H:%M:%S'` → output: "2025-10-30 16:23:45"
 - Orchestrator invokes audit-logger to initialize
 
 **Actions:**
-1. Read feature name: "tenant-onboarding"
-2. Read timestamp: "2025-10-30 16:23:45"
+1. Run `date '+%Y-%m-%d %H:%M:%S'` → output: "2025-10-30 16:23:45"
+2. Read feature name from context: "tenant-onboarding"
 3. Read config: threshold=4.5, max_iterations=3, layers=[domain, application, infrastructure]
 4. Create directory: `mkdir -p docs/tenant-onboarding/`
-5. Write audit file with initial template (see above)
+5. Write audit file with initial template using timestamp from step 1
 6. Confirm: "Audit trail initialized at docs/tenant-onboarding/implementation-audit.md"
 
 ---
@@ -217,12 +216,11 @@ For detailed entry templates, see [ENTRY-FORMATS.md](./ENTRY-FORMATS.md)
 
 **Context:**
 - Orchestrator about to start domain layer implementation
-- Orchestrator runs: `date '+%Y-%m-%d %H:%M:%S'` → output: "2025-10-30 16:25:12"
 - Orchestrator invokes audit-logger: "Log implementation start for domain layer, goal is to create Tenant aggregate"
 
 **Actions:**
-1. Read feature name from context: "tenant-onboarding"
-2. Read timestamp: "2025-10-30 16:25:12"
+1. Run `date '+%Y-%m-%d %H:%M:%S'` → output: "2025-10-30 16:25:12"
+2. Read feature name from context: "tenant-onboarding"
 3. Read entry data: layer="domain", goal="create Tenant aggregate"
 4. Format entry (implementation_start template from ENTRY-FORMATS.md):
    ```markdown
@@ -239,11 +237,10 @@ For detailed entry templates, see [ENTRY-FORMATS.md](./ENTRY-FORMATS.md)
 
 **Context:**
 - Review just completed, found issues
-- Orchestrator runs: `date '+%Y-%m-%d %H:%M:%S'` → output: "2025-10-30 16:45:30"
 - Orchestrator invokes audit-logger with review results
 
 **Actions:**
-1. Read timestamp: "2025-10-30 16:45:30"
+1. Run `date '+%Y-%m-%d %H:%M:%S'` → output: "2025-10-30 16:45:30"
 2. Read review data: score=4.2, threshold=4.5, failed=true, issues=[...]
 3. Format entry (review_complete template from ENTRY-FORMATS.md)
 4. Format issues list with problem/required/impact
@@ -255,9 +252,9 @@ For detailed entry templates, see [ENTRY-FORMATS.md](./ENTRY-FORMATS.md)
 ## Notes
 
 **Timestamps are Critical:**
-- The orchestrator MUST run `date` command before invoking this skill
-- Use the exact timestamp value from that command
-- Do not generate your own timestamps
+- Always run `date '+%Y-%m-%d %H:%M:%S'` at the start of each action
+- This ensures accurate, real-time timestamps
+- Never use placeholder values like "12:00am" or hardcoded times
 
 **Progressive Loading:**
 - Main SKILL.md provides workflow and quick reference
