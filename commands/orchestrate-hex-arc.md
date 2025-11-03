@@ -160,21 +160,42 @@ Context:
 
 The skill will generate a timestamp internally.
 
-**Invoke implementation-engine skill:**
+**Spawn implementation agent:**
 
-Invoke the implementation-engine skill to implement the {layer_name} layer.
+Use the Task tool to spawn an isolated agent that will execute implementation.
 
-Context:
+**Task tool parameters:**
+- `subagent_type`: "general-purpose"
+- `description`: "Implement {layer_name} layer"
+- `prompt`:
+
+```
+You are implementing the {layer_name} layer for the {feature_name} feature.
+
+Read the implementation-engine skill instructions from:
+skills/implementation-engine/SKILL.md
+
+Then execute the skill with this context:
 - Feature: {feature_name}
 - Layer: {layer_name}
 - Plan: docs/{feature_name}/plan.md
 
-The skill will build all components specified in the plan, following governance patterns and writing tests.
+Build all components specified in the plan, following governance patterns and writing tests.
 
-**Monitor implementation:**
-- Watch for completion or errors
-- If errors occur: Log error, abort orchestration
-- If successful: Continue to completion logging
+When complete, return a structured summary:
+{
+  "success": true/false,
+  "components": ["list of components built"],
+  "tests": ["list of test files created"],
+  "files": ["paths to all files created"],
+  "error": "error message if failed"
+}
+```
+
+**Monitor agent:**
+- Wait for agent completion
+- If agent returns `success: false`: Log error, abort orchestration
+- If agent returns `success: true`: Extract results for audit logging
 
 **Log implementation completion:**
 
@@ -213,27 +234,60 @@ Context:
 
 The skill will generate a timestamp internally.
 
-**Invoke review-engine skill:**
+**Spawn review agent:**
 
-Invoke the review-engine skill to review the {layer_name} layer implementation.
+Use the Task tool to spawn an isolated agent that will execute review and quality gate.
 
-Context:
+**Task tool parameters:**
+- `subagent_type`: "general-purpose"
+- `description`: "Review {layer_name} layer"
+- `prompt`:
+
+```
+You are reviewing the {layer_name} layer for the {feature_name} feature.
+
+Step 1: Read the review-engine skill instructions from:
+skills/review-engine/SKILL.md
+
+Execute the skill with this context:
 - Feature: {feature_name}
 - Layer: {layer_name}
 - Implementation files: contexts/{feature_name}/{layer_name}/
 - Plan: docs/{feature_name}/plan.md
 
-The skill will evaluate code against governance patterns, score each tactic, and identify issues.
+This will evaluate code against governance patterns, score each tactic, and identify issues.
 
-**Invoke quality-gate skill:**
+Step 2: Read the quality-gate skill instructions from:
+skills/quality-gate/SKILL.md
 
-Invoke the quality-gate skill to determine if the review passed the quality threshold.
-
-Context:
+Execute the quality gate with:
 - Review results: {from review-engine output above}
 - Threshold: {threshold}
 
-The skill will make a pass/fail decision and categorize any issues for fixing.
+The quality gate makes a pass/fail decision and categorizes issues by priority.
+
+When complete, return a structured summary:
+{
+  "review": {
+    "overall_score": number,
+    "patterns": [{"name": "...", "score": number, "tactics": [...]}]
+  },
+  "gate": {
+    "passed": true/false,
+    "reasons": ["list of failure reasons if failed"],
+    "issues": {
+      "critical": [...],
+      "important": [...],
+      "optional": [...],
+      "constraint_failures": [...]
+    }
+  }
+}
+```
+
+**Monitor agent:**
+- Wait for agent completion
+- Extract review results and quality gate decision
 
 **Log review result:**
 
@@ -267,11 +321,22 @@ The skill will generate a timestamp and append the review results to the audit t
 
 #### 3.4 Fix Cycle (if quality gate failed)
 
-**Invoke fix-coordinator skill:**
+**Spawn fix coordinator agent:**
 
-Invoke the fix-coordinator skill to fix issues that caused quality gate failure.
+Use the Task tool to spawn an isolated agent that will manage the fix cycle.
 
-Context:
+**Task tool parameters:**
+- `subagent_type`: "general-purpose"
+- `description`: "Fix {layer_name} layer issues"
+- `prompt`:
+
+```
+You are coordinating fixes for the {layer_name} layer of the {feature_name} feature.
+
+Read the fix-coordinator skill instructions from:
+skills/fix-coordinator/SKILL.md
+
+Execute the skill with this context:
 - Feature: {feature_name}
 - Layer: {layer_name}
 - Issues to fix: {gate_result.issues categorized by priority}
@@ -280,24 +345,43 @@ Context:
 - Current iteration: 1 (first attempt)
 - Previous score: {review_result.overall_score}
 
-The skill will apply fixes, then the orchestrator will re-run review and quality gate.
-
-The fix-coordinator skill will:
+The skill will:
 - Manage up to 3 fix iterations
 - Generate detailed fix prompts
-- Spawn fix agents
-- Re-review after each fix
+- Apply fixes to code
+- Re-run review-engine and quality-gate after each fix
 - Track score improvement
 - Return final result
 
+When complete, return a structured summary:
+{
+  "fixed": true/false,
+  "intervention_needed": true/false,
+  "intervention_reason": "why intervention needed if applicable",
+  "final_review": {
+    "overall_score": number,
+    "patterns": [...]
+  },
+  "iterations_used": number,
+  "final_gate": {
+    "passed": true/false,
+    "issues": {...}
+  }
+}
+```
+
+**Monitor agent:**
+- Wait for agent completion
+- Extract fix results
+
 **Handle fix-coordinator result:**
 
-If result.fixed = true:
+If `result.fixed = true`:
 - quality_gate_passed = true
 - final_review = result.final_review
 - Continue to Commit Phase
 
-If result.intervention_needed = true:
+If `result.intervention_needed = true`:
 - Log intervention request
 - Ask user for decision (continue manually, lower threshold, skip layer, abort)
 - Handle user decision
@@ -509,15 +593,31 @@ What would you like to do?
 
 ## Notes for Claude
 
-**Skills Composition:**
-This command orchestrates 7 skills:
-- **audit-logger**: Log every action with timestamps
-- **implementation-engine**: Build each layer
-- **review-engine**: Evaluate code quality
-- **quality-gate**: Make pass/fail decisions
-- **fix-coordinator**: Manage fix iterations
-- **git-ops**: Create clean commits
-- All skills return structured data
+**Sub-Agent Architecture:**
+This command uses the Task tool to spawn isolated sub-agents for heavy operations:
+
+**Phases executed in sub-agents:**
+- ✅ **Implementation** - Spawns agent to execute implementation-engine skill
+- ✅ **Review + Quality Gate** - Spawns agent to execute review-engine and quality-gate skills
+- ✅ **Fix Cycle** - Spawns agent to execute fix-coordinator skill (manages iterations internally)
+
+**Phases executed inline (orchestrator context):**
+- ⚡ **Audit logging** - Fast, inline skill invocation (audit-logger)
+- ⚡ **Git commits** - Fast, inline skill invocation (git-ops)
+- ⚡ **User prompts** - Direct communication with user
+- ⚡ **Flow control** - Quality gate decisions, layer iteration
+
+**Why sub-agents?**
+- **Context preservation**: Heavy operations (implementation, review, fixes) don't pollute orchestrator context
+- **Focused execution**: Each sub-agent loads only what it needs
+- **Isolation**: Implementation details stay in sub-agent, orchestrator only sees results
+- **Scalability**: Orchestrator stays clean even for large multi-layer features
+
+**Sub-agent prompts:**
+- Load skill instructions from `skills/{skill-name}/SKILL.md`
+- Execute with provided context
+- Return structured results (JSON format)
+- Orchestrator uses results for audit logging and flow decisions
 
 **Timestamps:**
 - The audit-logger skill generates timestamps internally
@@ -529,9 +629,11 @@ This command orchestrates 7 skills:
 - Show real-time progress after each phase
 - Use emojis for visual clarity
 - Keep user informed throughout
+- Display sub-agent status (spawning → executing → completed)
 
 **Error Recovery:**
-- Graceful abort on critical errors
+- Sub-agents return structured errors
+- Orchestrator logs errors and aborts gracefully
 - Clear error messages with actions
 - User intervention for complex issues
 
@@ -540,10 +642,10 @@ This command orchestrates 7 skills:
 - Clean messages with quality metrics
 - No Claude footer
 
-**This command is now a workflow coordinator:**
-- Calls skills in sequence
-- Handles results
-- Makes flow decisions
-- Logs everything
-- Reports progress
-- Total logic: ~250 lines (down from 962 lines)
+**This command is now a pure orchestrator:**
+- Spawns sub-agents for heavy work (Task tool)
+- Inline operations for fast tasks (audit, git, prompts)
+- Makes flow control decisions
+- Logs everything to audit trail
+- Reports progress to user
+- Orchestrator context stays clean
