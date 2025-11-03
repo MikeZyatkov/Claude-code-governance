@@ -63,6 +63,33 @@ If any criterion fails, enter fix cycle (up to 3 iterations).
 
 ## Instructions for Claude
 
+**🚨 CRITICAL - Sub-Agent Architecture:**
+
+**DO NOT use the Skill tool for implementation, review, or fix operations.**
+
+Instead, use the **Task tool** to spawn isolated sub-agents:
+
+✅ **Use Task tool for** (spawn sub-agents):
+- Implementation (implementation-engine)
+- Review + Quality Gate (review-engine + quality-gate)
+- Fix Cycle (fix-coordinator)
+
+⚡ **Use Skill tool for** (inline execution):
+- Audit logging (audit-logger) - fast append operations
+- Git commits (git-ops) - fast git operations
+
+**Why?** Heavy operations executed inline will fill the orchestrator context window rapidly (you'll run out of context before completing all layers). Sub-agents execute in isolation and return only structured summaries, keeping the orchestrator context clean.
+
+**How to spawn a sub-agent:**
+```
+Use the Task tool with:
+- subagent_type: "general-purpose"
+- description: Brief description
+- prompt: Full instructions including skill file path to read
+```
+
+---
+
 **IMPORTANT - Audit Logging:**
 
 The audit-logger skill generates timestamps automatically by running `date '+%Y-%m-%d %H:%M:%S'` internally at the start of each action. You do NOT need to run `date` commands or pass timestamps to the skill - simply invoke it with the appropriate context (feature name, entry type, and relevant data).
@@ -162,7 +189,9 @@ The skill will generate a timestamp internally.
 
 **Spawn implementation agent:**
 
-Use the Task tool to spawn an isolated agent that will execute implementation.
+⚠️ **DO NOT use the Skill tool here** - it will fill the orchestrator context.
+
+**Use the Task tool** to spawn an isolated agent that will execute implementation.
 
 **Task tool parameters:**
 - `subagent_type`: "general-purpose"
@@ -236,7 +265,9 @@ The skill will generate a timestamp internally.
 
 **Spawn review agent:**
 
-Use the Task tool to spawn an isolated agent that will execute review and quality gate.
+⚠️ **DO NOT use the Skill tool here** - it will fill the orchestrator context.
+
+**Use the Task tool** to spawn an isolated agent that will execute review and quality gate.
 
 **Task tool parameters:**
 - `subagent_type`: "general-purpose"
@@ -323,7 +354,9 @@ The skill will generate a timestamp and append the review results to the audit t
 
 **Spawn fix coordinator agent:**
 
-Use the Task tool to spawn an isolated agent that will manage the fix cycle.
+⚠️ **DO NOT use the Skill tool here** - it will fill the orchestrator context.
+
+**Use the Task tool** to spawn an isolated agent that will manage the fix cycle.
 
 **Task tool parameters:**
 - `subagent_type`: "general-purpose"
