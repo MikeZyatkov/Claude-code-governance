@@ -242,6 +242,34 @@ You control when to commit, what to fix, and how to iterate.
 # - /orchestrate:hex-arc
 ```
 
+### ⚠️ Post-Installation Configuration Required
+
+**After installation, you MUST configure IAM permissions** to enable autonomous skill orchestration.
+
+Without this configuration, you'll be prompted for approval 20-30+ times during orchestration, defeating the purpose of automation.
+
+**📖 [Complete Post-Installation Guide](./post-install-configuration.md)**
+
+**Quick Setup (1 minute):**
+
+Edit `~/.claude/settings.json` and add:
+
+```json
+{
+  "iam": {
+    "allow": [
+      "Skill(claude-code-governance:*)"
+    ]
+  }
+}
+```
+
+Then restart Claude Code.
+
+**Why this is needed:** The `/orchestrate:hex-arc` command coordinates multiple skills (implementation → review → quality gate → fix → commit). Each skill invocation requires approval by default. This configuration whitelists all plugin skills for seamless autonomous execution.
+
+See the [full configuration guide](./post-install-configuration.md) for detailed instructions, security considerations, and troubleshooting.
+
 ## Quick Start
 
 ```bash
