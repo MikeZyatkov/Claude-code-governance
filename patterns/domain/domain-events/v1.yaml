@@ -98,6 +98,11 @@ constraints:
       - "Integration events may reference external systems"
     evaluation: "llm_judge"
 
+  - rule: "Events MUST NOT define timestamp fields"
+    description: "Do not explicitly define timestamp fields (createdOn, updatedOn, deletedOn, timestamp, etc.) as they are inherited from EventBase"
+    exceptions: []
+    evaluation: "deterministic"
+
 related_patterns:
   - "Event Sourcing"
   - "DDD Aggregates"
