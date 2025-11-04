@@ -359,10 +359,10 @@ The skill will generate a timestamp and append the review results to the audit t
 #### 3.3 Quality Gate Decision
 
 **If gate_result.passed = true:**
-- Skip to Step 3.4 (Commit Phase)
+- Skip to Step 3.5 (Commit Phase)
 
 **If gate_result.passed = false:**
-- Continue to Fix Cycle
+- Continue to Fix Cycle (Step 3.4)
 
 #### 3.4 Fix Cycle (if quality gate failed)
 
@@ -488,19 +488,90 @@ Commit: {commit_result.commit_hash}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-#### 3.5 Update Plan with Completion
+#### 3.6 Update Plan Progress
 
-**Mark layer as completed in plan:**
+**This step updates the plan with completed work for progress tracking.**
 
-1. Read `docs/{feature_name}/plan.md`
-2. Find the `## {Layer} Layer` section
-3. Add completion marker at the start of the section:
-   ```markdown
-   ## Domain Layer ✅
-   ```
-4. Write updated plan back to file
+**This happens after commit completes. At this point, you have:**
+- Implementation results (components, tests, files) from Step 3.1
+- Review results and quality gate pass from Steps 3.2-3.3
+- Commit hash from Step 3.5
 
-**Note:** This provides visual progress tracking when reviewing the plan document.
+**Part A: Update Testing Checklist**
+
+1. **Read plan:** Load `docs/{feature_name}/plan.md`
+
+2. **Extract Testing Checklist items for current layer:**
+   - Find the `## Testing Checklist` section
+   - Extract all unchecked items for current layer (e.g., `### Domain Layer Tests`)
+   - Parse items like: `- [ ] Test description here`
+
+3. **Match completed tests to checklist items (fuzzy matching):**
+
+   For each test file reported by implementation agent:
+   - Extract test descriptions from `tests` array
+   - For each unchecked checklist item:
+     - Prompt yourself: "Does the completed test '{test_description}' fulfill the checklist item '{checklist_item_text}'?"
+     - Analyze semantically (not exact string match):
+       - Does the test verify the same behavior?
+       - Does the test cover the same scenario?
+       - Is the test functionally equivalent?
+     - If yes: Mark as match
+     - If no: Continue to next item
+
+4. **Update matched checklist items:**
+   - Replace `- [ ]` with `- [x]` for each matched item
+   - Keep items minimal (no timestamps, no metadata)
+
+5. **Handle unmatched tests (work beyond plan):**
+   - Find the `## Additional Work Completed` section
+   - For each test that didn't match any checklist item:
+     - Add as new item: `- {layer_name} layer: {test_description}`
+   - If "Additional Work Completed" section contains "_No additional work yet._", remove that placeholder
+
+6. **Write updated plan** back to `docs/{feature_name}/plan.md`
+
+**Part B: Update Success Criteria**
+
+1. **Read plan:** Load `docs/{feature_name}/plan.md` (may have been updated in Part A)
+
+2. **Extract Success Criteria items for current layer:**
+   - Find the `## Success Criteria` section
+   - Extract all unchecked items for current layer section (e.g., `**Domain Layer:**`)
+   - Parse items like: `- [ ] Criterion description`
+
+3. **Match completed work to success criteria (fuzzy matching):**
+
+   Based on implementation agent output and review results:
+   - For each component built, match to criteria like "Aggregate implemented" or "Command handler implemented"
+   - For "tests passing" criteria: Check if implementation reported tests passing
+   - For "pattern compliance verified" criteria: Check if review passed with score ≥ threshold
+   - Use fuzzy matching: "Does completion of '{component_name}' fulfill criterion '{criterion_text}'?"
+
+4. **Update matched criteria items:**
+   - Replace `- [ ]` with `- [x]` for each matched criterion
+   - Common criteria to check:
+     - Component implementation (aggregates, handlers, etc.)
+     - Tests passing
+     - Pattern compliance verified (auto-check after review passes)
+
+5. **Add layer completion marker:**
+   - Find the `## {Layer} Layer` section header
+   - Add checkmark: `## Domain Layer ✅`
+
+6. **Write updated plan** back to `docs/{feature_name}/plan.md`
+
+**Fuzzy Matching Algorithm:**
+
+For each checklist item or criterion:
+1. Extract key entities: component names, action verbs, outcomes
+2. Compare with completed work using semantic similarity:
+   - "OccupierUser.uninvite() removes all access" matches "uninvite method removes user access"
+   - "CreateUserCommandHandler creates user successfully" matches "CreateUserCommandHandler success test"
+3. If similarity is high (same entities + same action/outcome), mark as match
+4. Be conservative: Only check off if clearly fulfilled (avoid false positives)
+
+**Note:** Plan updates provide visual progress tracking. Users can open `plan.md` during orchestration to see real-time completion status.
 
 ### Step 4: Final Summary
 

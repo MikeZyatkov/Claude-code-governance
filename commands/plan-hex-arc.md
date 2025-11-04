@@ -415,6 +415,87 @@ AdapterName implements IPortName:
 
 ---
 
+## Testing Checklist
+
+> This checklist will be updated by the orchestrator as tests are implemented.
+>
+> **Instructions**: Generate specific test items based on:
+> - Critical scenarios from Test Strategy section
+> - Edge cases identified
+> - Each domain method, command handler, and Lambda handler
+> - Write test descriptions that can be matched to actual test names
+
+### Domain Layer Tests
+- [ ] [Specific test for aggregate creation - e.g., "AggregateName.create() creates with valid inputs"]
+- [ ] [Specific test for domain method - e.g., "AggregateName.doAction() performs action and emits event"]
+- [ ] [Specific test for validation - e.g., "AggregateName.create() throws error when field is invalid"]
+- [ ] [Edge case test - e.g., "AggregateName handles concurrent updates"]
+- [ ] All domain unit tests passing
+
+### Application Layer Tests
+- [ ] [Command handler success - e.g., "CreateSomethingCommandHandler creates aggregate successfully"]
+- [ ] [Command handler error - e.g., "CreateSomethingCommandHandler throws NotFoundError when dependency missing"]
+- [ ] [Query handler - e.g., "GetSomethingQueryHandler returns DTO with all fields"]
+- [ ] [Projector - e.g., "SomethingProjector handles SomethingCreated event"]
+- [ ] [Projector - e.g., "SomethingProjector handles SomethingUpdated event"]
+- [ ] All application integration tests passing
+
+### Infrastructure Layer Tests
+- [ ] [Lambda handler success - e.g., "createSomethingHandler returns 200 with id"]
+- [ ] [Lambda handler validation - e.g., "createSomethingHandler returns 400 for invalid input"]
+- [ ] [Lambda handler error - e.g., "createSomethingHandler returns 404 when resource not found"]
+- [ ] [Adapter test - e.g., "SomethingAdapter implements port correctly"]
+- [ ] [Error mapping - e.g., "DomainError mapped to correct HTTP status"]
+- [ ] All infrastructure component tests passing
+
+---
+
+## Success Criteria
+
+> This checklist will be updated by the orchestrator as work progresses.
+>
+> **Instructions**: List specific, measurable deliverables for each layer based on the plan above.
+
+**Domain Layer:**
+- [ ] [Specific aggregate] implemented (e.g., "OccupierUser aggregate")
+- [ ] [Specific value object] implemented (e.g., "EmailAddress value object")
+- [ ] [Specific domain event] implemented (e.g., "OccupierUserCreated event")
+- [ ] [Specific business rule] enforced (e.g., "Cannot create user with duplicate email")
+- [ ] Domain tests passing (all unit tests)
+- [ ] Domain layer pattern compliance verified (score ≥ threshold)
+
+**Application Layer:**
+- [ ] [Specific command handler] implemented (e.g., "CreateOccupierUserCommandHandler")
+- [ ] [Specific query handler] implemented (e.g., "GetOccupierUserQueryHandler")
+- [ ] [Specific projector] implemented (e.g., "OccupierUserProjector")
+- [ ] [Specific port] defined (e.g., "ICognitoUserPoolAdapter")
+- [ ] Application tests passing (all integration tests)
+- [ ] Application layer pattern compliance verified (score ≥ threshold)
+
+**Infrastructure Layer:**
+- [ ] [Specific API endpoint] implemented (e.g., "POST /api/occupier-users")
+- [ ] [Specific Lambda handler] implemented (e.g., "createOccupierUserHandler")
+- [ ] [Specific adapter] implemented (e.g., "CognitoUserPoolAdapter")
+- [ ] Error handling/mapping complete (all domain errors mapped)
+- [ ] Infrastructure tests passing (all component tests)
+- [ ] Infrastructure layer pattern compliance verified (score ≥ threshold)
+
+**Overall:**
+- [ ] Backward compatibility verified (no breaking changes)
+- [ ] All tests passing (unit, integration, component)
+- [ ] All layers committed with quality scores ≥ threshold
+- [ ] Feature complete and ready for review
+
+---
+
+## Additional Work Completed
+
+> Work completed beyond the original plan will be tracked here by the orchestrator.
+
+_No additional work yet._
+
+---
+
 ## Key Considerations
 
 ### Architectural Decisions
