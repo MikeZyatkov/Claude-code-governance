@@ -1,0 +1,134 @@
+pattern_name: "CQRS (Command Query Responsibility Segregation)"
+version: "v1"
+domain: "Application Architecture"
+
+goal: |
+  Separate the responsibility of reading data from the responsibility of
+  writing data to enable independent optimization, scaling, and evolution
+  of each side. Achieve clarity by making the distinction between operations
+  that change state (commands) and operations that read state (queries)
+  explicit in the code structure.
+
+guiding_policy: |
+  Split application layer into two distinct paths: command side handles
+  all state changes through command handlers that orchestrate domain logic,
+  while query side handles all data retrieval through query handlers that
+  read from optimized read models. Commands modify aggregates via repositories,
+  queries bypass aggregates and read directly from persistence.
+
+tactics:
+  - id: "separate-command-query-directories"
+    name: "Separate command and query handlers into different directories"
+    priority: critical
+    description: "Place command handlers in application/commands/, query handlers in application/queries/"
+
+  - id: "commands-return-id-only"
+    name: "Commands MUST return only identifiers or acknowledgment"
+    priority: critical
+    description: "Command handlers return string (ID), void, or acknowledgment token, never full data"
+
+  - id: "queries-no-state-modification"
+    name: "Queries MUST NOT modify state"
+    priority: critical
+    description: "Query handlers only read and return data, no aggregate modifications, no events emitted"
+
+  - id: "commands-orchestrate-domain"
+    name: "Command handlers orchestrate domain aggregate methods"
+    priority: critical
+    description: "Commands load aggregate from repository, call domain methods, save aggregate back"
+
+  - id: "queries-return-dtos"
+    name: "Query handlers return application-layer DTOs, not domain aggregates"
+    priority: critical
+    description: "Queries return simple DTOs/response objects, never expose full aggregate instances"
+
+  - id: "use-dependency-injection"
+    name: "Use dependency injection for repository access"
+    priority: important
+    description: "Inject repositories via constructor using @inject decorator from tsyringe"
+
+  - id: "validate-inputs-in-handler"
+    name: "Command handlers validate inputs then delegate to domain"
+    priority: important
+    description: "Basic input validation in handler (non-null, format), business validation in domain"
+
+  - id: "use-mapper-for-conversion"
+    name: "Use mapper for API-to-domain conversion when reused"
+    priority: important
+    description: "Use mapper classes when same API→domain conversion is reused across multiple handlers. Single-use conversions can be inline in Lambda handler"
+
+  - id: "queries-read-without-modifications"
+    name: "Query handlers read directly from repository without modifications"
+    priority: important
+    description: "Queries call repository.read() and map to response, no aggregate method calls"
+
+  - id: "name-command-handlers"
+    name: "Name command handlers with CommandHandler suffix"
+    priority: important
+    description: "Follow naming: CreateOccupierCommandHandler, DeleteOperatorUserCommandHandler"
+
+  - id: "name-query-handlers"
+    name: "Name query handlers with QueryHandler suffix"
+    priority: important
+    description: "Follow naming: GetOccupierByIdQueryHandler, ListOperatorUsersQueryHandler"
+
+  - id: "structured-logging"
+    name: "Add structured logging at handler entry and exit points"
+    priority: optional
+    description: "Log command/query at start, log result/error at end with correlation info"
+
+  - id: "error-handling-boundary"
+    name: "Handle errors at handler boundary with try-catch"
+    priority: optional
+    description: "Wrap handler logic in try-catch, log errors, re-throw or transform to application errors"
+
+constraints:
+  - rule: "Command handlers MUST NOT return full domain objects"
+    description: "Commands return identifiers, void, or acknowledgment only, never aggregate instances"
+    exceptions:
+      - "Returning command IDs for tracking (string, UUID)"
+      - "Returning acknowledgment tokens for async operations"
+    evaluation: "deterministic"  # Can check return types via AST
+
+  - rule: "Query handlers MUST NOT call aggregate.save() or repository.write()"
+    description: "Queries are strictly read-only, no persistence operations"
+    exceptions: []
+    evaluation: "deterministic"  # Can grep for repository.write in query files
+
+  - rule: "Command and query handler files MUST be in separate directories"
+    description: "Enforce physical separation: commands/ vs queries/"
+    exceptions: []
+    evaluation: "deterministic"  # Check file paths
+
+  - rule: "Command handlers MUST save aggregates via repository after modifications"
+    description: "Every command that modifies state must call repository.writeAsync() or repository.save()"
+    exceptions:
+      - "Commands that only query for validation before throwing error"
+      - "Commands delegating to other command handlers"
+    evaluation: "llm_judge"
+
+  - rule: "Handlers MUST be decorated with @injectable for DI"
+    description: "All command and query handlers must use @injectable() decorator"
+    exceptions: []
+    evaluation: "deterministic"  # Can check for @injectable decorator
+
+related_patterns:
+  - "Repository Pattern"
+  - "DDD Aggregates"
+  - "API Mapper Pattern"
+  - "Event Sourcing"
+
+anti_patterns:
+  - name: "Query That Modifies"
+    description: "Query handler that saves state, emits events, or calls aggregate business methods"
+  - name: "Command Returning Full Data"
+    description: "Command handler returning full aggregate or complex DTOs instead of just ID"
+  - name: "Anemic Command Handler"
+    description: "Command handler doing all business logic instead of delegating to domain"
+  - name: "Combined Handler"
+    description: "Single handler doing both reads and writes, defeating CQRS purpose"
+
+references:
+  - "Fowler, Martin. CQRS (martinfowler.com/bliki/CQRS.html)"
+  - "Young, Greg. CQRS Documents"
+  - "Vernon, Vaughn. Implementing Domain-Driven Design (Chapter on CQRS)"

@@ -1,0 +1,33 @@
+{
+  "name": "claude-code-governance",
+  "version": "1.0.0",
+  "description": "Hexagonal architecture governance framework with DDD/CQRS/Event Sourcing patterns. Provides pattern-based planning, evaluation, and quality benchmarking for enterprise applications.",
+  "author": {
+    "name": "Mikhail"
+  },
+  "keywords": [
+    "governance",
+    "hexagonal-architecture",
+    "ddd",
+    "cqrs",
+    "event-sourcing",
+    "patterns",
+    "architecture",
+    "quality"
+  ],
+  "commands": [
+    "./commands/plan-hex-arc.md",
+    "./commands/implement-hex-arc.md",
+    "./commands/review-hex-arc.md",
+    "./commands/orchestrate-hex-arc.md"
+  ],
+  "skills": [
+    "./skills/pattern-loader/SKILL.md",
+    "./skills/implementation-engine/SKILL.md",
+    "./skills/review-engine/SKILL.md",
+    "./skills/quality-gate/SKILL.md",
+    "./skills/audit-logger/SKILL.md",
+    "./skills/git-ops/SKILL.md",
+    "./skills/fix-coordinator/SKILL.md"
+  ]
+}

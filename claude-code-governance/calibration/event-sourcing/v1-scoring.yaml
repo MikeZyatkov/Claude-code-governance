@@ -1,0 +1,98 @@
+# Scoring calibration for Event Sourcing pattern v1
+# This file contains the scoring rubrics used during code evaluation
+# Pattern definition: patterns/domain/event-sourcing/v1.yaml
+
+pattern_ref:
+  name: "Event Sourcing"
+  version: "v1"
+
+tactic_scoring:
+  - tactic_id: "aggregate-extends-root"
+    scoring_rubric:
+      5: "All event-sourced aggregates extend AggregateRoot"
+      4: "One aggregate doesn't extend but follows pattern manually"
+      3: "Multiple aggregates don't extend AggregateRoot"
+      2: "Most aggregates don't use event sourcing infrastructure"
+      1: "No use of AggregateRoot base class"
+      0: "Not applicable (no event sourcing)"
+
+  - tactic_id: "register-event-handlers"
+    scoring_rubric:
+      5: "All aggregates register complete event handlers in constructor"
+      4: "One event type not registered"
+      3: "Multiple events missing handlers"
+      2: "Most events not registered properly"
+      1: "No event handler registration"
+      0: "Not applicable"
+
+  - tactic_id: "apply-via-applyChange"
+    scoring_rubric:
+      5: "100% of state changes via applyChange(), no direct mutations"
+      4: "One minor direct mutation"
+      3: "Several direct mutations in business methods"
+      2: "Mostly direct mutations, little use of applyChange"
+      1: "No use of applyChange, all direct mutations"
+      0: "Not applicable"
+
+  - tactic_id: "events-drive-state"
+    scoring_rubric:
+      5: "Aggregate state entirely derived from event stream"
+      4: "One field stored/cached outside events"
+      3: "Some state stored directly, some from events"
+      2: "Primarily state-based with some events"
+      1: "No event-driven state, traditional persistence"
+      0: "Not applicable"
+
+  - tactic_id: "static-factory-method"
+    scoring_rubric:
+      5: "All aggregates provide static factory() method"
+      4: "One aggregate missing factory"
+      3: "Multiple aggregates missing factory"
+      2: "Most aggregates don't have factory"
+      1: "No factory methods for reconstitution"
+      0: "Not applicable"
+
+  - tactic_id: "dynamo-event-store"
+    scoring_rubric:
+      5: "All events stored in DynamoDB via es-aggregates Repository"
+      4: "Mostly DynamoDB, one aggregate uses different store"
+      3: "Mix of DynamoDB and other storage"
+      2: "Primarily other storage mechanisms"
+      1: "No DynamoDB event store"
+      0: "Not applicable (test environment)"
+
+  - tactic_id: "no-direct-mutation"
+    scoring_rubric:
+      5: "Business methods create and apply events, zero direct field assignments"
+      4: "One direct assignment in business method"
+      3: "Several direct mutations in business logic"
+      2: "Primarily direct mutations"
+      1: "No event-based mutations"
+      0: "Not applicable"
+
+  - tactic_id: "event-handlers-mutate"
+    scoring_rubric:
+      5: "Only registered event handlers perform state mutations"
+      4: "Mostly correct, minor leakage"
+      3: "Both handlers and business methods mutate"
+      2: "Primarily business methods mutate"
+      1: "No separation, mutations everywhere"
+      0: "Not applicable"
+
+  - tactic_id: "validate-before-events"
+    scoring_rubric:
+      5: "All invariants validated before event creation, events only created for valid operations"
+      4: "Good validation, minor gap"
+      3: "Some validation before events"
+      2: "Events created then validation fails"
+      1: "No validation, invalid events created"
+      0: "Not applicable"
+
+  - tactic_id: "idempotent-handlers"
+    scoring_rubric:
+      5: "All event handlers idempotent, safe for replay"
+      4: "Mostly idempotent, one handler not safe"
+      3: "Some handlers not idempotent"
+      2: "Many handlers have side effects"
+      1: "Handlers not idempotent, replay breaks state"
+      0: "Not applicable"

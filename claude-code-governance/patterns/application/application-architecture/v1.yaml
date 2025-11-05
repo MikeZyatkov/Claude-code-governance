@@ -1,0 +1,97 @@
+pattern_name: "Application Architecture"
+version: "v1"
+domain: "Application Layer Design"
+
+goal: |
+  Design application layer for simplicity, efficiency, and maintainability.
+  Minimize unnecessary abstractions while ensuring clean separation of concerns.
+  Optimize for bulk operations and structured error handling to support
+  real-world usage patterns.
+
+guiding_policy: |
+  Favor directness over indirection. Return data structures that match use cases
+  without unnecessary wrapping. Process multiple items efficiently using bulk
+  operations. Provide structured feedback for partial success scenarios. Keep
+  the application layer thin - orchestrate domain logic, don't duplicate it.
+
+tactics:
+  - id: "avoid-wrapper-objects"
+    name: "Avoid wrapper objects for simple return types"
+    priority: critical
+    description: "Return arrays, primitives, or domain objects directly. Don't wrap in { results: [], total: 0 } unless pagination metadata is genuinely needed"
+
+  - id: "bulk-operations"
+    name: "Use bulk operations for multi-item processing"
+    priority: critical
+    description: "When processing multiple items, use single DB query per validation type, not N individual queries"
+
+  - id: "bulk-port-interfaces"
+    name: "Design ports for bulk operations"
+    priority: important
+    description: "Port interfaces should support batch operations (e.g., validateMany(), createMany()) where applicable"
+
+  - id: "structured-partial-success"
+    name: "Return structured results for partial success"
+    priority: important
+    description: "For bulk operations, return structured results showing successes and failures separately, not throwing on first error"
+
+  - id: "command-return-conventions"
+    name: "Follow command return type conventions"
+    priority: important
+    description: "Commands return ID/void for creates, void for updates/deletes. Queries return domain-appropriate types. Don't return full objects from commands"
+
+  - id: "thin-application-layer"
+    name: "Keep application layer thin"
+    priority: important
+    description: "Application handlers orchestrate (load, call domain method, save) but don't contain business logic. Business rules belong in domain"
+
+  - id: "validation-separation"
+    name: "Separate input validation from business validation"
+    priority: important
+    description: "Application layer validates inputs (required, format). Domain layer validates business rules (invariants, state transitions)"
+
+  - id: "efficient-validation"
+    name: "Batch validations efficiently"
+    priority: optional
+    description: "When validating multiple items against external systems, batch validation requests rather than individual calls"
+
+constraints:
+  - rule: "Command handlers MUST NOT return full domain objects"
+    description: "Commands create/modify state and return minimal data (ID or void), not full aggregates"
+    exceptions:
+      - "Query handlers may return domain-appropriate response objects"
+    evaluation: "llm_judge"
+
+  - rule: "Wrapper objects MUST NOT be used without justification"
+    description: "Don't wrap simple arrays or primitives in objects unless pagination or metadata is required"
+    exceptions:
+      - "Paginated results need { items: [], nextToken: string }"
+      - "Bulk operation results need { successes: [], failures: [] }"
+    evaluation: "llm_judge"
+
+  - rule: "Bulk operations MUST use efficient queries"
+    description: "Processing N items must not result in N database queries for the same validation"
+    exceptions:
+      - "Different validation types may require separate queries"
+    evaluation: "llm_judge"
+
+  - rule: "Business logic MUST reside in domain layer"
+    description: "Application handlers orchestrate but don't duplicate domain logic"
+    exceptions: []
+    evaluation: "llm_judge"
+
+related_patterns:
+  - "CQRS"
+  - "DDD Aggregates"
+
+anti_patterns:
+  - name: "N+1 Validation Queries"
+    description: "Validating N items with N separate database queries instead of one bulk query"
+  - name: "Business Logic in Handler"
+    description: "Application handler contains business validation or state mutation logic that should be in aggregate"
+  - name: "Unnecessary Wrapping"
+    description: "Returning { results: [items] } when [items] alone would suffice"
+
+references:
+  - "Martin Fowler - Application Service Layer"
+  - "Evans, Eric. Domain-Driven Design (Application Layer)"

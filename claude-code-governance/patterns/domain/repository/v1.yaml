@@ -1,0 +1,110 @@
+pattern_name: "Repository Pattern"
+version: "v1"
+domain: "Domain-Driven Design"
+
+goal: |
+  Provide a collection-like interface for accessing aggregates while
+  abstracting persistence details from the domain layer. Enable testability
+  through interface-based design and support event sourcing with DynamoDB-based
+  event storage.
+
+guiding_policy: |
+  Repositories act as the bridge between domain and infrastructure. Define
+  repository interfaces in the domain layer, implement them in infrastructure.
+  Each aggregate root gets one repository. Repositories work with complete
+  aggregates, not individual entities. Use the es-aggregates library's Repository
+  base class for event-sourced aggregates.
+
+tactics:
+  - id: "interface-in-domain"
+    name: "Define repository interface in domain layer"
+    priority: critical
+    description: "Repository interface (IXxxRepository) lives in domain/repositories/, declares contract"
+
+  - id: "implementation-in-infrastructure"
+    name: "Repository implementation in infrastructure layer"
+    priority: critical
+    description: "Concrete repository class in infrastructure/persistence/, implements domain interface"
+
+  - id: "one-repo-per-aggregate"
+    name: "One repository per aggregate root"
+    priority: critical
+    description: "Each aggregate root has exactly one repository, no repositories for entities or value objects"
+
+  - id: "extend-es-aggregates-repository"
+    name: "Extend Repository base class from es-aggregates"
+    priority: critical
+    description: "Repository implementation extends Repository<TAgg> from es-aggregates library"
+
+  - id: "inject-dependencies"
+    name: "Use dependency injection for repository configuration"
+    priority: important
+    description: "Repository constructor uses @inject for table name, factory function, and DynamoDB client"
+
+  - id: "collection-interface"
+    name: "Expose collection-like interface"
+    priority: important
+    description: "Repository methods: readAsync(id), writeAsync(aggregate), no query methods"
+
+  - id: "work-with-aggregates"
+    name: "Repository works with complete aggregates"
+    priority: important
+    description: "Load entire aggregate, modify via aggregate methods, save entire aggregate - no partial updates"
+
+  - id: "use-injectable-decorator"
+    name: "Mark repository with @injectable"
+    priority: important
+    description: "Repository implementation uses @injectable() decorator for DI container registration"
+
+  - id: "provide-factory-function"
+    name: "Provide factory function for aggregate reconstitution"
+    priority: optional
+    description: "Pass aggregate's static factory() method to Repository constructor for event replay"
+
+constraints:
+  - rule: "Repository interface MUST be in domain layer"
+    description: "IXxxRepository interface defined in domain/repositories/, not infrastructure"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Repository implementation MUST be in infrastructure layer"
+    description: "Concrete XxxRepository class in infrastructure/persistence/"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "One repository per aggregate root ONLY"
+    description: "No repositories for entities or value objects, only aggregate roots"
+    exceptions: []
+    evaluation: "llm_judge"
+
+  - rule: "Repository MUST extend es-aggregates Repository class"
+    description: "Implementation extends Repository<TAgg> from es-aggregates"
+    exceptions:
+      - "Custom repositories for non-event-sourced aggregates (rare)"
+    evaluation: "deterministic"
+
+  - rule: "Repository methods MUST NOT contain business logic"
+    description: "Repository handles persistence only, no domain logic or validation"
+    exceptions: []
+    evaluation: "llm_judge"
+
+related_patterns:
+  - "DDD Aggregates"
+  - "Event Sourcing"
+  - "Hexagonal Architecture"
+
+anti_patterns:
+  - name: "Repository in Wrong Layer"
+    description: "Repository interface in infrastructure or implementation in domain"
+  - name: "Entity Repository"
+    description: "Creating repositories for entities instead of only aggregate roots"
+  - name: "Business Logic in Repository"
+    description: "Repository performing validation or business rules instead of just persistence"
+  - name: "Query-Rich Repository"
+    description: "Repository with many query methods instead of using dedicated query handlers"
+
+references:
+  - "Evans, Eric. Domain-Driven Design (Repository chapter)"
+  - "Vernon, Vaughn. Implementing Domain-Driven Design"
+  - "Fowler, Martin. Repository Pattern"
+  - "es-aggregates library documentation"

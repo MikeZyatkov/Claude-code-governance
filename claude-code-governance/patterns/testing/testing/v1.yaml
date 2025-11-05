@@ -1,0 +1,112 @@
+pattern_name: "Testing"
+version: "v1"
+domain: "Testing Strategy"
+
+goal: |
+  Ensure comprehensive, maintainable test coverage with minimal duplication.
+  Test business logic at the unit level and integration points at the component
+  level. Make tests executable documentation of system behavior.
+
+guiding_policy: |
+  Test each layer appropriately: domain in isolation with unit tests, application
+  with unit tests using fakes, infrastructure with component tests using real
+  dependencies. Colocate tests with code. Make test scenarios explicit and
+  specific - avoid generic "test X works" descriptions.
+
+tactics:
+  - id: "colocated-tests"
+    name: "Colocate tests with implementation"
+    priority: critical
+    description: "Place .test.ts file in same directory as implementation file"
+
+  - id: "unit-tests-domain"
+    name: "Unit tests for domain layer"
+    priority: critical
+    description: "All aggregates, entities, value objects have unit tests covering business rules and invariants"
+
+  - id: "unit-tests-application"
+    name: "Unit tests for application handlers"
+    priority: critical
+    description: "All command handlers and query handlers have unit tests using fake implementations of dependencies"
+
+  - id: "component-tests-projectors"
+    name: "Component tests for projectors"
+    priority: critical
+    description: "Projectors tested with DbTestHelper against real database to verify projection logic"
+
+  - id: "fake-implementations"
+    name: "Fake implementations for all ports"
+    priority: important
+    description: "All port interfaces (repositories, adapters) have fake implementations in infrastructure/fakes/"
+
+  - id: "specific-test-scenarios"
+    name: "Use specific test scenario descriptions"
+    priority: important
+    description: "Describe exact scenario (Given-When-Then style), not generic 'test X works'. Example: 'When creating user without legacy_id, should set account_type to ELUMO_ONLY'"
+
+  - id: "error-scenarios"
+    name: "Test error and edge cases"
+    priority: important
+    description: "Include tests for business rule violations, invalid inputs, and error conditions, not just happy path"
+
+  - id: "authorization-tests"
+    name: "Include authorization scenarios"
+    priority: important
+    description: "Test authorization rules and access control where applicable"
+
+  - id: "test-file-suffix"
+    name: "Use .test.ts suffix"
+    priority: optional
+    description: "Test files use .test.ts suffix, not .spec.ts"
+
+  - id: "reset-fakes"
+    name: "Reset fake state in beforeEach"
+    priority: optional
+    description: "Fake implementations reset state in test setup to ensure test isolation"
+
+constraints:
+  - rule: "Unit tests MUST exist for domain aggregates"
+    description: "All aggregate roots have unit tests covering business logic"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Unit tests MUST exist for application handlers"
+    description: "All command and query handlers have unit tests"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Fake implementations MUST exist in infrastructure/fakes/"
+    description: "Port interfaces have corresponding fakes for testing"
+    exceptions:
+      - "Third-party library interfaces may use library-provided mocks"
+    evaluation: "deterministic"
+
+  - rule: "Test files MUST use .test.ts suffix"
+    description: "Consistent naming with .test.ts not .spec.ts"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Integration/E2E tests MUST NOT be included by default"
+    description: "Focus on unit and component tests. Integration tests only when explicitly requested"
+    exceptions:
+      - "Component tests for projectors using DbTestHelper are allowed"
+    evaluation: "llm_judge"
+
+related_patterns:
+  - "DDD Aggregates (test domain logic)"
+  - "CQRS (test handlers separately)"
+  - "Ports and Adapters (fake implementations)"
+
+anti_patterns:
+  - name: "Generic Test Descriptions"
+    description: "Test descriptions like 'it works' or 'handles errors' instead of specific scenarios"
+  - name: "Missing Fake Implementations"
+    description: "Using real implementations in unit tests instead of fakes"
+  - name: "Shared Test State"
+    description: "Fakes not reset between tests, causing test interdependence"
+  - name: "Happy Path Only"
+    description: "Only testing success scenarios, ignoring error cases and edge conditions"
+
+references:
+  - "Martin Fowler - TestPyramid"
+  - "Growing Object-Oriented Software, Guided by Tests"

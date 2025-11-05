@@ -1,0 +1,122 @@
+pattern_name: "Projectors and Read Models"
+version: "v1"
+domain: "CQRS and Event-Driven Architecture"
+
+goal: |
+  Transform domain events into optimized read models for query operations.
+  Maintain eventual consistency between write model (aggregates) and read
+  model (projections). Enable efficient queries without loading entire
+  aggregates or traversing event streams.
+
+guiding_policy: |
+  Projectors subscribe to domain events and update read models (database tables)
+  that are optimized for queries. Each projector handles events for one aggregate
+  type. Projectors live in the application layer and use ports (interfaces) to
+  write to infrastructure. Use dependency injection and handle events through a
+  consistent handle() method pattern.
+
+tactics:
+  - id: "projector-per-aggregate"
+    name: "One projector per aggregate type"
+    priority: critical
+    description: "Each aggregate has one projector handling its events (OccupierProjector, SiteProjector)"
+
+  - id: "handle-method-pattern"
+    name: "Implement handle(eventType, eventData) method"
+    priority: critical
+    description: "Projector has single handle() method that switches on event type"
+
+  - id: "use-ports-for-writing"
+    name: "Use port interfaces for read model writes"
+    priority: critical
+    description: "Projectors depend on ports (IXxxRDSWriter) not concrete implementations"
+
+  - id: "projectors-in-application"
+    name: "Projectors live in application/projectors/"
+    priority: critical
+    description: "Projectors are application layer, not domain or infrastructure"
+
+  - id: "injectable-projectors"
+    name: "Mark projectors with @injectable decorator"
+    priority: important
+    description: "Projectors use @injectable() for dependency injection"
+
+  - id: "inject-dependencies"
+    name: "Inject ports via constructor with @inject"
+    priority: important
+    description: "Constructor uses @inject('IXxxWriter') for port dependencies"
+
+  - id: "private-event-handlers"
+    name: "Create private handler methods per event type"
+    priority: important
+    description: "Each event type has private _handleXxxEvent() method called from handle()"
+
+  - id: "structured-logging"
+    name: "Add structured logging for event processing"
+    priority: important
+    description: "Log at entry (event received) and exit (projection completed) with event details"
+
+  - id: "denormalize-for-queries"
+    name: "Denormalize data for query efficiency"
+    priority: optional
+    description: "Read models can be denormalized, duplicating data across tables for query performance"
+
+  - id: "component-tests"
+    name: "Component tests with real database"
+    priority: optional
+    description: "Projectors tested with DbTestHelper against real database"
+
+constraints:
+  - rule: "Projectors MUST be in application layer"
+    description: "Projectors live in application/projectors/, not domain or infrastructure"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Projectors MUST use port interfaces"
+    description: "Dependencies are port interfaces (IXxxWriter), not concrete classes"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "One projector per aggregate"
+    description: "Each aggregate type has exactly one projector handling its events"
+    exceptions:
+      - "Complex aggregates may have multiple projectors for different read models"
+    evaluation: "llm_judge"
+
+  - rule: "Projectors MUST NOT contain business logic"
+    description: "Projectors transform and write data, no business validation or rules"
+    exceptions:
+      - "Data transformation logic (format conversion, denormalization)"
+    evaluation: "llm_judge"
+
+  - rule: "Projectors MUST handle events idempotently"
+    description: "Processing same event multiple times produces same read model state"
+    exceptions: []
+    evaluation: "llm_judge"
+
+  - rule: "Projectors MUST NOT emit new domain events"
+    description: "Projectors update read models, don't create new domain events"
+    exceptions:
+      - "Integration event projectors that publish to EventBridge"
+    evaluation: "llm_judge"
+
+related_patterns:
+  - "CQRS"
+  - "Event Sourcing"
+  - "Domain Events"
+  - "Ports and Adapters"
+
+anti_patterns:
+  - name: "Business Logic in Projector"
+    description: "Projector performing validation or business rules instead of just projection"
+  - name: "Projector Emitting Domain Events"
+    description: "Projector creating domain events, creating circular event flows"
+  - name: "Non-Idempotent Projections"
+    description: "Replaying events produces different results or corrupts read model"
+  - name: "Projector in Wrong Layer"
+    description: "Projector in domain or infrastructure instead of application"
+
+references:
+  - "Young, Greg. CQRS Documents"
+  - "Vernon, Vaughn. Implementing Domain-Driven Design"
+  - "Fowler, Martin. Event Sourcing"

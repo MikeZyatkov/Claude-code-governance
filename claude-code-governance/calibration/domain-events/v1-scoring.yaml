@@ -1,0 +1,98 @@
+# Scoring calibration for Domain Events pattern v1
+# This file contains the scoring rubrics used during code evaluation
+# Pattern definition: patterns/domain/domain-events/v1.yaml
+
+pattern_ref:
+  name: "Domain Events"
+  version: "v1"
+
+tactic_scoring:
+  - tactic_id: "extend-event-base"
+    scoring_rubric:
+      5: "All domain events extend EventBase from es-aggregates"
+      4: "One event doesn't extend EventBase"
+      3: "Multiple events don't extend EventBase"
+      2: "Most events are plain objects"
+      1: "No use of EventBase"
+      0: "Not applicable (no events)"
+
+  - tactic_id: "past-tense-naming"
+    scoring_rubric:
+      5: "All events named in past tense (Created, Updated, Processed)"
+      4: "One event uses present/imperative tense"
+      3: "Multiple events incorrectly named"
+      2: "Most events use command-style naming"
+      1: "No consistent naming convention"
+      0: "Not applicable"
+
+  - tactic_id: "static-typename"
+    scoring_rubric:
+      5: "All events have static typename matching class name"
+      4: "One event missing typename"
+      3: "Multiple events missing typename"
+      2: "typenames don't match class names"
+      1: "No typename properties defined"
+      0: "Not applicable"
+
+  - tactic_id: "immutable-properties"
+    scoring_rubric:
+      5: "All event properties are readonly"
+      4: "One property not readonly"
+      3: "Multiple properties not readonly"
+      2: "Most properties mutable"
+      1: "No immutability, all properties mutable"
+      0: "Not applicable"
+
+  - tactic_id: "self-contained-events"
+    scoring_rubric:
+      5: "All events contain complete data for state changes, no external lookups needed"
+      4: "One event requires minor external lookup"
+      3: "Some events incomplete, require external data"
+      2: "Most events require external data to apply"
+      1: "Events are just identifiers, all data externalized"
+      0: "Not applicable"
+
+  - tactic_id: "pass-typename-to-super"
+    scoring_rubric:
+      5: "All events pass typename to super() constructor"
+      4: "One event doesn't call super correctly"
+      3: "Multiple events with incorrect super() calls"
+      2: "Most events don't call super properly"
+      1: "No super() calls or incorrect pattern"
+      0: "Not applicable"
+
+  - tactic_id: "events-in-domain-layer"
+    scoring_rubric:
+      5: "All domain events in domain/events/ directory"
+      4: "One event in wrong location"
+      3: "Multiple events in wrong location"
+      2: "Events scattered across layers"
+      1: "No organization, events anywhere"
+      0: "Not applicable"
+
+  - tactic_id: "business-meaningful"
+    scoring_rubric:
+      5: "All events represent business facts domain experts care about"
+      4: "Mostly business-focused, one technical event"
+      3: "Mix of business and technical events"
+      2: "Primarily technical events"
+      1: "Events capture technical state, not business facts"
+      0: "Not applicable"
+
+  - tactic_id: "one-event-per-fact"
+    scoring_rubric:
+      5: "Each event represents one cohesive business fact"
+      4: "One event bundles multiple facts but still clear"
+      3: "Some events bundle unrelated changes"
+      2: "Most events are kitchen-sink events"
+      1: "All changes in single event type"
+      0: "Not applicable"
+
+  - tactic_id: "include-metadata"
+    scoring_rubric:
+      5: "Events include relevant metadata (createdBy, timestamp, correlation info)"
+      4: "Most events have metadata, minor gaps"
+      3: "Some events have metadata"
+      2: "Minimal metadata"
+      1: "No metadata, only business data"
+      0: "Not applicable (metadata not needed)"

@@ -1,0 +1,125 @@
+pattern_name: "Domain Events"
+version: "v1"
+domain: "Domain-Driven Design"
+
+goal: |
+  Capture and communicate facts about state changes that domain experts care
+  about. Enable event sourcing, eventual consistency, and decoupled integration
+  between bounded contexts. Make the system's behavior auditable and enable
+  event-driven architectures.
+
+guiding_policy: |
+  Domain events are immutable facts about the past, named in past tense (UserCreated,
+  not CreateUser). Each state change in an aggregate produces one or more events.
+  Events extend EventBase from es-aggregates and define a static typename for
+  serialization. Events contain all data needed to apply the state change,
+  avoiding external dependencies during event replay.
+
+tactics:
+  - id: "extend-event-base"
+    name: "Extend EventBase from es-aggregates"
+    priority: critical
+    description: "All domain events extend EventBase class from es-aggregates library"
+
+  - id: "past-tense-naming"
+    name: "Name events in past tense"
+    priority: critical
+    description: "Event names describe what happened: OccupierCreated, ContractSigned, PaymentProcessed"
+
+  - id: "static-typename"
+    name: "Define static typename property"
+    priority: critical
+    description: "Each event class has 'public static readonly typename' matching the class name"
+
+  - id: "immutable-properties"
+    name: "All event properties must be readonly"
+    priority: critical
+    description: "Event properties declared as 'public readonly' to enforce immutability"
+
+  - id: "self-contained-events"
+    name: "Events must be self-contained"
+    priority: critical
+    description: "Event contains all data needed to apply state change, no external lookups during replay"
+
+  - id: "pass-typename-to-super"
+    name: "Pass typename to super constructor"
+    priority: important
+    description: "Constructor calls super(ClassName.typename) to initialize EventBase"
+
+  - id: "events-in-domain-layer"
+    name: "Events defined in domain/events/ directory"
+    priority: important
+    description: "All domain events live in domain/events/, part of domain layer"
+
+  - id: "business-meaningful"
+    name: "Events represent business-meaningful changes"
+    priority: important
+    description: "Events capture facts domain experts care about, not technical concerns"
+
+  - id: "one-event-per-fact"
+    name: "Each event represents one cohesive fact"
+    priority: optional
+    description: "Don't bundle multiple unrelated changes into one event, keep focused"
+
+  - id: "include-metadata"
+    name: "Include relevant metadata"
+    priority: optional
+    description: "Events include who/when/why context (createdBy, correlationId) when relevant"
+
+constraints:
+  - rule: "Events MUST be immutable"
+    description: "All properties readonly, no setters, events represent unchangeable facts"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Events MUST extend EventBase"
+    description: "All domain events extend EventBase from es-aggregates"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Events MUST have static typename"
+    description: "typename property must match class name for serialization"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Events MUST be named in past tense"
+    description: "Event names describe completed actions: Created, Updated, Deleted"
+    exceptions: []
+    evaluation: "deterministic"
+
+  - rule: "Events MUST NOT reference other aggregates"
+    description: "Events contain IDs of related aggregates, not references to aggregate instances"
+    exceptions: []
+    evaluation: "llm_judge"
+
+  - rule: "Events MUST be self-contained for replay"
+    description: "Event handlers can apply event without external data lookups"
+    exceptions:
+      - "Integration events may reference external systems"
+    evaluation: "llm_judge"
+
+  - rule: "Events MUST NOT define timestamp fields"
+    description: "Do not explicitly define timestamp fields (createdOn, updatedOn, deletedOn, timestamp, etc.) as they are inherited from EventBase"
+    exceptions: []
+    evaluation: "deterministic"
+
+related_patterns:
+  - "Event Sourcing"
+  - "DDD Aggregates"
+  - "Projectors/Read Models"
+
+anti_patterns:
+  - name: "Mutable Events"
+    description: "Events with setters or non-readonly fields"
+  - name: "Command-Named Events"
+    description: "Events named as commands (CreateUser) instead of facts (UserCreated)"
+  - name: "Events with External Dependencies"
+    description: "Event handlers that require external lookups to apply the event"
+  - name: "Technical Events"
+    description: "Events for technical concerns rather than business facts"
+
+references:
+  - "Vernon, Vaughn. Domain-Driven Design Distilled (Domain Events)"
+  - "Evans, Eric. Domain-Driven Design"
+  - "Fowler, Martin. Event Sourcing"
+  - "es-aggregates library documentation"
