@@ -1,0 +1,20 @@
+{
+  "name": "jira-ops",
+  "version": "1.0.0",
+  "description": "Jira operations automation plugin for managing issues, requirements, and workflows. Streamlines ticket creation with structured requirements and best practices.",
+  "author": {
+    "name": "Mikhail"
+  },
+  "keywords": [
+    "jira",
+    "issue-tracking",
+    "requirements",
+    "project-management",
+    "automation",
+    "workflows"
+  ],
+  "commands": [],
+  "skills": [
+    "./skills/jira-requirements/SKILL.md"
+  ]
+}

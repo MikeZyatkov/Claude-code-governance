@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "claude-code-governance",
-      "source": "./",
+      "source": "./claude-code-governance",
       "description": "Hexagonal architecture governance framework with DDD/CQRS/Event Sourcing patterns. Provides pattern-based planning, evaluation, and quality benchmarking.",
       "version": "1.0.0",
       "keywords": [
@@ -20,6 +20,20 @@
         "patterns",
         "architecture",
         "quality"
+      ]
+    },
+    {
+      "name": "jira-ops",
+      "source": "./jira-ops",
+      "description": "Jira operations automation plugin for managing issues, requirements, and workflows. Streamlines ticket creation with structured requirements and best practices.",
+      "version": "1.0.0",
+      "keywords": [
+        "jira",
+        "issue-tracking",
+        "requirements",
+        "project-management",
+        "automation",
+        "workflows"
       ]
     }
   ]
