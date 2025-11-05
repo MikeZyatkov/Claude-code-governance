@@ -415,6 +415,59 @@ AdapterName implements IPortName:
 
 ---
 
+## Implementation Sequence
+
+> This checklist will be updated by the orchestrator during implementation to track progress.
+>
+> **Instructions**: Generate specific implementation items in the order they should be built:
+> - Follow hexagonal architecture: Domain → Application → Infrastructure
+> - List specific components based on the plan sections above
+> - Each item should be a concrete deliverable (e.g., "TenantId value object")
+> - Items should be ordered to minimize dependencies (build foundations first)
+
+### Phase 1: Domain Layer
+- [ ] [Value object - e.g., "TenantId value object with validation"]
+- [ ] [Value object - e.g., "EmailAddress value object"]
+- [ ] [Domain event - e.g., "TenantCreated event"]
+- [ ] [Domain event - e.g., "TenantActivated event"]
+- [ ] [Aggregate - e.g., "Tenant aggregate with create() factory"]
+- [ ] [Domain method - e.g., "Tenant.activate() method"]
+- [ ] [Domain method - e.g., "Tenant.suspend() method"]
+- [ ] [Repository interface - e.g., "ITenantRepository port"]
+- [ ] Domain layer complete
+
+### Phase 2: Application Layer
+- [ ] [Command - e.g., "CreateTenantCommand"]
+- [ ] [Command handler - e.g., "CreateTenantCommandHandler"]
+- [ ] [Command - e.g., "ActivateTenantCommand"]
+- [ ] [Command handler - e.g., "ActivateTenantCommandHandler"]
+- [ ] [Query - e.g., "GetTenantQuery"]
+- [ ] [Query handler - e.g., "GetTenantQueryHandler"]
+- [ ] [Port - e.g., "INotificationService port"]
+- [ ] [Projector - e.g., "TenantProjector for read model"]
+- [ ] [Domain service - if needed, e.g., "TenantDomainService"]
+- [ ] Application layer complete
+
+### Phase 3: Infrastructure Layer
+- [ ] [Repository implementation - e.g., "TenantEventStoreRepository"]
+- [ ] [Adapter - e.g., "SESNotificationAdapter"]
+- [ ] [Read model mapper - e.g., "TenantReadModelMapper"]
+- [ ] [API request DTO - e.g., "CreateTenantRequest"]
+- [ ] [API response DTO - e.g., "CreateTenantResponse"]
+- [ ] [Lambda handler - e.g., "createTenantHandler"]
+- [ ] [Lambda handler - e.g., "getTenantHandler"]
+- [ ] [Error mapping - e.g., "Domain errors to HTTP status codes"]
+- [ ] [API integration - e.g., "Wire up API Gateway routes"]
+- [ ] Infrastructure layer complete
+
+### Phase 4: Integration
+- [ ] End-to-end flow verified (API → Domain → Data)
+- [ ] Error handling verified across all layers
+- [ ] Event flow verified (Domain → EventBridge)
+- [ ] All layers integrated and working
+
+---
+
 ## Testing Checklist
 
 > This checklist will be updated by the orchestrator as tests are implemented.
@@ -485,14 +538,6 @@ AdapterName implements IPortName:
 - [ ] All tests passing (unit, integration, component)
 - [ ] All layers committed with quality scores ≥ threshold
 - [ ] Feature complete and ready for review
-
----
-
-## Additional Work Completed
-
-> Work completed beyond the original plan will be tracked here by the orchestrator.
-
-_No additional work yet._
 
 ---
 
