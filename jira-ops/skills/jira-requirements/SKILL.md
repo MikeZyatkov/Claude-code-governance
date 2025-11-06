@@ -365,6 +365,35 @@ Don't worry if you don't have all details - I'll extract what I can and ask foll
 - Use `* [ ]` for Definition of Done checkboxes
 - Use numbered lists for Business Requirements
 
+**CRITICAL - Gherkin Formatting:**
+- MUST use proper markdown code blocks:
+  ```
+  ### Scenario: Name here
+
+  ```gherkin
+  Given some precondition
+  When some action
+  Then some result
+  ```
+  ```
+- DO NOT use inline code or single-line gherkin blocks
+- Each scenario needs its own code block
+- Use proper Given/When/Then keywords
+
+**Keep It Concise:**
+- Value section: 2-4 sentences max
+- Context & Background: Brief bullets, not essays
+- Business Requirements: 5-10 items max, not 20+
+- Acceptance Criteria: 3-7 key scenarios (not every edge case)
+- Definition of Done: 8-12 items max
+- Technical consideration: 2-3 sentences or short bullets
+
+**Avoid Redundancy:**
+- Don't repeat the same information in multiple sections
+- Don't include extensive comparison tables unless critical
+- Don't add "Out of Scope" or "Size & Complexity" sections
+- Keep technical specs brief - detailed design belongs in separate docs
+
 **Example of properly formatted description:**
 ```markdown
 **As an** operator administrator
@@ -618,15 +647,43 @@ Business circumstances change - contract dates may need adjustment...
 - ALWAYS wait for user confirmation
 - NEVER skip template sections (except Technical consideration)
 - NEVER create without validation
+- NEVER make tickets too long - be concise!
 
 **Template Formatting:**
 - Exact structure matters for consistency
 - Use markdown properly (bold, headers, code blocks)
-- Gherkin scenarios must be in code blocks with language tag
+- Gherkin scenarios MUST be in proper code blocks:
+  ```
+  ### Scenario: Title
+
+  ```gherkin
+  Given...
+  When...
+  Then...
+  ```
+  ```
+- NOT inline code like `Given...When...Then...`
+- NOT single-line gherkin blocks
 - Horizontal rules (`---`) between major sections
+
+**Conciseness Guidelines:**
+- Value: 2-4 sentences (not paragraphs)
+- Context: Brief bullets (not detailed essays)
+- Business Requirements: 5-10 clear items (not 20+)
+- Acceptance Criteria: 3-7 key scenarios (focus on critical paths)
+- Definition of Done: 8-12 items (not exhaustive lists)
+- Technical consideration: 2-3 sentences or short bullets
+
+**Avoid:**
+- Long comparison tables
+- "Out of Scope" sections (keep tickets focused)
+- "Size & Complexity" estimates (not needed in description)
+- Extensive technical specifications (link to design docs instead)
+- Repeating same information across multiple sections
 
 **User Experience:**
 - Make it conversational and helpful
 - Explain why you need each piece of information
 - Offer suggestions when user is unsure
 - Show what the final ticket will look like before creating
+- Edit ruthlessly for clarity and brevity
