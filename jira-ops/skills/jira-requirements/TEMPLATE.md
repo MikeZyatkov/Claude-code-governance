@@ -2,6 +2,8 @@
 
 Use this template to write your requirements. The jira-requirements skill will read this file and convert it to a properly formatted Jira ticket.
 
+**KEY PRINCIPLE:** Focus on WHAT needs to be built (capabilities, outcomes) and WHY (business value), NOT HOW to implement it (specific files, classes, methods). Let the development team decide the implementation approach.
+
 ---
 
 ## User Story
@@ -74,26 +76,34 @@ Then [expected error/outcome]
 
 ## Definition of Done
 
-* [ ] Task 1 (e.g., "Implement X method in Y aggregate")
-* [ ] Task 2 (e.g., "Add validation for Z constraint")
-* [ ] Task 3
-* [ ] Unit tests cover all validation scenarios
-* [ ] Integration tests for key workflows
-* [ ] Documentation updated
-* [ ] Code reviewed
+**Focus on WHAT works, not HOW it's built. List outcomes and quality gates, NOT specific files or implementation tasks.**
+
+* [ ] Capability 1 delivered (e.g., "Contract update functionality works")
+* [ ] Capability 2 delivered (e.g., "Date validations prevent invalid updates")
+* [ ] All acceptance criteria scenarios pass
+* [ ] Domain events published for all operations
+* [ ] Tests pass (npm test)
+* [ ] Linting passes (npm run lint)
+* [ ] Type checking passes (npm run type-check)
 * [ ] Deployed to staging
+
+❌ **Avoid:** "Create X.ts file", "Add method to Y class", "Update Z interface"
+✅ **Instead:** "Update capability works", "Validation prevents invalid data", "All tests pass"
 
 ### Technical consideration
 
-*(Optional section)*
+**Provide high-level architectural guidance, NOT detailed implementation instructions.**
 
-[Any specific implementation patterns, technical constraints, or references]
+*(Optional section - keep it concise, 2-3 sentences or short bullets)*
 
 Examples:
-- Convert dates to UTC timestamps based on site timezone
-- Follow existing pattern in `HandlerClass`
-- Use bcrypt for password hashing
-- Store sessions in Redis with 1-hour TTL
+- Follow DDD patterns used in contexts/tenant-management/
+- Skip Bluefin integration for ELUMO_ONLY accounts
+- Use existing API mapping patterns (snake_case ↔ camelCase)
+- Ensure secure password storage and session management
+
+❌ **Avoid:** File paths, line numbers, method signatures, detailed code references
+✅ **Instead:** Architectural patterns, constraints, high-level guidance
 
 ---
 
@@ -183,18 +193,19 @@ And the end date remains unchanged
 
 ## Definition of Done
 
-* [ ] Implement contract update method in Occupier aggregate
-* [ ] Support updating: startDate, endDate
-* [ ] Validate start date can only change for upcoming contracts
-* [ ] Validate end date constraints (not before yesterday, after start date)
-* [ ] Validate contract dates align with occupancy dates
-* [ ] Prevent updating discarded contracts
-* [ ] Publish contract updated events
-* [ ] Audit trail records all changes
-* [ ] Unit tests cover all validation scenarios
+* [ ] Contract update capability works (start date, end date)
+* [ ] Start date validation prevents changes to active contracts
+* [ ] End date validation prevents invalid date ranges
+* [ ] Contract-occupancy date alignment validated
+* [ ] Discarded contracts cannot be updated
+* [ ] Contract updated events published correctly
+* [ ] All acceptance criteria scenarios pass
+* [ ] Tests pass (npm test)
+* [ ] Linting passes (npm run lint)
+* [ ] Type checking passes (npm run type-check)
 
 ### Technical consideration
 
-Convert occupancy dates coming from API to UTC timestamps based on the site timezone (check current `CreateContractCommandHandler` to understand the pattern, convert them back during the projection)
+Follow DDD patterns used in contexts/tenant-management/. Convert occupancy dates to UTC timestamps based on site timezone (similar to CreateContractCommandHandler pattern).
 
 ---

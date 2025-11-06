@@ -1,23 +1,23 @@
 ---
 name: jira-requirements
-description: Creates well-structured Jira tickets following the standard template with user story, value, context, business requirements, acceptance criteria (Gherkin), definition of done, and technical considerations.
+description: Creates well-structured Jira tickets focusing on business value and WHAT needs to be built from end-user perspective. Includes user story, value, context, business requirements, acceptance criteria (Gherkin), definition of done (outcomes), and high-level technical guidance. Avoids implementation details like specific files, classes, or step-by-step instructions.
 allowed-tools: mcp__atlassian__*, Read, Grep, Bash
 ---
 
 # Jira Requirements Skill
 
-Creates well-structured Jira tickets following a standardized template with comprehensive requirements and acceptance criteria.
+Creates well-structured Jira tickets focusing on business value and WHAT needs to be built from the end-user perspective, avoiding implementation details.
 
 ## Purpose
 
 Automates the creation of high-quality Jira tickets using the standard template:
 - **User Story** (As a... I want to... So that...)
 - **Value** - Business value and why this matters
-- **Context & Background** - Current state and technical details
+- **Context & Background** - Current state and capability gaps
 - **Business Requirements** - Numbered list of requirements
 - **Acceptance Criteria** - Gherkin scenarios (Given/When/Then)
-- **Definition of Done** - Checkboxes with specific tasks
-- **Technical consideration** (optional) - Implementation details
+- **Definition of Done** - Checkboxes with outcomes and quality gates (NOT implementation tasks)
+- **Technical consideration** (optional) - High-level architectural guidance (NOT detailed implementation)
 
 ## When to Use
 
@@ -168,9 +168,11 @@ Then {expected outcome}
 
 **Context & Background:**
 - What's the current state?
-- What exists/doesn't exist?
-- Where does relevant code live?
-- What are the technical details (fields, entities, etc.)?
+- What capabilities exist/don't exist?
+- Where does relevant code live? (general location, not specific files)
+- What are the technical details (fields, entities, integrations)?
+- AVOID: Listing specific files to create or detailed implementation steps
+- FOCUS ON: Current capabilities and gaps, not prescriptive "what needs to be built"
 
 **Business Requirements:**
 - What are the functional requirements? (numbered list)
@@ -183,14 +185,18 @@ Then {expected outcome}
 - Cover happy paths and error cases
 
 **Definition of Done:**
-- What tasks must be completed?
-- What tests are needed?
-- What documentation is required?
+- What business capabilities must be delivered?
+- What quality outcomes are expected? (tests pass, linting passes, etc.)
+- What functional verification is needed?
+- AVOID: Specific file names, class names, or implementation tasks
+- FOCUS ON: What works, not how it's built
 
 **Technical Consideration (optional):**
-- Any specific implementation patterns?
-- Technical constraints or conversions?
-- References to existing code?
+- High-level architectural patterns to follow
+- Important constraints or technical context
+- Key integrations or dependencies
+- AVOID: Detailed code references, file paths, line numbers, method signatures
+- FOCUS ON: Strategic technical guidance, not tactical implementation steps
 
 #### 4. Show Preview
 
@@ -232,6 +238,18 @@ Then {expected outcome}
 
 ## Instructions for Claude
 
+**CRITICAL PRINCIPLE: Focus on WHAT and WHY, not HOW**
+
+The purpose of a Jira ticket is to communicate WHAT needs to be built from the business/user perspective and WHY it's valuable - NOT HOW to implement it. The development team will decide the implementation approach.
+
+- ✅ DO: Describe capabilities, outcomes, business requirements, validation rules
+- ✅ DO: Provide high-level technical context and architectural guidance
+- ❌ DON'T: List specific files to create, class names, method signatures
+- ❌ DON'T: Prescribe step-by-step implementation instructions
+- ❌ DON'T: Include detailed code references or line numbers
+
+See the "Examples: Good vs Bad Approaches" section below for concrete examples.
+
 ### Starting the Workflow
 
 **First, determine input method:**
@@ -271,14 +289,16 @@ Claude: [Reads file]
 
 **Initial Request - Ask ONE open question:**
 
-"Please describe what needs to be built. To create a comprehensive ticket, try to mention:
+"Please describe what needs to be built from a business/user perspective. To create a comprehensive ticket, try to mention:
 - **Who** needs this (user role)
 - **What** they need to do (capability/feature)
 - **Why** it's important (business value, problem it solves)
-- **Current state** (what exists/doesn't exist today)
+- **Current state** (what capabilities exist/don't exist today)
 - **Requirements** (what must the solution do?)
 - **Validations** (what should be validated/prevented?)
-- **Technical context** (any patterns, code locations, constraints)
+- **Technical context** (high-level patterns, general code location, key constraints)
+
+Focus on WHAT needs to work and WHY, not HOW to implement it. Avoid listing specific files to create or detailed implementation steps.
 
 Don't worry if you don't have all details - I'll extract what I can and ask follow-up questions for anything critical that's missing."
 
@@ -319,9 +339,11 @@ Don't worry if you don't have all details - I'll extract what I can and ask foll
 
 3. **Context & Background:**
    ```
-   Ask: "What's the current state? What exists/doesn't exist?"
-   Ask: "Where does relevant code live?"
-   Ask: "Any technical details (fields, entities) to mention?"
+   Ask: "What's the current state? What capabilities exist/don't exist?"
+   Ask: "Where does relevant code live?" (general location only)
+   Ask: "Any technical details (fields, entities, integrations) to mention?"
+   Avoid listing specific files to create or prescribing implementation
+   Focus on describing current state and gaps, not "what needs to be built"
    ```
 
 4. **Business Requirements:**
@@ -343,14 +365,17 @@ Don't worry if you don't have all details - I'll extract what I can and ask foll
 
 6. **Definition of Done:**
    ```
-   Ask: "What tasks must be completed?"
-   Ask: "What tests are needed?"
-   Build checkbox list
+   Ask: "What capabilities or outcomes must be delivered?"
+   Ask: "What quality gates must pass? (tests, linting, type checking)"
+   Build checkbox list focusing on WHAT works, not HOW it's built
+   Avoid listing specific file names or implementation tasks
    ```
 
 7. **Technical Consideration (optional):**
    ```
-   Ask: "Any specific implementation patterns or technical notes?"
+   Ask: "Any high-level architectural patterns or technical constraints to note?"
+   Focus on strategic guidance (e.g., "Follow DDD patterns", "Skip Bluefin for ELUMO_ONLY")
+   Avoid detailed code references, file paths, or line-by-line instructions
    ```
 
 ### Formatting the Ticket
@@ -620,15 +645,16 @@ Business circumstances change - contract dates may need adjustment...
 
 7. **Definition of Done:**
    ```
-   Ask: "What tasks must be completed?"
-   User: "Implement auth, write tests, update docs"
-   Build checkbox list
+   Ask: "What capabilities or outcomes must be delivered?"
+   User: "Authentication working, all tests pass, deployment complete"
+   Build checkbox list focusing on outcomes not implementation tasks
    ```
 
 8. **Technical Consideration:**
    ```
-   Ask: "Any technical notes?"
-   User: "Use bcrypt for passwords, Redis for sessions"
+   Ask: "Any high-level technical guidance or constraints?"
+   User: "Follow existing auth patterns, ensure secure password storage, use session management"
+   Keep it high-level, avoid detailed implementation steps
    ```
 
 9. **Preview & Create:**
@@ -668,11 +694,11 @@ Business circumstances change - contract dates may need adjustment...
 
 **Conciseness Guidelines:**
 - Value: 2-4 sentences (not paragraphs)
-- Context: Brief bullets (not detailed essays)
+- Context: Brief bullets describing current state (not detailed essays or file lists)
 - Business Requirements: 5-10 clear items (not 20+)
 - Acceptance Criteria: 3-7 key scenarios (focus on critical paths)
-- Definition of Done: 8-12 items (not exhaustive lists)
-- Technical consideration: 2-3 sentences or short bullets
+- Definition of Done: 8-12 items focusing on outcomes (not implementation tasks)
+- Technical consideration: 2-3 sentences or short bullets (high-level only)
 
 **Avoid:**
 - Long comparison tables
@@ -680,6 +706,93 @@ Business circumstances change - contract dates may need adjustment...
 - "Size & Complexity" estimates (not needed in description)
 - Extensive technical specifications (link to design docs instead)
 - Repeating same information across multiple sections
+- **CRITICAL: Listing specific files, classes, or methods to create**
+- **CRITICAL: Detailed code references, file paths, or line numbers**
+- **CRITICAL: Step-by-step implementation instructions**
+- **CRITICAL: Prescriptive "What Needs to Be Built" with implementation details**
+
+**Examples: Good vs Bad Approaches**
+
+❌ **BAD - Definition of Done (too implementation-focused):**
+```
+* [ ] Create DecommissionOccupierCommand.ts in contexts/tenant-management/application/commands/
+* [ ] Create DecommissionOccupierCommandHandler.ts with command handler logic
+* [ ] Add decommission() method to Occupier.aggregate.ts with domain validation
+* [ ] Create OccupierDecommissioned.ts domain event in contexts/tenant-management/domain/events/
+* [ ] Create lambda handler decommission-occupier-handler.ts in contexts/tenant-management/infrastructure/
+* [ ] Update OccupierRepository interface to support decommission status updates
+```
+
+✅ **GOOD - Definition of Done (outcome-focused):**
+```
+* [ ] Occupier decommissioning capability implemented for ELUMO_ONLY accounts
+* [ ] Decommission status transitions work correctly (null → IN_PROGRESS → DECOMMISSIONED)
+* [ ] Contract and occupancy validations prevent invalid decommissioning
+* [ ] All acceptance criteria scenarios pass
+* [ ] Domain events published for decommission operations
+* [ ] Tests pass (npm test)
+* [ ] Linting passes (npm run lint)
+* [ ] Type checking passes (npm run type-check)
+```
+
+❌ **BAD - Technical Consideration (too detailed):**
+```
+Architecture Pattern:
+Follow existing ELUMO_ONLY patterns in contexts/tenant-management/:
+- Command: DecommissionOccupierCommand (domain params, camelCase)
+- Handler: DecommissionOccupierCommandHandler (orchestration)
+- Aggregate: Add decommission() method to Occupier.aggregate.ts
+- Event: OccupierDecommissioned (domain event)
+
+API Mapping:
+- Request: DecommissionOccupierRequest (snake_case) → DecommissionOccupierParams (camelCase)
+- Response: DecommissionOccupierResponse (snake_case)
+- Use OccupierApiMapper for conversions
+
+Occupancy Handling (reuse logic):
+Reference legacy implementation in services/occupiers/helpers/decommissioning.ts:232-260:
+- If start_date >= today: DELETE (emit OccupancyDeleted)
+- If start_date < today: END with end_date = yesterday (emit OccupancyEnded)
+
+Repository Method:
+Add to IOccupierRepository:
+updateDecommissionStatus(occupierId: string, status: DecommissionStatus): Promise<void>
+```
+
+✅ **GOOD - Technical Consideration (high-level):**
+```
+Follow DDD patterns established in contexts/tenant-management/ for ELUMO_ONLY operations.
+Skip Bluefin integration checks entirely for ELUMO_ONLY accounts.
+No legacy_id requirement for ELUMO_ONLY OSAs.
+Handle occupancies similar to legacy: delete future occupancies, end active ones.
+Use existing API mapping patterns (snake_case ↔ camelCase).
+```
+
+❌ **BAD - Context & Background (prescriptive implementation):**
+```
+**What Needs to Be Built:**
+- New DecommissionOccupierCommand and DecommissionOccupierCommandHandler in contexts/tenant-management
+- Domain logic in Occupier.aggregate.ts for decommissioning behavior
+- Domain event: OccupierDecommissioned
+- Lambda handler to expose decommission endpoint for ELUMO_ONLY accounts
+- Infrastructure adapter for persisting decommission status
+- Skip all Bluefin-specific checks (provisioning, legacy_id requirements)
+```
+
+✅ **GOOD - Context & Background (descriptive current state):**
+```
+**Current State:**
+- Legacy decommissioning exists in services/occupiers/ and requires Bluefin integration
+- Legacy flow checks Bluefin service provisioning status and requires legacy_id on OSAs
+- ELUMO_ONLY operations (create site, create occupier) already use DDD pattern in contexts/tenant-management/
+- No ELUMO_ONLY-specific decommissioning path exists
+
+**ELUMO_ONLY Account Characteristics:**
+- account_type === 'ELUMO_ONLY' in authorizer context
+- No Bluefin dependencies required
+- May not have legacy_id on OSAs
+- Simplified validation rules compared to legacy accounts
+```
 
 **User Experience:**
 - Make it conversational and helpful
