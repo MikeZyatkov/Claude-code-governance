@@ -4,6 +4,8 @@ Use this template to write your requirements. The jira-requirements skill will r
 
 **KEY PRINCIPLE:** Focus on WHAT needs to be built (capabilities, outcomes) and WHY (business value), NOT HOW to implement it (specific files, classes, methods). Let the development team decide the implementation approach.
 
+**Business Requirements should be business rules, constraints, and invariants** - NOT implementation tasks like "Create X", "Implement Y", or "Emit Z event".
+
 ---
 
 ## User Story
@@ -44,11 +46,16 @@ Use this template to write your requirements. The jira-requirements skill will r
 
 ## Business Requirements
 
-1. Requirement 1
-2. Requirement 2
-3. Requirement 3
-4. Requirement 4
+**Focus on business rules, constraints, and invariants - NOT implementation tasks.**
+
+1. Business rule 1 (e.g., "Only authenticated users can access the system")
+2. Constraint 1 (e.g., "Passwords must meet minimum complexity requirements")
+3. Validation 1 (e.g., "Cannot delete accounts with active subscriptions")
+4. Invariant 1 (e.g., "Account status must transition: ACTIVE → SUSPENDED → CLOSED")
 ...
+
+❌ **Avoid:** "Create X class", "Implement Y method", "Emit Z event", "Add field to database"
+✅ **Instead:** "Users must authenticate before access", "Invalid data must be rejected", "Status transitions must follow business rules"
 
 ---
 
@@ -143,14 +150,14 @@ Based on the old implementation, operators should be able to update:
 
 ## Business Requirements
 
-1. Operators can update contract start dates and end dates
-2. Start date can only be changed for upcoming contracts (not yet started)
-3. New start date cannot be in the past
-4. End date cannot be moved before yesterday
-5. End date must be after start date
-6. Cannot update discarded contracts
+1. Only operator administrators can update contract dates
+2. Start dates can only be changed for upcoming contracts (not yet started)
+3. Start dates cannot be set to past dates
+4. End dates cannot be moved before yesterday
+5. End dates must be after start dates
+6. Discarded contracts cannot be updated
 7. Contract dates must align with occupancy dates
-8. Changes are audited and events published
+8. All contract updates must be auditable
 
 ---
 

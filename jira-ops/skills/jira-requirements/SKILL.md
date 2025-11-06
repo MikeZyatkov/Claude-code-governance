@@ -175,9 +175,12 @@ Then {expected outcome}
 - FOCUS ON: Current capabilities and gaps, not prescriptive "what needs to be built"
 
 **Business Requirements:**
-- What are the functional requirements? (numbered list)
-- What constraints exist?
-- What validations are needed?
+- What business rules must be enforced?
+- What constraints and invariants must always hold true?
+- What validations prevent invalid business states?
+- What behaviors are required from a business/domain perspective?
+- AVOID: Implementation tasks ("Create X", "Implement Y", "Emit Z event")
+- FOCUS ON: Business rules, constraints, and domain requirements
 
 **Acceptance Criteria:**
 - What are the key scenarios to test?
@@ -242,11 +245,13 @@ Then {expected outcome}
 
 The purpose of a Jira ticket is to communicate WHAT needs to be built from the business/user perspective and WHY it's valuable - NOT HOW to implement it. The development team will decide the implementation approach.
 
-- ✅ DO: Describe capabilities, outcomes, business requirements, validation rules
+- ✅ DO: Describe capabilities, outcomes, business rules, constraints, and validation rules
 - ✅ DO: Provide high-level technical context and architectural guidance
-- ❌ DON'T: List specific files to create, class names, method signatures
-- ❌ DON'T: Prescribe step-by-step implementation instructions
+- ❌ DON'T: List specific files to create, class names, method signatures, or event names
+- ❌ DON'T: Prescribe step-by-step implementation instructions ("Create X", "Implement Y", "Emit Z")
 - ❌ DON'T: Include detailed code references or line numbers
+
+**Business Requirements specifically should be business rules and invariants, NOT implementation tasks.**
 
 See the "Examples: Good vs Bad Approaches" section below for concrete examples.
 
@@ -294,8 +299,8 @@ Claude: [Reads file]
 - **What** they need to do (capability/feature)
 - **Why** it's important (business value, problem it solves)
 - **Current state** (what capabilities exist/don't exist today)
-- **Requirements** (what must the solution do?)
-- **Validations** (what should be validated/prevented?)
+- **Business rules** (what constraints and validations must hold true?)
+- **Invalid states** (what should be prevented/validated?)
 - **Technical context** (high-level patterns, general code location, key constraints)
 
 Focus on WHAT needs to work and WHY, not HOW to implement it. Avoid listing specific files to create or detailed implementation steps.
@@ -348,9 +353,11 @@ Don't worry if you don't have all details - I'll extract what I can and ask foll
 
 4. **Business Requirements:**
    ```
-   Ask: "What are the functional requirements?"
-   Build numbered list
-   Confirm completeness
+   Ask: "What business rules and constraints must be enforced?"
+   Ask: "What validations prevent invalid business states?"
+   Build numbered list of business rules, NOT implementation tasks
+   Focus on WHAT must be true, not HOW to implement it
+   Avoid: "Create X", "Implement Y", "Emit Z event"
    ```
 
 5. **Acceptance Criteria:**
@@ -630,9 +637,9 @@ Business circumstances change - contract dates may need adjustment...
 
 5. **Business Requirements:**
    ```
-   Ask: "What are the functional requirements?"
-   User: "JWT auth, role-based access, session management"
-   Build list...
+   Ask: "What business rules and constraints must be enforced?"
+   User: "Only authenticated users can access system. Roles determine permissions. Sessions expire after inactivity."
+   Build list of business rules and constraints (not implementation tasks)
    ```
 
 6. **Acceptance Criteria:**
@@ -695,7 +702,7 @@ Business circumstances change - contract dates may need adjustment...
 **Conciseness Guidelines:**
 - Value: 2-4 sentences (not paragraphs)
 - Context: Brief bullets describing current state (not detailed essays or file lists)
-- Business Requirements: 5-10 clear items (not 20+)
+- Business Requirements: 5-10 clear business rules and constraints (not 20+ implementation tasks)
 - Acceptance Criteria: 3-7 key scenarios (focus on critical paths)
 - Definition of Done: 8-12 items focusing on outcomes (not implementation tasks)
 - Technical consideration: 2-3 sentences or short bullets (high-level only)
@@ -792,6 +799,33 @@ Use existing API mapping patterns (snake_case ↔ camelCase).
 - No Bluefin dependencies required
 - May not have legacy_id on OSAs
 - Simplified validation rules compared to legacy accounts
+```
+
+❌ **BAD - Business Requirements (implementation-focused):**
+```
+1. Create domain event OccupierDecommissionInitiated with occupier details
+2. Add decommissionedAt timestamp field to Occupier aggregate
+3. Implement initiateDecommission() method on Occupier aggregate with validations
+4. Emit OccupancyEnded events for active occupancies
+5. Emit OccupancyDeleted events for future occupancies
+6. Create DecommissionOccupierCommand and DecommissionOccupierCommandHandler
+7. Create POST /occupiers/{occupier_id}/decommission lambda handler
+8. Project OccupierDecommissionInitiated event to EventBridge
+9. Return updated occupier with decommission status in API response
+```
+
+✅ **GOOD - Business Requirements (business rules and constraints):**
+```
+1. Only ELUMO_ONLY accounts can use this decommissioning path
+2. An occupier cannot be decommissioned if already in a decommissioning state
+3. Contracts cannot be decommissioned on their start date
+4. Future occupancies must be removed when decommissioning
+5. Active occupancies must be ended when decommissioning
+6. Occupier decommission status must transition: null → IN_PROGRESS → DECOMMISSIONED
+7. Person must have access to all sites associated with the occupier
+8. No Bluefin provisioning checks required for ELUMO_ONLY accounts
+9. No legacy_id required on OSAs for ELUMO_ONLY accounts
+10. Decommission operations must be auditable via domain events
 ```
 
 **User Experience:**
