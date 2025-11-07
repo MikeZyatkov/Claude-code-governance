@@ -36,11 +36,11 @@ tactic_scoring:
 
   - tactic_id: "commands-orchestrate-domain"
     scoring_rubric:
-      5: "Commands: load aggregate → call domain method → save via repository, no business logic in handler"
-      4: "Commands follow pattern with minor business logic leakage"
-      3: "Commands have significant business logic instead of delegating to domain"
-      2: "Commands manipulate aggregates directly without using domain methods"
-      1: "Commands bypass aggregates entirely, direct DB manipulation"
+      5: "Commands: load aggregate → call domain method → save via repository, zero business logic in handler"
+      4: "Commands follow pattern with only trivial formatting/conversion logic"
+      3: "Commands have some business validation or domain rules (should be in aggregate)"
+      2: "Commands have significant business logic, domain methods barely used"
+      1: "Commands bypass aggregates entirely, direct DB manipulation or anemic domain"
       0: "Not applicable"
 
   - tactic_id: "queries-return-dtos"
@@ -63,11 +63,11 @@ tactic_scoring:
 
   - tactic_id: "validate-inputs-in-handler"
     scoring_rubric:
-      5: "Clear separation: handler validates inputs, domain validates business rules"
-      4: "Good separation with minor overlap"
-      3: "Some business validation in handler that should be in domain"
-      2: "Most validation in handler, domain is anemic"
-      1: "All validation in handler or no validation"
+      5: "Perfect separation: handler validates technical inputs only, all business rules in domain"
+      4: "Mostly correct with one minor business validation in handler"
+      3: "Multiple business validations in handler that should be in domain"
+      2: "Most business validation in handler, domain is anemic"
+      1: "All business validation in handler or no validation"
       0: "Not applicable"
 
   - tactic_id: "use-mapper-for-conversion"

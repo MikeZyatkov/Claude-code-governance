@@ -1,0 +1,34 @@
+{
+  "pattern": "cqrs-queries",
+  "version": "v1",
+  "calibration_version": "v1",
+  "created": "2025-11-07T15:00:00Z",
+  "fixtures": {
+    "excellent/GetOccupierByIdQueryHandler.ts": {
+      "expected_score": 4.5,
+      "expected_range": [4.5, 5.0],
+      "status": "passing",
+      "notes": "Pure read operation returning DTO"
+    },
+    "poor/QueryMutatesState.ts": {
+      "expected_score": 3.0,
+      "expected_range": [2.0, 3.5],
+      "status": "passing",
+      "failing_tactics_expected": ["queries-no-state-modification", "queries-read-without-modifications"],
+      "expected_issues": [
+        "Calls repository.writeAsync() in query",
+        "Modifies aggregate state",
+        "Calls business methods"
+      ],
+      "notes": "Correctly detected state mutation violations"
+    },
+    "poor/QueryReturnsAggregate.ts": {
+      "expected_score": 3.5,
+      "expected_range": [2.5, 4.0],
+      "status": "passing",
+      "failing_tactics_expected": ["queries-return-dtos"],
+      "expected_issues": ["Returns domain aggregate instead of DTO"],
+      "notes": "Correctly detected return type violation"
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "pattern": "cqrs-commands",
+  "version": "v1",
+  "calibration_version": "v1",
+  "created": "2025-11-07T14:00:00Z",
+  "notes": "Initial baseline. Business logic fixture scored higher than expected (4.3 vs <4.0) - calibration may need tuning for orchestration-not-logic tactic.",
+  "fixtures": {
+    "excellent/CreateOccupierCommandHandler.ts": {
+      "expected_score": 4.5,
+      "expected_range": [4.5, 5.0],
+      "actual_first_run": "passed_above_4.5",
+      "status": "passing",
+      "notes": "Clean command handler with proper orchestration"
+    },
+    "poor/CommandHandlerWithBusinessLogic.ts": {
+      "expected_score": 4.3,
+      "expected_range": [4.0, 4.5],
+      "actual_first_run": 4.3,
+      "status": "passing",
+      "failing_tactics_expected": ["commands-orchestrate-domain", "validate-inputs-in-handler"],
+      "expected_issues": [
+        "Business validation logic in handler",
+        "Repository queries for business rules",
+        "Email validation method in handler"
+      ],
+      "notes": "Scores in 'good with issues' range (4.0-4.5). Has business logic violations but maintains good structure (DI, error handling). This demonstrates the calibration correctly identifies the issues while recognizing other good patterns. Calibration was tuned to be more strict about business logic."
+    },
+    "poor/CommandHandlerReturnsAggregate.ts": {
+      "expected_score": 3.5,
+      "expected_range": [2.5, 4.0],
+      "actual_first_run": "passed_below_4.0",
+      "status": "passing",
+      "failing_tactics_expected": ["return-void-or-id"],
+      "expected_issues": ["Returns domain aggregate instead of void/ID"],
+      "notes": "Correctly detected return type violation"
+    }
+  },
+  "calibration_tuning_needed": {
+    "tactic": "orchestration-not-logic",
+    "current_issue": "Business logic violations not scored harshly enough",
+    "recommendation": "Update scoring rubric in calibration/cqrs/v1-scoring.yaml to be more strict about business logic in handlers. Score 3 or below should apply when ANY business validation, domain rules, or validation methods are present in handler."
+  }
+}

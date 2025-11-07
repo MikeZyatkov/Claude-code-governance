@@ -1,0 +1,38 @@
+{
+  "pattern": "projectors",
+  "version": "v1",
+  "calibration_version": "v1",
+  "created": "2025-11-07T16:00:00Z",
+  "fixtures": {
+    "excellent/OccupierProjector.ts": {
+      "expected_score": 4.5,
+      "expected_range": [4.5, 5.0],
+      "status": "passing",
+      "notes": "Pure transformation, passive consumer, idempotent"
+    },
+    "poor/ProjectorWithBusinessValidation.ts": {
+      "expected_score": 4.0,
+      "expected_range": [3.5, 4.0],
+      "status": "passing",
+      "failing_tactics_expected": ["no-business-validation", "pure-transformation"],
+      "expected_issues": [
+        "Business validation in projector",
+        "Checks business rules",
+        "Validates name length and dates"
+      ],
+      "notes": "Scores at threshold (4.0) - has violations but maintains good structure"
+    },
+    "poor/ProjectorEmitsDomainEvents.ts": {
+      "expected_score": 4.0,
+      "expected_range": [3.5, 4.0],
+      "status": "passing",
+      "failing_tactics_expected": ["passive-consumer", "no-side-effects"],
+      "expected_issues": [
+        "Emits new domain events",
+        "Publishes notifications",
+        "Creates event cascades"
+      ],
+      "notes": "Scores at threshold (4.0) - has event emission violations but good structure otherwise"
+    }
+  }
+}

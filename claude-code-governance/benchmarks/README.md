@@ -17,14 +17,35 @@ benchmarks/
 ├── ddd-aggregates/
 │   ├── fixtures/
 │   │   ├── excellent/      # Scores 4.5-5.0
-│   │   ├── good/           # Scores 4.0-4.5 (future)
-│   │   ├── acceptable/     # Scores 3.5-4.0 (future)
-│   │   └── poor/           # Scores <4.0
+│   │   └── poor/           # Scores <4.5
 │   ├── implementation-plan.md
 │   ├── run.test.ts
-│   └── baseline.json (generated)
-├── cqrs/ (future)
-├── value-objects/ (future)
+│   ├── baseline.json
+│   └── README.md
+├── cqrs-commands/
+│   ├── fixtures/
+│   │   ├── excellent/      # Scores 4.5-5.0
+│   │   └── poor/           # 2 fixtures with violations
+│   ├── implementation-plan.md
+│   ├── run.test.ts
+│   ├── baseline.json
+│   └── README.md
+├── cqrs-queries/
+│   ├── fixtures/
+│   │   ├── excellent/      # Scores 4.5-5.0
+│   │   └── poor/           # 2 fixtures with violations
+│   ├── implementation-plan.md
+│   ├── run.test.ts
+│   ├── baseline.json
+│   └── README.md
+├── projectors/
+│   ├── fixtures/
+│   │   ├── excellent/      # Scores 4.5-5.0
+│   │   └── poor/           # 2 fixtures with violations
+│   ├── implementation-plan.md
+│   ├── run.test.ts
+│   ├── baseline.json
+│   └── README.md
 └── README.md (this file)
 ```
 
@@ -32,17 +53,19 @@ benchmarks/
 
 ```bash
 # Run all benchmarks
-npm run benchmark
+npx jest benchmarks/
 
 # Run specific pattern benchmarks
-npm run benchmark:ddd
-npm run benchmark:cqrs
+npx jest benchmarks/ddd-aggregates/run.test.ts
+npx jest benchmarks/cqrs-commands/run.test.ts
+npx jest benchmarks/cqrs-queries/run.test.ts
+npx jest benchmarks/projectors/run.test.ts
 
-# Run with verbose output
-npm run benchmark -- --verbose
+# Run all CQRS-related benchmarks
+npx jest benchmarks/cqrs-
 
 # Watch mode during development
-npm run benchmark -- --watch
+npx jest benchmarks/ --watch
 ```
 
 ## Adding New Fixtures
@@ -95,12 +118,17 @@ Code with critical violations, missing key tactics, or fundamental pattern misun
 
 ## Current Coverage
 
-- ✅ **DDD Aggregates** - 2 fixtures (excellent, poor)
-- 🔜 **CQRS** - Coming soon
-- 🔜 **Value Objects** - Coming soon
-- 🔜 **Projectors** - Coming soon
+- ✅ **DDD Aggregates** - 2 fixtures (1 excellent, 1 poor) - `/benchmarks/ddd-aggregates/`
+- ✅ **CQRS Commands** - 3 fixtures (1 excellent, 2 poor) - `/benchmarks/cqrs-commands/`
+- ✅ **CQRS Queries** - 3 fixtures (1 excellent, 2 poor) - `/benchmarks/cqrs-queries/`
+- ✅ **Projectors** - 3 fixtures (1 excellent, 2 poor) - `/benchmarks/projectors/`
+- 🔜 **Value Objects** - Planned
+- 🔜 **Domain Events** - Planned
+- 🔜 **Event Sourcing** - Planned
+- 🔜 **Error Handling** - Planned
+- 🔜 **Repository** - Planned
 
-Target: 15+ fixtures across 3+ patterns by end of Week 2.
+**Status:** 4 of 12 patterns (33%) - 11 fixtures total
 
 ## Best Practices
 
@@ -155,5 +183,6 @@ See `IMPLEMENTATION_PLAN.md` for detailed weekly plan:
 
 ---
 
-**Status:** Phase 1 Week 1 - Migration Complete ✅
-**Last Updated:** 2025-10-13
+**Status:** Phase 2 Complete - CQRS Patterns Validated ✅
+**Last Updated:** 2025-11-07
+**Coverage:** 4/12 patterns (33%)
