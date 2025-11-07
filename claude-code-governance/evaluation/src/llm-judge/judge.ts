@@ -6,7 +6,7 @@
 import { Pattern, LLMJudgeResult, TacticScore, ConstraintCheck, Calibration } from '../types'
 import { PromptBuilder } from './prompt-builder'
 import { ILLMAdapter } from './ILLMAdapter'
-import { ClaudeCodeCLIAdapter } from './adapters/ClaudeCodeCLIAdapter'
+import { AdapterFactory } from './adapters/AdapterFactory'
 
 interface JudgeOptions {
   model?: string
@@ -22,7 +22,7 @@ export class LLMJudge {
 
   constructor(defaultAdapter?: ILLMAdapter) {
     this.promptBuilder = new PromptBuilder()
-    this.defaultAdapter = defaultAdapter || new ClaudeCodeCLIAdapter()
+    this.defaultAdapter = defaultAdapter || AdapterFactory.getDefaultAdapter()
   }
 
   async evaluatePattern(

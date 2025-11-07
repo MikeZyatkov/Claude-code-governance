@@ -4,29 +4,24 @@
  */
 
 import { ILLMAdapter, LLMRequest, LLMResponse } from '../ILLMAdapter'
-
-// Import will be added when SDK is installed
-// import Anthropic from '@anthropic-ai/sdk'
+import Anthropic from '@anthropic-ai/sdk'
 
 export class AnthropicSDKAdapter implements ILLMAdapter {
   private apiKey: string
-  // private client: Anthropic
+  private client: Anthropic
 
-  constructor(apiKey: string) {
-    this.apiKey = apiKey
-    // this.client = new Anthropic({ apiKey })
+  constructor(apiKey?: string) {
+    this.apiKey = apiKey || process.env.ANTHROPIC_API_KEY || ''
+    if (!this.apiKey) {
+      throw new Error(
+        'AnthropicSDKAdapter requires an API key. ' +
+        'Pass it to the constructor or set ANTHROPIC_API_KEY environment variable.'
+      )
+    }
+    this.client = new Anthropic({ apiKey: this.apiKey })
   }
 
   async complete(request: LLMRequest): Promise<LLMResponse> {
-    // TODO: Implement when @anthropic-ai/sdk is installed
-    throw new Error(
-      'AnthropicSDKAdapter not yet implemented. Install @anthropic-ai/sdk first.\n' +
-      'Usage:\n' +
-      '  npm install @anthropic-ai/sdk\n' +
-      '  Then uncomment the implementation in this file.'
-    )
-
-    /*
     const message = await this.client.messages.create({
       model: request.model || 'claude-sonnet-4',
       max_tokens: request.maxTokens || 4096,
@@ -47,7 +42,6 @@ export class AnthropicSDKAdapter implements ILLMAdapter {
         outputTokens: message.usage.output_tokens
       }
     }
-    */
   }
 
   getName(): string {
