@@ -1,0 +1,44 @@
+{
+  "pattern": "domain-events",
+  "version": "v1",
+  "calibration_version": "v1",
+  "created": "2025-11-07",
+  "fixtures": {
+    "excellent/OccupierCreated.ts": {
+      "expected_score": 5.0,
+      "expected_range": [4.5, 5.0],
+      "status": "passing",
+      "notes": "Perfect domain event - immutable, past-tense naming, extends EventBase, self-contained, no methods"
+    },
+    "poor/MutableDomainEvent.ts": {
+      "expected_score": 3.7,
+      "expected_range": [3.0, 4.0],
+      "status": "passing",
+      "notes": "Violates immutability - mutable properties, methods that modify state, business logic",
+      "failing_tactics_expected": [
+        "immutable-properties",
+        "no-methods",
+        "data-only"
+      ]
+    },
+    "poor/EventWithAggregateReference.ts": {
+      "expected_score": 3.7,
+      "expected_range": [3.0, 4.0],
+      "status": "passing",
+      "notes": "Not self-contained - contains aggregate reference, has methods, cannot be serialized",
+      "failing_tactics_expected": [
+        "self-contained-events",
+        "no-aggregate-references",
+        "serializable-data",
+        "no-methods"
+      ]
+    }
+  },
+  "summary": {
+    "total_fixtures": 3,
+    "excellent_fixtures": 1,
+    "poor_fixtures": 2,
+    "test_pass_rate": "100%",
+    "calibration_status": "validated"
+  }
+}

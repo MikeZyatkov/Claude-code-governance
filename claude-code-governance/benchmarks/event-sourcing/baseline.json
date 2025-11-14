@@ -1,0 +1,43 @@
+{
+  "pattern": "event-sourcing",
+  "version": "v1",
+  "calibration_version": "v1",
+  "created": "2025-11-07",
+  "fixtures": {
+    "excellent/OccupierUser.aggregate.ts": {
+      "expected_score": 5.0,
+      "expected_range": [4.5, 5.0],
+      "status": "passing",
+      "notes": "Perfect event sourcing - extends AggregateRoot, all handlers registered, all state changes via applyChange()"
+    },
+    "poor/DirectStateModification.ts": {
+      "expected_score": 2.9,
+      "expected_range": [2.5, 4.0],
+      "status": "passing",
+      "notes": "Bypasses event sourcing - direct state mutation, no events for some methods",
+      "failing_tactics_expected": [
+        "apply-via-events",
+        "no-direct-state-mutation",
+        "consistent-event-sourcing"
+      ]
+    },
+    "poor/MissingEventHandlers.ts": {
+      "expected_score": 3.0,
+      "expected_range": [2.5, 4.0],
+      "status": "passing",
+      "notes": "Incomplete event sourcing - events created but handlers not registered",
+      "failing_tactics_expected": [
+        "register-event-handlers",
+        "handler-for-every-event",
+        "complete-event-sourcing"
+      ]
+    }
+  },
+  "summary": {
+    "total_fixtures": 3,
+    "excellent_fixtures": 1,
+    "poor_fixtures": 2,
+    "test_pass_rate": "100%",
+    "calibration_status": "validated"
+  }
+}
