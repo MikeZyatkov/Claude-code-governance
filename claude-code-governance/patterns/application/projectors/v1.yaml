@@ -100,6 +100,11 @@ constraints:
       - "Integration event projectors that publish to EventBridge"
     evaluation: "llm_judge"
 
+  - rule: "EventBridge projectors MUST NOT query RDS projections"
+    description: "Integration projectors (EventBridge) must only transform events directly, not depend on read model data from RDS projections. This prevents tight coupling between integration and read model concerns."
+    exceptions: []
+    evaluation: "llm_judge"
+
 related_patterns:
   - "CQRS"
   - "Event Sourcing"
@@ -115,6 +120,8 @@ anti_patterns:
     description: "Replaying events produces different results or corrupts read model"
   - name: "Projector in Wrong Layer"
     description: "Projector in domain or infrastructure instead of application"
+  - name: "EventBridge Projector Querying RDS Projection"
+    description: "Integration projector depending on read model data creates tight coupling between concerns"
 
 references:
   - "Young, Greg. CQRS Documents"

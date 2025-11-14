@@ -12,21 +12,27 @@ describe('Projectors Benchmarks', () => {
   const fixturesPath = path.join(__dirname, 'fixtures')
   const implementationPlanPath = path.join(__dirname, 'implementation-plan.md')
   const excellentProjectorPath = path.join(fixturesPath, 'excellent/OccupierProjector.ts')
+  const excellentEventBridgePath = path.join(fixturesPath, 'excellent/OccupierEventBridgeProjector.ts')
   const poorValidationPath = path.join(fixturesPath, 'poor/ProjectorWithBusinessValidation.ts')
   const poorEmitsEventsPath = path.join(fixturesPath, 'poor/ProjectorEmitsDomainEvents.ts')
+  const poorCrossProjectionPath = path.join(fixturesPath, 'poor/EventBridgeProjectorQueriesRDSProjection.ts')
 
   let implementationPlan: string
   let excellentCode: string
+  let excellentEventBridgeCode: string
   let poorValidationCode: string
   let poorEmitsEventsCode: string
+  let poorCrossProjectionCode: string
   let pattern: any
   let calibration: any
 
   beforeAll(() => {
     implementationPlan = fs.readFileSync(implementationPlanPath, 'utf8')
     excellentCode = fs.readFileSync(excellentProjectorPath, 'utf8')
+    excellentEventBridgeCode = fs.readFileSync(excellentEventBridgePath, 'utf8')
     poorValidationCode = fs.readFileSync(poorValidationPath, 'utf8')
     poorEmitsEventsCode = fs.readFileSync(poorEmitsEventsPath, 'utf8')
+    poorCrossProjectionCode = fs.readFileSync(poorCrossProjectionPath, 'utf8')
     pattern = loadPattern('application', 'projectors', 'v1')
     calibration = loadCalibration('projectors', 'v1')
   })
@@ -36,6 +42,26 @@ describe('Projectors Benchmarks', () => {
       const result = await evaluateCode({
         code: excellentCode,
         codePath: excellentProjectorPath,
+        patterns: [pattern],
+        calibrations: [calibration],
+        checkDeterministic: false,
+        checkLLMJudge: true,
+        multiPassCount: 1,
+        implementationPlan
+      })
+
+      expect(result.overall_score).toBeGreaterThan(4.5)
+      expect(result.llm_judge[0].overall_pattern_score).toBeGreaterThan(4.5)
+      expect(result.llm_judge[0].constraints_passed).toBe(true)
+
+      const hasSuccessMessage = result.recommendations.some(r => r.includes('✅'))
+      expect(hasSuccessMessage).toBe(true)
+    })
+
+    it('should score EventBridge projector without RDS dependencies above 4.5', async () => {
+      const result = await evaluateCode({
+        code: excellentEventBridgeCode,
+        codePath: excellentEventBridgePath,
         patterns: [pattern],
         calibrations: [calibration],
         checkDeterministic: false,
@@ -88,6 +114,28 @@ describe('Projectors Benchmarks', () => {
 
       // Should have recommendations about the issues
       expect(result.recommendations.length).toBeGreaterThan(0)
+    })
+
+    it('should detect EventBridge projector querying RDS projections and score at or below 4.0', async () => {
+      const result = await evaluateCode({
+        code: poorCrossProjectionCode,
+        codePath: poorCrossProjectionPath,
+        patterns: [pattern],
+        calibrations: [calibration],
+        checkDeterministic: false,
+        checkLLMJudge: true,
+        multiPassCount: 1,
+        implementationPlan
+      })
+
+      expect(result.overall_score).toBeLessThanOrEqual(4.0)
+
+      // Should have recommendations about the cross-projection dependency issue
+      expect(result.recommendations.length).toBeGreaterThan(0)
+
+      // Should specifically flag the constraint violation
+      const judgeResult = result.llm_judge[0]
+      expect(judgeResult.constraints_passed).toBe(false)
     })
   })
 
